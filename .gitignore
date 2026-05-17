@@ -150,7 +150,7 @@ activemq-data/
 # Environments
 .env
 .envrc
-.venv
+.venv/
 env/
 venv/
 ENV/
@@ -216,3 +216,28 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project reference files
+Second_Project_EN-1.pdf
+
+# Project data and generated artifacts
+data/raw/*
+!data/raw/.gitkeep
+data/prepared/*
+!data/prepared/.gitkeep
+data/generated/*
+!data/generated/.gitkeep
+
+outputs/spark_sql/*
+!outputs/spark_sql/.gitkeep
+outputs/spark_core/*
+!outputs/spark_core/.gitkeep
+outputs/hive/*
+!outputs/hive/.gitkeep
+outputs/mapreduce/*
+!outputs/mapreduce/.gitkeep
+
+experiments/results/local/*
+!experiments/results/local/.gitkeep
+experiments/results/cluster/*
+!experiments/results/cluster/.gitkeep

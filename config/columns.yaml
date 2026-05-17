@@ -1,0 +1,68 @@
+canonical_columns:
+  - flight_date
+  - month
+  - airline_code
+  - airline_name
+  - origin_airport
+  - destination_airport
+  - departure_delay
+  - arrival_delay
+  - cancelled
+  - diverted
+  - cancellation_code
+  - carrier_delay
+  - weather_delay
+  - nas_delay
+  - security_delay
+  - late_aircraft_delay
+
+aliases:
+  flight_date:
+    - flight_date
+    - fl_date
+    - date
+  month:
+    - month
+  airline_code:
+    - airline_code
+    - airline
+    - op_unique_carrier
+    - reporting_airline
+  airline_name:
+    - airline_name
+    - carrier_name
+  origin_airport:
+    - origin_airport
+    - origin
+    - origin_airport_code
+  destination_airport:
+    - destination_airport
+    - dest
+    - destination_airport_code
+  departure_delay:
+    - departure_delay
+    - dep_delay
+    - depdelay
+  arrival_delay:
+    - arrival_delay
+    - arr_delay
+    - arrdelay
+  cancelled:
+    - cancelled
+    - is_cancelled
+  diverted:
+    - diverted
+    - is_diverted
+  cancellation_code:
+    - cancellation_code
+    - cancellation_reason
+  carrier_delay:
+    - carrier_delay
+  weather_delay:
+    - weather_delay
+  nas_delay:
+    - nas_delay
+  security_delay:
+    - security_delay
+  late_aircraft_delay:
+    - late_aircraft_delay

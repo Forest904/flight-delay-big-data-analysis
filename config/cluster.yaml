@@ -1,0 +1,29 @@
+environment: cluster
+
+paths:
+  raw_dir: data/raw
+  raw_file: data/raw/flight_data_2024.csv
+  prepared_dir: data/prepared
+  prepared_file: data/prepared/flights_2024_clean.parquet
+  generated_dir: data/generated
+  outputs_dir: outputs
+  results_dir: experiments/results/cluster
+
+spark:
+  master: spark://CHANGE_ME:7077
+  app_name: flight-delay-big-data-analysis-cluster
+  shuffle_partitions: 64
+
+benchmark:
+  cluster_size: CHANGE_ME
+  input_sizes:
+    - label: 1m
+      records: 1000000
+    - label: 3m
+      records: 3000000
+    - label: 7m
+      records: 7000000
+    - label: 14m
+      records: 14000000
+    - label: 28m
+      records: 28000000

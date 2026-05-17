@@ -1,0 +1,4 @@
+name: flight-delay-big-data-analysis
+
+# Hive/Hadoop services will be added during the Hive implementation milestone.
+services: {}
