@@ -21,7 +21,10 @@ check-env:
 inspect-raw:
 	$(VENV_PYTHON) scripts/inspect_raw_dataset.py
 
-prepare generate-sizes run-spark-sql run-spark-core run-hive run-all-local benchmark-local benchmark-cluster charts report:
+prepare:
+	$(VENV_PYTHON) src/preparation/prepare_spark.py
+
+generate-sizes run-spark-sql run-spark-core run-hive run-all-local benchmark-local benchmark-cluster charts report:
 	@echo Target "$@" is not implemented yet. This milestone only sets up the project foundation.
 	@$(FAIL)
 

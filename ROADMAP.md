@@ -11,6 +11,7 @@ Build a complete, reproducible, well-benchmarked big-data assignment submission 
 - [ ] M1 foundation commit created.
 - [x] Kaggle dataset downloaded.
 - [x] Raw dataset schema inspected.
+- [x] Canonical prepared Parquet dataset created and validated.
 - [ ] MapReduce intentionally out of scope.
 - [ ] Docker-based cluster simulation planned as grade-enhancing evidence if stable.
 
@@ -80,24 +81,26 @@ Grading evidence:
 
 ### M3 - Data Preparation Pipeline
 
+Status: complete.
+
 Goal: create the canonical cleaned Parquet dataset used by every technology.
 
 Deliverables:
 
-- [ ] PySpark preparation script under `src/preparation/`.
-- [ ] Canonical columns produced: date/month, airline, airports, delays, cancellation/diversion, and delay causes.
-- [ ] Cleaning rules implemented and documented.
-- [ ] Prepared Parquet written to `data/prepared/flights_2024_clean.parquet`.
-- [ ] Preparation metrics logged: input rows, output rows, removed rows, null handling summary.
-- [ ] `make prepare` wired to the preparation script.
+- [x] PySpark preparation script under `src/preparation/`.
+- [x] Canonical columns produced: date/month, airline, airports, delays, cancellation/diversion, and delay causes.
+- [x] Cleaning rules implemented and documented.
+- [x] Prepared Parquet written to `data/prepared/flights_2024_clean.parquet`.
+- [x] Preparation metrics logged: input rows, output rows, removed rows, null handling summary.
+- [x] `make prepare` wired to the preparation script.
 
 Acceptance criteria:
 
-- [ ] `make prepare` runs from a clean shell after dataset download.
-- [ ] Prepared Parquet loads successfully with Spark.
-- [ ] Cancelled flights are kept for cancellation-rate analysis.
-- [ ] Null delay values do not distort averages.
-- [ ] Negative delays are preserved.
+- [x] `make prepare` runs from a clean shell after dataset download.
+- [x] Prepared Parquet loads successfully with Spark.
+- [x] Cancelled flights are kept for cancellation-rate analysis.
+- [x] Null delay values do not distort averages.
+- [x] Negative delays are preserved.
 
 Grading evidence:
 
@@ -328,7 +331,7 @@ Grading evidence:
 
 - [ ] Correctness: both selected analyses produce consistent outputs across Spark SQL, Spark Core, and Hive.
 - [ ] Completeness: Spark SQL, Spark Core, and Hive are all implemented for both jobs.
-- [ ] Data preparation: cleaning, normalization, and column mapping are justified and documented.
+- [x] Data preparation: cleaning, normalization, and column mapping are justified and documented.
 - [ ] Reproducibility: setup, preparation, execution, benchmarking, charts, and report generation have stable commands.
 - [ ] Experimental quality: benchmarks vary technology, job, input size, and execution setting where feasible.
 - [ ] Scalability: input-size generation is controlled and explained.
