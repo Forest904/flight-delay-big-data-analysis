@@ -26,7 +26,7 @@ Build a complete, reproducible, well-benchmarked big-data assignment submission 
 
 ### M1 - Repository Foundation
 
-Status: ready to commit.
+Status: complete.
 
 Goal: make the repository runnable and organized before dataset work begins.
 
@@ -46,7 +46,7 @@ Acceptance criteria:
 - [x] `make check-env` passes when Docker Desktop is running.
 - [x] `make setup` is idempotent.
 - [x] Future milestone targets fail clearly while unimplemented.
-- [ ] Commit foundation changes with a clear message.
+- [x] Commit foundation changes with a clear message.
 
 Grading evidence:
 
