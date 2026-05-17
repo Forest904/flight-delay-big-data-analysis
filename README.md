@@ -198,7 +198,7 @@ Expected local structure:
 ```text
 data/
 └── raw/
-    └── flights_2024.csv
+    └── flight_data_2024.csv
 ```
 
 The exact filename can be configured in:
@@ -448,6 +448,7 @@ A complete reproduction should follow this sequence:
 
 ```bash
 make setup
+make inspect-raw
 make prepare
 make generate-sizes
 make benchmark-local
@@ -469,6 +470,7 @@ The project is expected to expose the following commands:
 
 ```text
 setup
+inspect-raw
 prepare
 generate-sizes
 run-spark-sql

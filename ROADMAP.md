@@ -9,8 +9,8 @@ Build a complete, reproducible, well-benchmarked big-data assignment submission 
 - [x] Tooling installed and verified: Python 3.12, PySpark 4.1.1, Java 17, Docker Desktop, Docker Compose, and Make.
 - [x] Repository foundation scaffolded locally.
 - [ ] M1 foundation commit created.
-- [ ] Kaggle dataset downloaded.
-- [ ] Raw dataset schema inspected.
+- [x] Kaggle dataset downloaded.
+- [x] Raw dataset schema inspected.
 - [ ] MapReduce intentionally out of scope.
 - [ ] Docker-based cluster simulation planned as grade-enhancing evidence if stable.
 
@@ -59,19 +59,19 @@ Goal: obtain the raw dataset and replace assumptions with measured facts.
 
 Deliverables:
 
-- [ ] Kaggle credentials documented locally, not committed.
-- [ ] Dataset downloaded under `data/raw/`.
-- [ ] Raw filename confirmed against `config/local.yaml`.
-- [ ] Schema, column names, types, row count, and sample rows inspected.
-- [ ] Null counts collected for analysis-critical fields.
-- [ ] `docs/data_preparation.md` started with schema findings.
+- [x] Kaggle credentials documented locally, not committed. N/A for this run because the dataset was downloaded manually; optional CLI redownload guidance remains in `scripts/download_dataset.md`.
+- [x] Dataset downloaded under `data/raw/`.
+- [x] Raw filename confirmed against `config/local.yaml`.
+- [x] Schema, column names, types, row count, and sample rows inspected.
+- [x] Null counts collected for analysis-critical fields.
+- [x] `docs/data_preparation.md` started with schema findings.
 
 Acceptance criteria:
 
-- [ ] Raw dataset can be located by config.
-- [ ] Total row count is recorded.
-- [ ] Required analysis columns are mapped to canonical names or flagged.
-- [ ] Dataset is confirmed ignored by Git.
+- [x] Raw dataset can be located by config.
+- [x] Total row count is recorded.
+- [x] Required analysis columns are mapped to canonical names or flagged.
+- [x] Dataset is confirmed ignored by Git.
 
 Grading evidence:
 

@@ -8,7 +8,7 @@ VENV_PYTHON := .venv/bin/python
 FAIL := exit 1
 endif
 
-.PHONY: setup check-env prepare generate-sizes run-spark-sql run-spark-core run-hive run-all-local benchmark-local benchmark-cluster charts report clean
+.PHONY: setup check-env inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-hive run-all-local benchmark-local benchmark-cluster charts report clean
 
 setup:
 	$(PYTHON_LAUNCHER) -m venv .venv
@@ -17,6 +17,9 @@ setup:
 
 check-env:
 	$(VENV_PYTHON) scripts/check_env.py
+
+inspect-raw:
+	$(VENV_PYTHON) scripts/inspect_raw_dataset.py
 
 prepare generate-sizes run-spark-sql run-spark-core run-hive run-all-local benchmark-local benchmark-cluster charts report:
 	@echo Target "$@" is not implemented yet. This milestone only sets up the project foundation.
