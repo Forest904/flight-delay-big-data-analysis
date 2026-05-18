@@ -161,13 +161,18 @@ If `make` is not available on the local PATH, run the underlying command:
 The script reads paths and Spark settings from `config/local.yaml`:
 
 - Raw CSV: `data/raw/flight_data_2024.csv`
-- Prepared Parquet: `data/prepared/flights_2024_clean.parquet`
+- Prepared Parquet directory: `data/prepared/flights_2024_clean.parquet`
 - Metrics JSON: `data/prepared/preparation_metrics.json`
 
 On Windows, the script selects a local Java 17+ JDK if the active shell points
 to an older Java runtime. If Hadoop `winutils.exe` is not installed, Spark still
-performs the preparation and the script writes the final Parquet file with
-PyArrow so the configured path remains loadable by Spark.
+performs the preparation and the script writes a standard Parquet directory with
+PyArrow part files. Future Spark jobs should use `src/common/prepared_data.py`
+to read the prepared dataset, because that helper resolves exact part-file paths
+on Windows when Hadoop native directory listing is unavailable.
+
+The prepared output is written to a temporary sibling path first and replaces the
+previous prepared dataset only after the new write succeeds.
 
 `data/prepared/*` is ignored by Git, so these generated artifacts are not
 committed.
@@ -242,6 +247,7 @@ The metrics include:
 
 - input rows
 - output rows
+- output shape and writer mode
 - removed rows
 - removed row percentage
 - canonical source-column mapping
@@ -259,11 +265,11 @@ The metrics include:
 After `make prepare`, verify Spark can load the prepared Parquet:
 
 ```powershell
-.\.venv\Scripts\python.exe -c "import sys; sys.path.insert(0, 'src/preparation'); import prepare_spark; prepare_spark.ensure_java_17(); from pyspark.sql import SparkSession; spark = SparkSession.builder.master('local[*]').appName('validate-prepared').getOrCreate(); df = spark.read.parquet('data/prepared/flights_2024_clean.parquet'); print(df.count()); df.printSchema(); spark.stop()"
+.\.venv\Scripts\python.exe -c "import sys; sys.path.insert(0, 'src/preparation'); import prepare_spark; prepare_spark.ensure_java_17(); from pyspark.sql import SparkSession; from src.common.prepared_data import read_prepared_parquet; spark = SparkSession.builder.master('local[*]').appName('validate-prepared').getOrCreate(); df = read_prepared_parquet(spark, 'data/prepared/flights_2024_clean.parquet'); print(df.count()); df.printSchema(); spark.stop()"
 ```
 
 Acceptance checks can be run with:
 
 ```powershell
-.\.venv\Scripts\python.exe -c "import sys; sys.path.insert(0, 'src/preparation'); import prepare_spark; prepare_spark.ensure_java_17(); from pyspark.sql import SparkSession, functions as F; spark = SparkSession.builder.master('local[*]').appName('validate-m3').getOrCreate(); df = spark.read.parquet('data/prepared/flights_2024_clean.parquet'); df.agg(F.sum((F.col('cancelled') == 1).cast('int')).alias('cancelled_rows'), F.sum(F.col('departure_delay').isNull().cast('int')).alias('null_departure_delay_rows'), F.sum((F.col('departure_delay') < 0).cast('int')).alias('negative_departure_delay_rows'), F.avg('departure_delay').alias('avg_departure_delay')).show(truncate=False); spark.stop()"
+.\.venv\Scripts\python.exe -c "import sys; sys.path.insert(0, 'src/preparation'); import prepare_spark; prepare_spark.ensure_java_17(); from pyspark.sql import SparkSession, functions as F; from src.common.prepared_data import read_prepared_parquet; spark = SparkSession.builder.master('local[*]').appName('validate-m3').getOrCreate(); df = read_prepared_parquet(spark, 'data/prepared/flights_2024_clean.parquet'); df.agg(F.sum((F.col('cancelled') == 1).cast('int')).alias('cancelled_rows'), F.sum(F.col('departure_delay').isNull().cast('int')).alias('null_departure_delay_rows'), F.sum((F.col('departure_delay') < 0).cast('int')).alias('negative_departure_delay_rows'), F.avg('departure_delay').alias('avg_departure_delay')).show(truncate=False); spark.stop()"
 ```

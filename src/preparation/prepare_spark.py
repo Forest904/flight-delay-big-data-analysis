@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,11 @@ from pyspark.sql.column import Column
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.common.prepared_data import has_windows_winutils
+
 LOCAL_CONFIG = PROJECT_ROOT / "config" / "local.yaml"
 COLUMNS_CONFIG = PROJECT_ROOT / "config" / "columns.yaml"
 METRICS_FILE_NAME = "preparation_metrics.json"
@@ -113,24 +119,37 @@ def ensure_java_17() -> None:
     )
 
 
-def has_windows_winutils() -> bool:
-    if os.name != "nt":
-        return True
-
-    for env_name in ("HADOOP_HOME", "hadoop.home.dir"):
-        value = os.environ.get(env_name)
-        if not value:
-            continue
-        if (Path(value) / "bin" / "winutils.exe").exists():
-            return True
-    return False
-
-
 def clear_output_path(path: Path) -> None:
     if path.is_dir():
         shutil.rmtree(path)
     elif path.exists():
         path.unlink()
+
+
+def temporary_output_path(path: Path) -> Path:
+    return path.parent / f".{path.name}.tmp"
+
+
+def backup_output_path(path: Path) -> Path:
+    return path.parent / f".{path.name}.bak"
+
+
+def replace_output_from_temp(temp_path: Path, final_path: Path) -> None:
+    backup_path = backup_output_path(final_path)
+    clear_output_path(backup_path)
+
+    if final_path.exists():
+        shutil.move(str(final_path), str(backup_path))
+
+    try:
+        shutil.move(str(temp_path), str(final_path))
+    except Exception:
+        clear_output_path(final_path)
+        if backup_path.exists():
+            shutil.move(str(backup_path), str(final_path))
+        raise
+    else:
+        clear_output_path(backup_path)
 
 
 def write_parquet_with_pyarrow(df: DataFrame, output_path: Path, columns: list[str], batch_size: int = 100_000) -> None:
@@ -159,7 +178,8 @@ def write_parquet_with_pyarrow(df: DataFrame, output_path: Path, columns: list[s
     )
 
     clear_output_path(output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.mkdir(parents=True, exist_ok=True)
+    part_file = output_path / "part-00000.parquet"
 
     writer: pq.ParquetWriter | None = None
     batch: dict[str, list[Any]] = {column: [] for column in columns}
@@ -171,7 +191,7 @@ def write_parquet_with_pyarrow(df: DataFrame, output_path: Path, columns: list[s
             return
         table = pa.table(batch, schema=arrow_schema)
         if writer is None:
-            writer = pq.ParquetWriter(output_path, arrow_schema, compression="snappy")
+            writer = pq.ParquetWriter(part_file, arrow_schema, compression="snappy")
         writer.write_table(table)
         batch = {column: [] for column in columns}
         rows_in_batch = 0
@@ -188,6 +208,7 @@ def write_parquet_with_pyarrow(df: DataFrame, output_path: Path, columns: list[s
     finally:
         if writer is not None:
             writer.close()
+    (output_path / "_SUCCESS").touch()
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
@@ -384,12 +405,15 @@ def main() -> int:
         null_counts_after = count_nulls(clean_df, canonical_columns)
         output_summary = count_output_summary(clean_df)
 
+        temp_prepared_file = temporary_output_path(prepared_file)
+        clear_output_path(temp_prepared_file)
         if has_windows_winutils():
-            clean_df.write.mode("overwrite").parquet(str(prepared_file))
+            clean_df.write.mode("error").parquet(str(temp_prepared_file))
             output_writer = "spark"
         else:
-            write_parquet_with_pyarrow(clean_df, prepared_file, canonical_columns)
+            write_parquet_with_pyarrow(clean_df, temp_prepared_file, canonical_columns)
             output_writer = "pyarrow_windows_local"
+        replace_output_from_temp(temp_prepared_file, prepared_file)
 
         removed_rows = input_rows - output_rows
         metrics: dict[str, Any] = {
@@ -398,6 +422,7 @@ def main() -> int:
             "prepared_file": str(prepared_file.relative_to(PROJECT_ROOT)),
             "input_rows": input_rows,
             "output_rows": output_rows,
+            "output_shape": "parquet_directory",
             "output_writer": output_writer,
             "removed_rows": removed_rows,
             "removed_row_percentage": round((removed_rows / input_rows) * 100, 6) if input_rows else 0,

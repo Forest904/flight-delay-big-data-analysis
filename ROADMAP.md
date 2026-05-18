@@ -347,6 +347,8 @@ Grading evidence:
 | Hive setup becomes time-consuming | Finish Spark SQL and Spark Core first, then isolate Hive in the Docker milestone. |
 | Local hardware cannot handle full or replicated datasets | Use smaller sizes, document limits, and include controlled replication only where feasible. |
 | Outputs differ across technologies | Treat Spark SQL as the reference and add comparison checks before benchmarking. |
+| Windows local preparation without Hadoop `winutils.exe` uses a PyArrow writer that streams prepared rows through the driver | Treat this as a compatibility fallback only; do not use it as scalability evidence for M7/M8 benchmark claims. |
+| Prepared Parquet directory reads can differ on Windows without Hadoop native tools | Use the shared prepared-data resolver in `src/common/prepared_data.py` for Spark jobs so all technologies agree on the canonical directory shape. |
 | Docker cluster simulation is unstable | Keep local benchmarks as the required baseline and document simulation limits honestly. |
 | Large files are accidentally committed | Use `.gitignore`, `git status --ignored`, and final submission checks. |
 | Report falls behind implementation | Capture metrics, sample rows, and notes at each milestone instead of reconstructing everything at the end. |
