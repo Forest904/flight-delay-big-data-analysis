@@ -109,23 +109,25 @@ Grading evidence:
 
 ### M4 - Spark SQL Analyses
 
+Status: complete.
+
 Goal: implement both selected analyses in the most expressive API and use them as reference outputs.
 
 Deliverables:
 
-- [ ] Delay report by airport, month, and delay range.
-- [ ] Airline-airport anomalous delay ranking.
-- [ ] Output writing under `outputs/spark_sql/`.
-- [ ] First 10 rows exported for each analysis.
-- [ ] Runtime metrics captured.
-- [ ] `make run-spark-sql` wired.
+- [x] Delay report by airport, month, and delay range.
+- [x] Airline-airport anomalous delay ranking.
+- [x] Output writing under `outputs/spark_sql/`.
+- [x] First 10 rows exported for each analysis.
+- [x] Runtime metrics captured.
+- [x] `make run-spark-sql` wired.
 
 Acceptance criteria:
 
-- [ ] Delay ranges are implemented consistently: low `< 15`, medium `15 <= delay <= 60`, high `> 60`.
-- [ ] Ranking uses airport-level partitioning and average departure delay ascending.
-- [ ] Cancellation rates are computed from all relevant flights.
-- [ ] Output schemas are stable and documented.
+- [x] Delay ranges are implemented consistently: low `< 15`, medium `15 <= delay <= 60`, high `> 60`.
+- [x] Ranking uses airport-level partitioning and average departure delay ascending.
+- [x] Cancellation rates are computed from all relevant flights.
+- [x] Output schemas are stable and documented.
 
 Grading evidence:
 

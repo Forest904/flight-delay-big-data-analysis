@@ -316,11 +316,14 @@ make prepare
 make run-spark-sql
 ```
 
-Or:
+Or on Windows:
 
-```bash
-bash scripts/run_spark_sql.sh
+```powershell
+.\.venv\Scripts\python.exe src\spark_sql\run_spark_sql.py
 ```
+
+On Windows, Spark SQL output writing requires Hadoop `winutils.exe` configured
+through `HADOOP_HOME` or `hadoop.home.dir`.
 
 ### Run Spark Core jobs
 
