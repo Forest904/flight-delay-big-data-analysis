@@ -1,4 +1,14 @@
 name: flight-delay-big-data-analysis
 
 # Hive/Hadoop services will be added during the Hive implementation milestone.
-services: {}
+services:
+  spark-core:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark-core
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    environment:
+      PYTHONUNBUFFERED: "1"
+    command: python src/spark_core/run_spark_core.py

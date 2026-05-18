@@ -136,22 +136,24 @@ Grading evidence:
 
 ### M5 - Spark Core Analyses
 
+Status: complete.
+
 Goal: reimplement both analyses with RDD transformations and compare against Spark SQL.
 
 Deliverables:
 
-- [ ] RDD version of delay report.
-- [ ] RDD version of airline-airport ranking.
-- [ ] Output writing under `outputs/spark_core/`.
-- [ ] First 10 rows exported for each analysis.
-- [ ] Runtime metrics captured.
-- [ ] `make run-spark-core` wired.
+- [x] RDD version of delay report.
+- [x] RDD version of airline-airport ranking.
+- [x] Output writing under `outputs/spark_core/`.
+- [x] First 10 rows exported for each analysis.
+- [x] Runtime metrics captured.
+- [x] `make run-spark-core` wired.
 
 Acceptance criteria:
 
-- [ ] Spark Core outputs match Spark SQL on grouping keys and numeric fields within documented tolerance.
-- [ ] Ranking order matches Spark SQL for comparable records.
-- [ ] Implementation avoids unnecessary `groupByKey` where a safer aggregation pattern is practical.
+- [x] Spark Core outputs match Spark SQL on grouping keys and numeric fields within documented tolerance.
+- [x] Ranking order matches Spark SQL for comparable records.
+- [x] Implementation avoids unnecessary `groupByKey` where a safer aggregation pattern is practical.
 
 Grading evidence:
 
@@ -364,6 +366,8 @@ make prepare
 make generate-sizes
 make run-spark-sql
 make run-spark-core
+make run-spark-core-native
+make run-spark-core-docker
 make run-hive
 make benchmark-local
 make charts

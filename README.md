@@ -331,11 +331,39 @@ through `HADOOP_HOME` or `hadoop.home.dir`.
 make run-spark-core
 ```
 
-Or:
+On Windows, `make run-spark-core` uses the Docker Compose Spark Core service so
+PySpark RDD worker execution runs in Linux. On Linux, WSL, or macOS, it runs the
+native Spark Core runner directly.
 
-```bash
-bash scripts/run_spark_core.sh
+Run the native path directly for diagnostics with:
+
+```powershell
+make run-spark-core-native
 ```
+
+Validate Spark Core outputs against the Spark SQL reference with:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\validate_spark_core_outputs.py
+```
+
+Run only the Spark Core RDD worker smoke check with:
+
+```powershell
+.\.venv\Scripts\python.exe src\spark_core\run_spark_core.py --smoke-rdd
+```
+
+Spark Core writes its small aggregate CSV outputs locally, so it does not require
+Hadoop `winutils.exe` for output writing. If the native Windows RDD smoke check
+fails with `Python worker exited unexpectedly`, use the stable command:
+
+```powershell
+make run-spark-core
+```
+
+That command mounts this repository, runs the same Spark Core runner with Python
+3.12 and Java 17 in Docker, and writes the same `outputs/spark_core/` files. The
+explicit Docker target remains available as `make run-spark-core-docker`.
 
 ### Run Hive jobs
 
