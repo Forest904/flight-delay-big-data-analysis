@@ -1,0 +1,11 @@
+# syntax=docker/dockerfile:1.6
+FROM apache/hive:4.0.1
+
+USER root
+
+ADD --checksum=sha256:69020b3bd20984543e817393f2e6c01a890ef2e37a77dd11d6d8508181d079ab https://jdbc.postgresql.org/download/postgresql-42.7.5.jar /opt/hive/lib/postgres.jar
+RUN chmod 0644 /opt/hive/lib/postgres.jar \
+    && mkdir -p /home/hive \
+    && chown -R hive:hive /home/hive
+
+USER hive

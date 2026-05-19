@@ -162,24 +162,26 @@ Grading evidence:
 
 ### M6 - Hive Environment and HiveQL Analyses
 
+Status: complete.
+
 Goal: complete the third required technology using Docker-based Hive/Hadoop services.
 
 Deliverables:
 
-- [ ] Docker Compose Hive stack.
-- [ ] Hive DDL for prepared dataset.
-- [ ] Hive load or external table setup.
-- [ ] HiveQL version of both analyses.
-- [ ] Output writing under `outputs/hive/`.
-- [ ] First 10 rows exported for each analysis.
-- [ ] `make run-hive` wired.
+- [x] Docker Compose Hive stack.
+- [x] Hive DDL for prepared dataset.
+- [x] Hive load or external table setup.
+- [x] HiveQL version of both analyses.
+- [x] Output writing under `outputs/hive/`.
+- [x] First 10 rows exported for each analysis.
+- [x] `make run-hive` wired.
 
 Acceptance criteria:
 
-- [ ] Hive starts from Docker Compose.
-- [ ] Hive can read the prepared dataset or a Hive-compatible export of it.
-- [ ] Hive outputs are comparable to Spark SQL outputs.
-- [ ] Hive run times are logged.
+- [x] Hive starts from Docker Compose.
+- [x] Hive can read the prepared dataset or a Hive-compatible export of it.
+- [x] Hive outputs are comparable to Spark SQL outputs.
+- [x] Hive run times are logged.
 
 Grading evidence:
 

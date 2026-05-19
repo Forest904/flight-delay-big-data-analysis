@@ -13,7 +13,7 @@ DOCKER ?= docker
 DOCKER_COMPOSE := $(DOCKER) compose
 endif
 
-.PHONY: setup check-env inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive run-all-local benchmark-local benchmark-cluster charts report clean
+.PHONY: setup check-env inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive stop-hive run-all-local benchmark-local benchmark-cluster charts report clean
 
 setup:
 	$(PYTHON_LAUNCHER) -m venv .venv
@@ -44,7 +44,13 @@ run-spark-core-native:
 run-spark-core-docker:
 	$(DOCKER_COMPOSE) run --rm spark-core
 
-generate-sizes run-hive run-all-local benchmark-local benchmark-cluster charts report:
+run-hive:
+	$(VENV_PYTHON) src/hive/run_hive.py
+
+stop-hive:
+	$(DOCKER_COMPOSE) stop hiveserver2 hive-metastore hive-postgres
+
+generate-sizes run-all-local benchmark-local benchmark-cluster charts report:
 	@echo Target "$@" is not implemented yet. This milestone only sets up the project foundation.
 	@$(FAIL)
 

@@ -371,10 +371,21 @@ explicit Docker target remains available as `make run-spark-core-docker`.
 make run-hive
 ```
 
-Or:
+This starts the Docker Compose Hive stack with HiveServer2, a standalone
+metastore, and Postgres metadata storage. Hive reads the prepared Parquet dataset
+through an external table and writes outputs under `outputs/hive/`.
 
-```bash
-bash scripts/run_hive.sh
+Docker Desktop must be running before starting Hive. The Hive services remain
+running after the command finishes; stop them with:
+
+```powershell
+make stop-hive
+```
+
+Validate the Hive outputs against the Spark SQL reference with:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\validate_hive_outputs.py
 ```
 
 ### Run all local jobs
@@ -507,6 +518,7 @@ generate-sizes
 run-spark-sql
 run-spark-core
 run-hive
+stop-hive
 run-all-local
 benchmark-local
 benchmark-cluster
