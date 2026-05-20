@@ -13,6 +13,14 @@ DOCKER ?= docker
 DOCKER_COMPOSE := $(DOCKER) compose
 endif
 
+GENERATE_SIZE_FLAGS :=
+ifeq ($(FORCE),1)
+GENERATE_SIZE_FLAGS += --force
+endif
+ifeq ($(GENERATE_LARGE),1)
+GENERATE_SIZE_FLAGS += --include-large
+endif
+
 .PHONY: setup check-env inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive stop-hive run-all-local benchmark-local benchmark-cluster charts report clean
 
 setup:
@@ -28,6 +36,9 @@ inspect-raw:
 
 prepare:
 	$(VENV_PYTHON) src/preparation/prepare_spark.py
+
+generate-sizes:
+	$(VENV_PYTHON) src/preparation/generate_input_sizes.py $(GENERATE_SIZE_FLAGS)
 
 run-spark-sql:
 	$(VENV_PYTHON) src/spark_sql/run_spark_sql.py
@@ -50,7 +61,7 @@ run-hive:
 stop-hive:
 	$(DOCKER_COMPOSE) stop hiveserver2 hive-metastore hive-postgres
 
-generate-sizes run-all-local benchmark-local benchmark-cluster charts report:
+run-all-local benchmark-local benchmark-cluster charts report:
 	@echo Target "$@" is not implemented yet. This milestone only sets up the project foundation.
 	@$(FAIL)
 

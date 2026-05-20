@@ -246,27 +246,52 @@ bash scripts/run_prepare_local.sh
 
 ## Generated Input Sizes
 
-For benchmarking and scalability analysis, the project generates datasets of different sizes.
+For benchmarking and scalability analysis, the project generates reproducible
+datasets of different sizes from the canonical prepared Parquet input.
 
-Example generated datasets:
+Default generated datasets:
 
 ```text
 data/generated/flights_100k.parquet
 data/generated/flights_500k.parquet
 data/generated/flights_1m.parquet
 data/generated/flights_3m.parquet
-data/generated/flights_7m.parquet
+```
+
+The full-size local input is referenced directly from
+`data/prepared/flights_2024_clean.parquet` instead of being copied. The optional
+large replicated datasets are:
+
+```text
 data/generated/flights_14m.parquet
 data/generated/flights_28m.parquet
 ```
 
-Smaller datasets are created from portions of the original data. Larger datasets are created through controlled replication and are used only for scalability experiments.
+Smaller datasets are created with a seeded deterministic hash-limit method and
+exact row limits. Larger datasets are created through controlled replication:
+full repetitions of the prepared dataset plus a deterministic hash-limited
+remainder. Forced generation may print Spark `WindowExec` warnings because exact
+deterministic selection uses a global ordering step; validated manifest counts
+are the success signal.
 
 Run:
 
 ```bash
 make generate-sizes
 ```
+
+Replace existing generated inputs or opt into the larger replicated datasets:
+
+```bash
+make generate-sizes FORCE=1
+make generate-sizes GENERATE_LARGE=1 FORCE=1
+```
+
+Generation writes `data/generated/input_size_manifest.json` with the validated
+row count, generation method, seed, source path, and reuse status for every
+benchmark input. Benchmark runners should use this manifest as the source of
+truth and skip optional entries such as `14m` and `28m` unless they are present
+with successful validation.
 
 ---
 

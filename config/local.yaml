@@ -19,11 +19,28 @@ benchmark:
   input_sizes:
     - label: 100k
       records: 100000
+      path: data/generated/flights_100k.parquet
     - label: 500k
       records: 500000
+      path: data/generated/flights_500k.parquet
     - label: 1m
       records: 1000000
+      path: data/generated/flights_1m.parquet
     - label: 3m
       records: 3000000
-    - label: 7m
-      records: 7000000
+      path: data/generated/flights_3m.parquet
+    - label: full
+      records: 7079081
+      path: data/prepared/flights_2024_clean.parquet
+      method: prepared_reference
+      records_source: manifest_actual_records
+    - label: 14m
+      records: 14000000
+      path: data/generated/flights_14m.parquet
+      method: controlled_replication
+      optional: true
+    - label: 28m
+      records: 28000000
+      path: data/generated/flights_28m.parquet
+      method: controlled_replication
+      optional: true

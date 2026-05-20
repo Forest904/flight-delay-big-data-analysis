@@ -177,6 +177,72 @@ previous prepared dataset only after the new write succeeds.
 `data/prepared/*` is ignored by Git, so these generated artifacts are not
 committed.
 
+## M7 Generated Input Sizes
+
+Run the input-size generator from the project root:
+
+```powershell
+make generate-sizes
+```
+
+The default command reads the canonical prepared Parquet dataset and writes
+exact-size benchmark inputs under `data/generated/`:
+
+- `data/generated/flights_100k.parquet`
+- `data/generated/flights_500k.parquet`
+- `data/generated/flights_1m.parquet`
+- `data/generated/flights_3m.parquet`
+
+Smaller inputs are selected with a deterministic hash-limit method and the
+default seed `20240520`, then limited to the requested record count. The
+generator hashes a null-safe representation of the canonical source columns,
+orders by a seeded hash of that row key, and writes only the original canonical
+columns. This keeps the subsets reproducible while avoiding the chronological
+bias of taking early-2024 rows only.
+
+Because the deterministic selection requires a global ordering by the seeded
+row hash, Spark may print `WindowExec` warnings during forced generation. This
+is expected for the default local inputs: the warning documents that Spark moves
+the ranking step through a single logical ordering stage so exact row identities
+are repeatable. A successful run is determined by the manifest validation, not
+by the absence of this warning.
+
+The full-size local input is not copied. The manifest records
+`data/prepared/flights_2024_clean.parquet` as the `full` benchmark input and
+validates its current row count.
+
+Optional larger datasets are generated only when explicitly requested:
+
+```powershell
+make generate-sizes GENERATE_LARGE=1 FORCE=1
+```
+
+For targets larger than the prepared source, the generator uses controlled
+replication: it writes as many full source repetitions as fit in the target,
+then adds a deterministic sampled remainder. For the current `7,079,081`-row
+prepared dataset, `14m` is one full repetition plus `6,920,919` sampled rows,
+and `28m` is three full repetitions plus `6,762,757` sampled rows. No synthetic
+columns are kept in the generated output.
+
+Every run writes `data/generated/input_size_manifest.json` with the label, path,
+target records, validated actual records, method, seed, source path, schema
+match status, validation status, whether the dataset was generated in that run,
+and whether an existing dataset was reused from a compatible manifest. Re-run
+with `FORCE=1` to replace existing generated datasets:
+
+```powershell
+make generate-sizes FORCE=1
+```
+
+`data/generated/*` is ignored by Git, so generated benchmark inputs and the
+manifest stay local unless a small curated artifact is intentionally copied
+elsewhere.
+
+Future benchmark runners should treat `data/generated/input_size_manifest.json`
+as the source of truth for available input paths and validated actual row
+counts. Optional config entries such as `14m` and `28m` should be skipped unless
+they are present in the manifest with `validation_status` set to `success`.
+
 ## Canonical Prepared Schema
 
 The prepared dataset contains only the canonical analysis columns from

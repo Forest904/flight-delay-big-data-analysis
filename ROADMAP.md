@@ -190,21 +190,23 @@ Grading evidence:
 
 ### M7 - Input Size Generation
 
+Status: complete for default local sizes; optional 14M/28M generation is available behind an explicit flag.
+
 Goal: create controlled datasets for scalability experiments.
 
 Deliverables:
 
-- [ ] Generator script under `src/preparation/`.
-- [ ] Datasets for 100k, 500k, 1M, 3M, and full-size local runs where hardware allows.
+- [x] Generator script under `src/preparation/`.
+- [x] Datasets for 100k, 500k, 1M, 3M, and full-size local runs where hardware allows.
 - [ ] Replicated 14M and 28M datasets if local storage and time allow.
-- [ ] Record-count validation for every generated dataset.
-- [ ] `make generate-sizes` wired.
+- [x] Record-count validation for every generated dataset.
+- [x] `make generate-sizes` wired.
 
 Acceptance criteria:
 
-- [ ] Smaller datasets are sampled or selected from original data.
-- [ ] Larger datasets are generated through documented controlled replication.
-- [ ] Generated datasets are ignored by Git.
+- [x] Smaller datasets are sampled or selected from original data.
+- [x] Larger datasets are generated through documented controlled replication.
+- [x] Generated datasets are ignored by Git.
 
 Grading evidence:
 
