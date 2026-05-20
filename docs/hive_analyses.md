@@ -88,5 +88,5 @@ SQL reference:
 ```
 
 The validator checks metrics status, output columns, row counts, key sets,
-numeric values within `1e-6`, exact top-cause matches, ranking order, and the
-presence of first-10 sample files.
+numeric values within `1e-6`, exact top-three cause label and count matches,
+ranking order, and the presence of first-10 sample files.

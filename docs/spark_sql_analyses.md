@@ -52,7 +52,12 @@ Stable output schema:
 | flight_count | long | Count of flights in the airport-month-range group. |
 | avg_departure_delay | double | Average departure delay; Spark SQL ignores nulls. |
 | avg_arrival_delay | double | Average arrival delay; Spark SQL ignores nulls. |
-| top_delay_or_cancellation_cause | string | Most frequent derived cause in the group. |
+| top_1_cause | string | Most frequent derived cause in the group. |
+| top_1_count | long | Number of flights assigned to `top_1_cause`. |
+| top_2_cause | string | Second most frequent derived cause, or null when unavailable. |
+| top_2_count | long | Number of flights assigned to `top_2_cause`, or `0` when unavailable. |
+| top_3_cause | string | Third most frequent derived cause, or null when unavailable. |
+| top_3_count | long | Number of flights assigned to `top_3_cause`, or `0` when unavailable. |
 
 Delay ranges are implemented as:
 
@@ -74,9 +79,11 @@ The cause field is derived per flight:
   `delay:late_aircraft`.
 - Flights without a positive delay cause use `unknown`.
 
-Spark SQL computes the top cause with a grouped count and
+Spark SQL computes the top three causes with a grouped count and
 `ROW_NUMBER() OVER (PARTITION BY origin_airport, month, delay_range ORDER BY
 cause_count DESC, derived_cause ASC)`, which gives deterministic tie-breaking.
+Groups with fewer than three available causes use null cause labels and `0`
+counts for the missing slots.
 
 ## Airline-Airport Ranking
 

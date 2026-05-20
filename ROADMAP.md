@@ -49,30 +49,6 @@ Definition of done for the rescue path:
 
 ## Milestone Roadmap
 
-### M0 - Baseline Audit And Rubric Map
-
-Priority: `P0 grade blocker`  
-Status: current planning baseline.
-
-Goal: make the grading target explicit before changing implementation.
-
-Deliverables:
-
-- [ ] Keep this roadmap focused on grade rescue rather than historical narration.
-- [ ] Record the current estimated grade baseline: `76/100`.
-- [ ] Record the target grade: `95+`.
-- [ ] Map every known grading gap to a milestone and expected artifact.
-- [ ] Re-check the assignment PDF requirements before final report rewrite.
-
-Acceptance criteria:
-
-- [ ] A future implementer can explain why every milestone exists.
-- [ ] Required fixes appear before optional stretch work.
-- [ ] No section claims the project is already perfect.
-
-Grading evidence:
-
-- The roadmap itself becomes the execution checklist for turning feedback into measurable improvements.
 
 ### M1 - Fix Analysis 1 Top-Three Causes
 

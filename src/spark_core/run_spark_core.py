@@ -49,7 +49,12 @@ DELAY_OUTPUT_COLUMNS = [
     "flight_count",
     "avg_departure_delay",
     "avg_arrival_delay",
-    "top_delay_or_cancellation_cause",
+    "top_1_cause",
+    "top_1_count",
+    "top_2_cause",
+    "top_2_count",
+    "top_3_cause",
+    "top_3_count",
 ]
 
 RANKING_OUTPUT_COLUMNS = [
@@ -72,7 +77,12 @@ DELAY_SCHEMA = StructType(
         StructField("flight_count", LongType(), False),
         StructField("avg_departure_delay", DoubleType(), True),
         StructField("avg_arrival_delay", DoubleType(), True),
-        StructField("top_delay_or_cancellation_cause", StringType(), False),
+        StructField("top_1_cause", StringType(), True),
+        StructField("top_1_count", LongType(), False),
+        StructField("top_2_cause", StringType(), True),
+        StructField("top_2_count", LongType(), False),
+        StructField("top_3_cause", StringType(), True),
+        StructField("top_3_count", LongType(), False),
     ]
 )
 
@@ -268,17 +278,37 @@ def ranged_delay_record(row: Any) -> tuple[tuple[str, int, str], tuple[float, fl
     return key, value
 
 
-def best_cause(left: tuple[str, int], right: tuple[str, int]) -> tuple[str, int]:
-    left_cause, left_count = left
-    right_cause, right_count = right
-    if right_count > left_count:
-        return right
-    if right_count == left_count and right_cause < left_cause:
-        return right
-    return left
+def top_three_causes(causes: list[tuple[str, int]]) -> tuple[str | None, int, str | None, int, str | None, int]:
+    ordered = sorted(causes, key=lambda item: (-item[1], item[0]))
+    padded: list[tuple[str | None, int]] = [(cause, count) for cause, count in ordered[:3]]
+    while len(padded) < 3:
+        padded.append((None, 0))
+    return (
+        padded[0][0],
+        padded[0][1],
+        padded[1][0],
+        padded[1][1],
+        padded[2][0],
+        padded[2][1],
+    )
 
 
-def delay_output_sort_key(row: tuple[str, int, str, int, float | None, float | None, str]) -> tuple[str, int, str]:
+def delay_output_sort_key(
+    row: tuple[
+        str,
+        int,
+        str,
+        int,
+        float | None,
+        float | None,
+        str | None,
+        int,
+        str | None,
+        int,
+        str | None,
+        int,
+    ],
+) -> tuple[str, int, str]:
     return row[0], row[1], row[2]
 
 
@@ -293,15 +323,16 @@ def delay_report_df(spark: SparkSession, flights: DataFrame) -> DataFrame:
         )
     ).reduceByKey(add_delay_accumulators, numPartitions=partitions)
 
-    top_causes = (
+    cause_counts = (
         ranged.map(lambda item: ((item[0], item[1][2]), 1))
         .reduceByKey(lambda left, right: left + right, numPartitions=partitions)
         .map(lambda item: (item[0][0], (item[0][1], item[1])))
-        .reduceByKey(best_cause, numPartitions=partitions)
+        .combineByKey(add_to_list, merge_value, merge_lists, numPartitions=partitions)
+        .mapValues(top_three_causes)
     )
 
     rows = (
-        grouped.join(top_causes)
+        grouped.join(cause_counts)
         .map(
             lambda item: (
                 item[0][0],
@@ -311,6 +342,11 @@ def delay_report_df(spark: SparkSession, flights: DataFrame) -> DataFrame:
                 sql_avg(item[1][0][1], item[1][0][2]),
                 sql_avg(item[1][0][3], item[1][0][4]),
                 item[1][1][0],
+                item[1][1][1],
+                item[1][1][2],
+                item[1][1][3],
+                item[1][1][4],
+                item[1][1][5],
             )
         )
         .sortBy(delay_output_sort_key, numPartitions=partitions)

@@ -64,11 +64,27 @@ ranked_causes AS (
     month,
     delay_range,
     derived_cause,
+    cause_count,
     row_number() OVER (
       PARTITION BY origin_airport, month, delay_range
       ORDER BY cause_count DESC, derived_cause ASC
     ) AS cause_rank
   FROM cause_counts
+),
+top_causes AS (
+  SELECT
+    origin_airport,
+    month,
+    delay_range,
+    max(CASE WHEN cause_rank = 1 THEN derived_cause END) AS top_1_cause,
+    coalesce(max(CASE WHEN cause_rank = 1 THEN cause_count END), 0) AS top_1_count,
+    max(CASE WHEN cause_rank = 2 THEN derived_cause END) AS top_2_cause,
+    coalesce(max(CASE WHEN cause_rank = 2 THEN cause_count END), 0) AS top_2_count,
+    max(CASE WHEN cause_rank = 3 THEN derived_cause END) AS top_3_cause,
+    coalesce(max(CASE WHEN cause_rank = 3 THEN cause_count END), 0) AS top_3_count
+  FROM ranked_causes
+  WHERE cause_rank <= 3
+  GROUP BY origin_airport, month, delay_range
 )
 SELECT
   grouped.origin_airport,
@@ -77,11 +93,15 @@ SELECT
   grouped.flight_count,
   grouped.avg_departure_delay,
   grouped.avg_arrival_delay,
-  ranked_causes.derived_cause AS top_delay_or_cancellation_cause
+  top_causes.top_1_cause,
+  coalesce(top_causes.top_1_count, 0) AS top_1_count,
+  top_causes.top_2_cause,
+  coalesce(top_causes.top_2_count, 0) AS top_2_count,
+  top_causes.top_3_cause,
+  coalesce(top_causes.top_3_count, 0) AS top_3_count
 FROM grouped
-INNER JOIN ranked_causes
-  ON grouped.origin_airport = ranked_causes.origin_airport
-  AND grouped.month = ranked_causes.month
-  AND grouped.delay_range = ranked_causes.delay_range
-  AND ranked_causes.cause_rank = 1
+LEFT JOIN top_causes
+  ON grouped.origin_airport = top_causes.origin_airport
+  AND grouped.month = top_causes.month
+  AND grouped.delay_range = top_causes.delay_range
 ORDER BY grouped.origin_airport, grouped.month, grouped.delay_range;

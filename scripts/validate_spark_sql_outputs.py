@@ -30,7 +30,12 @@ DELAY_COLUMNS = [
     "flight_count",
     "avg_departure_delay",
     "avg_arrival_delay",
-    "top_delay_or_cancellation_cause",
+    "top_1_cause",
+    "top_1_count",
+    "top_2_cause",
+    "top_2_count",
+    "top_3_cause",
+    "top_3_count",
 ]
 
 RANKING_COLUMNS = [
@@ -121,6 +126,18 @@ def main() -> int:
     delay_ranges = set(delay["delay_range"].unique())
     if not delay_ranges <= {"low", "medium", "high"}:
         raise AssertionError(f"Unexpected delay ranges: {sorted(delay_ranges)}")
+    for column in ("top_1_count", "top_2_count", "top_3_count"):
+        if not (pd.to_numeric(delay[column], errors="coerce") >= 0).all():
+            raise AssertionError(f"{column} must be non-negative")
+    for cause_column, count_column in (
+        ("top_1_cause", "top_1_count"),
+        ("top_2_cause", "top_2_count"),
+        ("top_3_cause", "top_3_count"),
+    ):
+        missing_cause = delay[cause_column].isna()
+        zero_count = pd.to_numeric(delay[count_column], errors="coerce") == 0
+        if not (missing_cause == zero_count).all():
+            raise AssertionError(f"{cause_column} null values must correspond to zero {count_column}")
     if not ranking["cancellation_rate"].between(0, 1).all():
         raise AssertionError("Cancellation rates must be between 0 and 1")
     if not (ranking["rank_at_airport"] >= 1).all():

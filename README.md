@@ -72,7 +72,7 @@ For each departure airport, month, and departure-delay range, the job computes:
   - Low delay: less than 15 minutes
   - Medium delay: between 15 and 60 minutes
   - High delay: more than 60 minutes
-- Most frequent cancellation or delay causes, when available
+- Three most frequent cancellation or delay causes, when available
 
 ### 2. Airline-Airport Ranking
 

@@ -83,8 +83,9 @@ The delay report filters out rows with null `departure_delay`, derives the same
 delay range and cause labels as Spark SQL, then aggregates with `reduceByKey`.
 One keyed RDD computes flight counts and averages by `(origin_airport, month,
 delay_range)`. A second keyed RDD counts causes by `(origin_airport, month,
-delay_range, cause)` and reduces each group to the most frequent cause, breaking
-ties by cause label ascending.
+delay_range, cause)`, sorts the reduced cause counts by count descending and
+cause label ascending, and emits the first three causes. Groups with fewer than
+three available causes are padded with null cause labels and `0` counts.
 
 The airline-airport ranking aggregates airline statistics with `reduceByKey` on
 `(origin_airport, airline_code)` and airport averages with `reduceByKey` on
@@ -104,8 +105,8 @@ writing the small CSV result tables locally.
 
 - Delay grouping shuffles compact accumulators per airport-month-range, not all
   flight records for the group.
-- Delay cause counting performs a second shuffle because top-cause selection is a
-  separate grouped aggregate.
+- Delay cause counting performs a second shuffle because top-three cause
+  selection is a separate grouped aggregate.
 - Airline and airport statistics each shuffle once by their aggregation key, then
   the ranking job shuffles the compact aggregate rows for the airport join.
 - Ranking requires per-airport sorting after aggregation; this is the lower-level
@@ -122,5 +123,5 @@ Validate generated Spark Core outputs against the Spark SQL reference with:
 ```
 
 The validator checks duplicate keys, exact row counts, matching keys, exact
-delay top causes, ranking order, `rank_at_airport`, and numeric fields within a
-`1e-6` tolerance.
+delay top-three cause labels and counts, ranking order, `rank_at_airport`, and
+numeric fields within a `1e-6` tolerance.

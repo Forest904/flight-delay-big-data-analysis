@@ -38,7 +38,12 @@ DELAY_OUTPUT_COLUMNS = [
     "flight_count",
     "avg_departure_delay",
     "avg_arrival_delay",
-    "top_delay_or_cancellation_cause",
+    "top_1_cause",
+    "top_1_count",
+    "top_2_cause",
+    "top_2_count",
+    "top_3_cause",
+    "top_3_count",
 ]
 
 RANKING_OUTPUT_COLUMNS = [

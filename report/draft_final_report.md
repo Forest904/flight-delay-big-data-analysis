@@ -118,8 +118,8 @@ This job groups flights by departure airport, month, and delay range:
 
 Rows with null departure delay are excluded from this job because they cannot be
 assigned to one of the required delay ranges. For each group, the job computes
-flight count, average departure delay, average arrival delay, and the most
-frequent delay or cancellation cause.
+flight count, average departure delay, average arrival delay, and the three most
+frequent delay or cancellation causes.
 
 Textual pseudocode:
 
@@ -130,7 +130,8 @@ derive cause from cancellation code or largest positive delay-cause field
 group by origin_airport, month, delay_range
 compute counts and averages
 count causes inside each group
-choose top cause by count desc, cause label asc
+choose top three causes by count desc, cause label asc
+pad missing cause slots with null cause and zero count
 order output deterministically
 ```
 
@@ -158,8 +159,8 @@ order output by airport, rank, average delay, and airline code
 Spark SQL is the reference implementation. It expresses both analyses with
 DataFrame temporary views, SQL aggregations, and window functions. The
 airline-airport ranking uses `RANK() OVER (PARTITION BY origin_airport ORDER BY
-avg_departure_delay ASC NULLS LAST)`. The top-cause selection uses grouped cause
-counts and `ROW_NUMBER()` for deterministic tie-breaking.
+avg_departure_delay ASC NULLS LAST)`. The top-three cause selection uses grouped
+cause counts and `ROW_NUMBER()` for deterministic tie-breaking.
 
 Spark SQL is concise and easy to validate because grouping keys, derived fields,
 and ranking rules are visible in the query structure. Its main cost is that
@@ -200,18 +201,18 @@ sample and one ranking sample per technology.
 
 ## Delay Sample, First 10 Rows
 
-| Origin | Mo. | Range | Flights | Avg dep. | Avg arr. | Top cause |
-| --- | ---: | --- | ---: | ---: | ---: | --- |
-| ABE | 1 | high | 8 | 231.5 | 221.375 | delay:carrier |
-| ABE | 1 | low | 35 | -6.286 | -19.629 | unknown |
-| ABE | 1 | medium | 4 | 32.75 | 31.25 | delay:late_aircraft |
-| ABE | 2 | high | 3 | 324 | 335.667 | delay:late_aircraft |
-| ABE | 2 | low | 40 | -8.5 | -23.575 | unknown |
-| ABE | 2 | medium | 4 | 45.5 | 29.333 | unknown |
-| ABE | 3 | high | 8 | 127 | 121.625 | delay:carrier |
-| ABE | 3 | low | 41 | -4.756 | -16.39 | unknown |
-| ABE | 3 | medium | 3 | 32.333 | 12.667 | unknown |
-| ABE | 4 | high | 6 | 158.333 | 150.333 | delay:carrier |
+| Origin | Mo. | Range | Flights | Avg dep. | Avg arr. | Top 1 | Cnt. | Top 2 | Cnt. | Top 3 | Cnt. |
+| --- | ---: | --- | ---: | ---: | ---: | --- | ---: | --- | ---: | --- | ---: |
+| ABE | 1 | high | 30 | 241.3 | 234.033 | delay:late_aircraft | 14 | delay:carrier | 12 | delay:nas | 2 |
+| ABE | 1 | low | 277 | -5.509 | -14.556 | unknown | 256 | delay:nas | 20 | delay:carrier | 1 |
+| ABE | 1 | medium | 31 | 34.323 | 32.5 | delay:late_aircraft | 12 | delay:carrier | 8 | unknown | 7 |
+| ABE | 2 | high | 14 | 227.929 | 217.929 | delay:carrier | 6 | delay:late_aircraft | 6 | delay:nas | 1 |
+| ABE | 2 | low | 297 | -6.65 | -19.571 | unknown | 285 | delay:nas | 10 | delay:carrier | 1 |
+| ABE | 2 | medium | 20 | 29.7 | 10.105 | unknown | 12 | delay:carrier | 5 | delay:late_aircraft | 3 |
+| ABE | 3 | high | 23 | 173.435 | 163.391 | delay:carrier | 9 | delay:late_aircraft | 8 | delay:nas | 6 |
+| ABE | 3 | low | 339 | -6.186 | -18.369 | unknown | 332 | delay:nas | 7 |  | 0 |
+| ABE | 3 | medium | 28 | 30.679 | 19.893 | unknown | 13 | delay:late_aircraft | 7 | delay:carrier | 4 |
+| ABE | 4 | high | 29 | 258.655 | 250.379 | delay:carrier | 16 | delay:late_aircraft | 7 | delay:nas | 4 |
 
 ## Ranking Sample, First 10 Rows
 
@@ -294,7 +295,7 @@ does not demonstrate the strengths of a real distributed Hive deployment.
 
 The delay-by-airport-month job tends to be more expensive than the
 airline-airport ranking in the current evidence because it derives delay ranges,
-counts causes, and performs top-cause selection per airport-month-range. The
+counts causes, and performs top-three cause selection per airport-month-range. The
 ranking job still requires grouping and per-airport ranking, but it operates on
 compact airport-airline aggregates after the first stage.
 
@@ -332,7 +333,8 @@ Correctness validation is available through:
 
 Spark Core and Hive validators compare their outputs against the Spark SQL
 reference, including output columns, row counts, key sets, numeric values within
-tolerance, top-cause values, ranking order, and first-10 sample files.
+tolerance, top-three cause labels and counts, ranking order, and first-10 sample
+files.
 
 # Limitations
 

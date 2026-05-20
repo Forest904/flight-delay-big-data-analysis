@@ -26,7 +26,12 @@ DELAY_COLUMNS = [
     "flight_count",
     "avg_departure_delay",
     "avg_arrival_delay",
-    "top_delay_or_cancellation_cause",
+    "top_1_cause",
+    "top_1_count",
+    "top_2_cause",
+    "top_2_count",
+    "top_3_cause",
+    "top_3_count",
 ]
 
 RANKING_COLUMNS = [
@@ -44,7 +49,15 @@ RANKING_COLUMNS = [
 DELAY_KEYS = ["origin_airport", "month", "delay_range"]
 RANKING_KEYS = ["origin_airport", "airline"]
 
-DELAY_NUMERIC_COLUMNS = ["flight_count", "avg_departure_delay", "avg_arrival_delay"]
+DELAY_NUMERIC_COLUMNS = [
+    "flight_count",
+    "avg_departure_delay",
+    "avg_arrival_delay",
+    "top_1_count",
+    "top_2_count",
+    "top_3_count",
+]
+DELAY_CAUSE_COLUMNS = ["top_1_cause", "top_2_cause", "top_3_cause"]
 RANKING_NUMERIC_COLUMNS = [
     "flight_count",
     "avg_departure_delay",
@@ -145,6 +158,23 @@ def assert_numeric_close(merged: pd.DataFrame, columns: list[str], label: str) -
             raise AssertionError(f"{label} numeric column {column} differs beyond {TOLERANCE}: {sample}")
 
 
+def assert_string_columns_equal(
+    merged: pd.DataFrame,
+    columns: list[str],
+    left_suffix: str,
+    right_suffix: str,
+    label: str,
+) -> None:
+    for column in columns:
+        left_col = f"{column}_{left_suffix}"
+        right_col = f"{column}_{right_suffix}"
+        both_null = merged[left_col].isna() & merged[right_col].isna()
+        mismatch = ~(both_null | (merged[left_col] == merged[right_col]))
+        if mismatch.any():
+            sample = merged.loc[mismatch].head(3)
+            raise AssertionError(f"{label} string column {column} differs: {sample}")
+
+
 def validate_delay(sql: pd.DataFrame, hive: pd.DataFrame) -> None:
     assert_columns(sql, DELAY_COLUMNS, "spark_sql delay_by_airport_month")
     assert_columns(hive, DELAY_COLUMNS, "hive delay_by_airport_month")
@@ -155,14 +185,13 @@ def validate_delay(sql: pd.DataFrame, hive: pd.DataFrame) -> None:
 
     merged = sql.merge(hive, on=DELAY_KEYS, suffixes=("_sql", "_hive"), how="inner")
     assert_numeric_close(merged, DELAY_NUMERIC_COLUMNS, "delay_by_airport_month")
-
-    cause_mismatch = (
-        merged["top_delay_or_cancellation_cause_sql"]
-        != merged["top_delay_or_cancellation_cause_hive"]
+    assert_string_columns_equal(
+        merged,
+        DELAY_CAUSE_COLUMNS,
+        "sql",
+        "hive",
+        "delay_by_airport_month",
     )
-    if cause_mismatch.any():
-        sample = merged.loc[cause_mismatch].head(3)
-        raise AssertionError(f"Delay top causes differ between Spark SQL and Hive: {sample}")
 
 
 def assert_ranking_order(ranking: pd.DataFrame, label: str) -> None:
