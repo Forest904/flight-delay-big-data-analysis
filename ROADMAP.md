@@ -53,7 +53,7 @@ Definition of done for the rescue path:
 ### M1 - Fix Analysis 1 Top-Three Causes
 
 Priority: `P0 grade blocker`  
-Status: not started.
+Status: completed.
 
 Goal: make the delay report fully satisfy the assignment requirement for the three most frequent cancellation or delay causes.
 
@@ -69,25 +69,27 @@ Planned interface change:
 
 Implementation tasks:
 
-- [ ] Update Spark SQL delay analysis to rank causes per `origin_airport`, `month`, and `delay_range`, then pivot or aggregate the first three causes into the new schema.
-- [ ] Update Spark Core delay analysis to compute cause counts and emit the same top-three schema with deterministic tie-breaking.
-- [ ] Update HiveQL delay analysis to emit the same columns.
-- [ ] Update output-column constants in all affected runners.
-- [ ] Update validators so Spark Core and Hive compare against Spark SQL for all top-three cause/count fields.
-- [ ] Regenerate first-10 output tables for all three technologies.
-- [ ] Update docs and final report language from "top cause" to "top three causes".
+- [x] Update Spark SQL delay analysis to rank causes per `origin_airport`, `month`, and `delay_range`, then pivot or aggregate the first three causes into the new schema.
+- [x] Update Spark Core delay analysis to compute cause counts and emit the same top-three schema with deterministic tie-breaking.
+- [x] Update HiveQL delay analysis to emit the same columns.
+- [x] Update output-column constants in all affected runners.
+- [x] Update validators so Spark Core and Hive compare against Spark SQL for all top-three cause/count fields.
+- [x] Regenerate first-10 output tables for all three technologies.
+- [x] Update docs and final report language from "top cause" to "top three causes".
 
 Acceptance criteria:
 
-- [ ] Spark SQL, Spark Core, and Hive produce the same delay-output keys.
-- [ ] Top-three cause labels and counts match across technologies.
-- [ ] Ties are deterministic, using cause count descending and cause label ascending.
-- [ ] Groups with fewer than three available causes use a documented empty value, such as null cause and zero count.
-- [ ] Existing ranking analysis remains unchanged except for shared validation/report tooling if needed.
+- [x] Spark SQL, Spark Core, and Hive produce the same delay-output keys.
+- [x] Top-three cause labels and counts match across technologies.
+- [x] Ties are deterministic, using cause count descending and cause label ascending.
+- [x] Groups with fewer than three available causes use a documented empty value, such as null cause and zero count.
+- [x] Existing ranking analysis remains unchanged except for shared validation/report tooling if needed.
 
 Grading evidence:
 
 - This directly removes the largest requirement-compliance penalty.
+- Implemented delay-output schema now emits `top_1_cause`, `top_1_count`, `top_2_cause`, `top_2_count`, `top_3_cause`, and `top_3_count` across Spark SQL, Spark Core, and Hive.
+- Verification completed: `pytest` passed with 38 tests, all three technology outputs regenerated successfully, Spark SQL validation passed, Spark Core validation passed against Spark SQL, Hive validation passed against Spark SQL, and `make charts` regenerated first-10 report tables.
 
 ### M2 - Strengthen Benchmark Evidence
 
@@ -300,9 +302,9 @@ Grading evidence:
 
 Delay-analysis schema:
 
-- Current schema to replace:
+- Replaced schema:
   - `top_delay_or_cancellation_cause`
-- Target schema:
+- Current schema:
   - `top_1_cause`
   - `top_1_count`
   - `top_2_cause`
