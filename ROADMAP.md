@@ -1,377 +1,413 @@
-# Project Roadmap
+# 95+ Grade Rescue Roadmap
 
 ## North Star
 
-Build a complete, reproducible, well-benchmarked big-data assignment submission using the 2024 Flight Delay dataset, with two analyses implemented in Spark SQL, Spark Core, and Hive. The final submission should make correctness, scalability, implementation tradeoffs, and reproducibility easy for the evaluator to verify.
+Turn the current project from a solid but imperfect submission into a strict-evaluator-ready Big Data Course project. The immediate goal is to raise the expected grade from about `76/100` to `95+` by fixing requirement gaps, strengthening experimental evidence, improving report traceability, and only then adding MapReduce as the flagship stretch.
 
-## Current State
+## Current Baseline: functional but not yet 95+
 
-- [x] Tooling installed and verified: Python 3.12, PySpark 4.1.1, Java 17, Docker Desktop, Docker Compose, and Make.
-- [x] Repository foundation scaffolded locally.
-- [ ] M1 foundation commit created.
-- [x] Kaggle dataset downloaded.
-- [x] Raw dataset schema inspected.
-- [x] Canonical prepared Parquet dataset created and validated.
-- [ ] MapReduce intentionally out of scope.
-- [x] Docker-based cluster simulation added as grade-enhancing evidence with documented limits.
+The project already has a strong foundation:
 
-## Working Principles
+- Spark SQL, Spark Core, and Hive implementations exist for two assignment analyses.
+- The raw dataset is prepared into a canonical Parquet dataset.
+- Input-size generation exists for `100k`, `500k`, `1m`, `3m`, and `full`.
+- Benchmark orchestration, chart generation, validators, Docker services, and report-building scripts exist.
+- The draft report is readable and honest about limitations.
 
-- Treat Spark SQL as the correctness reference, then match Spark Core and Hive outputs against it.
-- Preserve reproducibility through Make targets, configs, scripts, and documented commands.
-- Generate evidence as the project progresses: row counts, first 10 output rows, benchmark CSVs, charts, and report notes.
-- Keep raw data, prepared data, generated data, outputs, and logs out of Git unless they are curated report artifacts.
-- Prefer completing the required three technologies well before adding optional extras.
+The project is not yet a `95+` submission because a strict evaluator can still identify requirement misses and weak evidence.
+
+## Target: strict-evaluator-ready submission
+
+Priority labels:
+
+- `P0 grade blocker`: must be fixed before the final submission can be considered high-grade.
+- `P1 evidence upgrade`: needed to make conclusions convincing and defensible.
+- `P2 polish`: improves reproducibility, presentation, and evaluator confidence.
+- `P3 stretch`: optional expansion after the core path is strong.
+
+Definition of done for the rescue path:
+
+- Every selected assignment analysis exactly satisfies the written requirements.
+- Spark SQL, Spark Core, and Hive produce validated, comparable outputs.
+- Benchmark tables and charts vary input size enough to support scalability discussion.
+- Docker execution is described as a standalone simulation unless a true cluster is used.
+- The final PDF contains visible or traceable evidence for every required report item.
+- A fresh evaluator can reproduce the main workflow from the README and Make targets.
+
+## Grade Gap Map
+
+| Finding | Priority | Planned milestone | Required outcome |
+|---|---|---|---|
+| Analysis 1 reports only one cause instead of the three most frequent causes | P0 grade blocker | M1 | Delay-analysis output includes top 1, 2, and 3 cause labels plus counts across Spark SQL, Spark Core, and Hive. |
+| Benchmark evidence is too narrow | P0/P1 | M2 | Local and Docker simulation benchmarks cover enough input sizes to support scalability claims. |
+| Docker "cluster" wording can overclaim | P1 | M2, M3, M4 | Report, charts, configs, and docs consistently use cautious Docker standalone simulation wording. |
+| Local charts have only one x-axis point | P1 | M3 | Chart type matches available evidence; line charts are used only when there are at least three input sizes. |
+| Per-technology output samples are hidden | P0/P1 | M4 | Final report shows per-technology samples or an appendix with paths, checksums, and validation status. |
+| Hardware and runtime configuration are missing from the report | P1 | M2, M4 | Report includes CPU, RAM, OS, Spark/Hive versions, partitions, Docker limits, and topology. |
+| README has encoding and reproducibility polish issues | P2 | M5 | README renders cleanly and documents the correct venv-based test command. |
+| MapReduce exists only as an empty placeholder | P3 | M6 | MapReduce is either implemented and validated as a stretch or clearly excluded from core grade claims. |
 
 ## Milestone Roadmap
 
-### M1 - Repository Foundation
+### M0 - Baseline Audit And Rubric Map
 
-Status: complete.
+Priority: `P0 grade blocker`  
+Status: current planning baseline.
 
-Goal: make the repository runnable and organized before dataset work begins.
-
-Deliverables:
-
-- [x] Project directory structure.
-- [x] `Makefile` with stable public targets.
-- [x] `requirements.txt` with direct dependency pins.
-- [x] Local, cluster, and column configuration files.
-- [x] Environment smoke check script.
-- [x] Dataset download instructions.
-- [x] Docker Compose placeholder.
-- [x] `.gitignore` policy for large artifacts.
-
-Acceptance criteria:
-
-- [x] `make check-env` passes when Docker Desktop is running.
-- [x] `make setup` is idempotent.
-- [x] Future milestone targets fail clearly while unimplemented.
-- [x] Commit foundation changes with a clear message.
-
-Grading evidence:
-
-- Reproducible setup entrypoints exist.
-- Repository organization matches the assignment and PRD.
-
-### M2 - Dataset Acquisition and Schema Inspection
-
-Goal: obtain the raw dataset and replace assumptions with measured facts.
+Goal: make the grading target explicit before changing implementation.
 
 Deliverables:
 
-- [x] Kaggle credentials documented locally, not committed. N/A for this run because the dataset was downloaded manually; optional CLI redownload guidance remains in `scripts/download_dataset.md`.
-- [x] Dataset downloaded under `data/raw/`.
-- [x] Raw filename confirmed against `config/local.yaml`.
-- [x] Schema, column names, types, row count, and sample rows inspected.
-- [x] Null counts collected for analysis-critical fields.
-- [x] `docs/data_preparation.md` started with schema findings.
+- [ ] Keep this roadmap focused on grade rescue rather than historical narration.
+- [ ] Record the current estimated grade baseline: `76/100`.
+- [ ] Record the target grade: `95+`.
+- [ ] Map every known grading gap to a milestone and expected artifact.
+- [ ] Re-check the assignment PDF requirements before final report rewrite.
 
 Acceptance criteria:
 
-- [x] Raw dataset can be located by config.
-- [x] Total row count is recorded.
-- [x] Required analysis columns are mapped to canonical names or flagged.
-- [x] Dataset is confirmed ignored by Git.
+- [ ] A future implementer can explain why every milestone exists.
+- [ ] Required fixes appear before optional stretch work.
+- [ ] No section claims the project is already perfect.
 
 Grading evidence:
 
-- Data preparation choices are grounded in actual dataset properties.
-- The report can cite initial schema and quality observations.
+- The roadmap itself becomes the execution checklist for turning feedback into measurable improvements.
 
-### M3 - Data Preparation Pipeline
+### M1 - Fix Analysis 1 Top-Three Causes
 
-Status: complete.
+Priority: `P0 grade blocker`  
+Status: not started.
 
-Goal: create the canonical cleaned Parquet dataset used by every technology.
+Goal: make the delay report fully satisfy the assignment requirement for the three most frequent cancellation or delay causes.
 
-Deliverables:
+Planned interface change:
 
-- [x] PySpark preparation script under `src/preparation/`.
-- [x] Canonical columns produced: date/month, airline, airports, delays, cancellation/diversion, and delay causes.
-- [x] Cleaning rules implemented and documented.
-- [x] Prepared Parquet written to `data/prepared/flights_2024_clean.parquet`.
-- [x] Preparation metrics logged: input rows, output rows, removed rows, null handling summary.
-- [x] `make prepare` wired to the preparation script.
+- Replace the single `top_delay_or_cancellation_cause` output column with:
+  - `top_1_cause`
+  - `top_1_count`
+  - `top_2_cause`
+  - `top_2_count`
+  - `top_3_cause`
+  - `top_3_count`
+
+Implementation tasks:
+
+- [ ] Update Spark SQL delay analysis to rank causes per `origin_airport`, `month`, and `delay_range`, then pivot or aggregate the first three causes into the new schema.
+- [ ] Update Spark Core delay analysis to compute cause counts and emit the same top-three schema with deterministic tie-breaking.
+- [ ] Update HiveQL delay analysis to emit the same columns.
+- [ ] Update output-column constants in all affected runners.
+- [ ] Update validators so Spark Core and Hive compare against Spark SQL for all top-three cause/count fields.
+- [ ] Regenerate first-10 output tables for all three technologies.
+- [ ] Update docs and final report language from "top cause" to "top three causes".
 
 Acceptance criteria:
 
-- [x] `make prepare` runs from a clean shell after dataset download.
-- [x] Prepared Parquet loads successfully with Spark.
-- [x] Cancelled flights are kept for cancellation-rate analysis.
-- [x] Null delay values do not distort averages.
-- [x] Negative delays are preserved.
+- [ ] Spark SQL, Spark Core, and Hive produce the same delay-output keys.
+- [ ] Top-three cause labels and counts match across technologies.
+- [ ] Ties are deterministic, using cause count descending and cause label ascending.
+- [ ] Groups with fewer than three available causes use a documented empty value, such as null cause and zero count.
+- [ ] Existing ranking analysis remains unchanged except for shared validation/report tooling if needed.
 
 Grading evidence:
 
-- Mandatory data preparation is implemented, justified, and repeatable.
-- Prepared data becomes a stable input for all analyses.
+- This directly removes the largest requirement-compliance penalty.
 
-### M4 - Spark SQL Analyses
+### M2 - Strengthen Benchmark Evidence
 
-Status: complete.
+Priority: `P0 grade blocker` and `P1 evidence upgrade`  
+Status: partially supported by existing tooling, evidence incomplete.
 
-Goal: implement both selected analyses in the most expressive API and use them as reference outputs.
+Goal: make the experimental analysis broad enough to support efficiency and scalability claims.
 
-Deliverables:
+Benchmark target:
 
-- [x] Delay report by airport, month, and delay range.
-- [x] Airline-airport anomalous delay ranking.
-- [x] Output writing under `outputs/spark_sql/`.
-- [x] First 10 rows exported for each analysis.
-- [x] Runtime metrics captured.
-- [x] `make run-spark-sql` wired.
+- Local benchmark matrix:
+  - [ ] `100k`, `500k`, `1m`, and `3m` for Spark SQL, Spark Core, and Hive.
+  - [ ] `full` for Spark SQL and Spark Core if runtime and hardware allow.
+  - [ ] Hive full-size run only if it is practical; otherwise document the limit.
+- Docker standalone simulation matrix:
+  - [ ] `100k`, `500k`, and `1m` for Spark SQL, Spark Core, and Hive.
+  - [ ] Optional worker-count variation only if Docker Compose can support it reliably.
+
+Runtime configuration evidence:
+
+- [ ] Record CPU model, core count, RAM, OS, disk type if known, and timestamp of benchmark campaign.
+- [ ] Record Python, Java, Spark, Hive, Docker, and Docker Compose versions.
+- [ ] Record Spark master, shuffle partitions, executor/worker topology, worker memory, worker cores, and Docker Desktop CPU/RAM limits.
+- [ ] Store this as a report-ready artifact, for example `report/tables/environment_summary.*`.
 
 Acceptance criteria:
 
-- [x] Delay ranges are implemented consistently: low `< 15`, medium `15 <= delay <= 60`, high `> 60`.
-- [x] Ranking uses airport-level partitioning and average departure delay ascending.
-- [x] Cancellation rates are computed from all relevant flights.
-- [x] Output schemas are stable and documented.
+- [ ] Benchmark summary tables no longer rely on only local `100k` and Docker `100k`/`1m`.
+- [ ] Failed or skipped benchmark cells are explicitly marked with a reason.
+- [ ] The report can discuss input-size trends without overgeneralizing.
+- [ ] Docker results are labeled as Docker standalone simulation, not as real distributed-cluster performance.
 
 Grading evidence:
 
-- Correct reference implementation for both required jobs.
-- Strong expressiveness discussion point for SQL/window functions.
+- The project visibly addresses the assignment request to compare execution times while varying input size and, where possible, execution setting.
 
-### M5 - Spark Core Analyses
+### M3 - Upgrade Charts And Derived Metrics
 
-Status: complete.
+Priority: `P1 evidence upgrade`  
+Status: not started.
 
-Goal: reimplement both analyses with RDD transformations and compare against Spark SQL.
+Goal: make the final visualizations convincing, readable, and aligned with the amount of data available.
 
-Deliverables:
+Chart changes:
 
-- [x] RDD version of delay report.
-- [x] RDD version of airline-airport ranking.
-- [x] Output writing under `outputs/spark_core/`.
-- [x] First 10 rows exported for each analysis.
-- [x] Runtime metrics captured.
-- [x] `make run-spark-core` wired.
+- [ ] Use grouped bar charts when a job/environment has only one or two input sizes.
+- [ ] Use line charts only when a job/environment has at least three input sizes.
+- [ ] Keep separate charts for local and Docker standalone simulation unless combining them improves readability.
+- [ ] Rename chart titles and filenames away from overclaiming "cluster" language where needed.
+
+Derived metrics:
+
+- [ ] Add rows-per-second tables per technology, job, environment, and input size.
+- [ ] Add speedup tables:
+  - Spark SQL duration divided by Spark Core duration.
+  - Hive duration divided by Spark SQL duration.
+  - Hive duration divided by Spark Core duration.
+- [ ] Add normalized scalability ratios from the `100k` baseline where at least three input sizes exist.
+- [ ] Include notes explaining startup overhead and why tiny inputs may not show monotonic scaling.
 
 Acceptance criteria:
 
-- [x] Spark Core outputs match Spark SQL on grouping keys and numeric fields within documented tolerance.
-- [x] Ranking order matches Spark SQL for comparable records.
-- [x] Implementation avoids unnecessary `groupByKey` where a safer aggregation pattern is practical.
+- [ ] No local chart shows a one-point line as if it were a trend.
+- [ ] Every chart has clear units, input sizes, technology labels, and environment labels.
+- [ ] Visual claims in the report are directly supported by the plotted data.
 
 Grading evidence:
 
-- Clear comparison between declarative Spark SQL and lower-level RDD implementation effort.
-- Shuffle and aggregation costs can be discussed with concrete examples.
+- The final report becomes stronger on efficiency, scalability, and technology comparison.
 
-### M6 - Hive Environment and HiveQL Analyses
+### M4 - Report Rewrite And Evidence Appendix
 
-Status: complete.
+Priority: `P0 grade blocker` and `P1 evidence upgrade`  
+Status: draft report exists, rewrite needed after M1-M3.
 
-Goal: complete the third required technology using Docker-based Hive/Hadoop services.
+Goal: make the PDF read like a complete final submission rather than a compact draft.
 
-Deliverables:
+Required report updates:
 
-- [x] Docker Compose Hive stack.
-- [x] Hive DDL for prepared dataset.
-- [x] Hive load or external table setup.
-- [x] HiveQL version of both analyses.
-- [x] Output writing under `outputs/hive/`.
-- [x] First 10 rows exported for each analysis.
-- [x] `make run-hive` wired.
+- [ ] Update Analysis 1 explanation and samples for top-three causes.
+- [ ] Show first 10 rows for each job and technology, or provide a compact appendix with paths, checksums, and validation status.
+- [ ] Add hardware and runtime-configuration table from M2.
+- [ ] Add benchmark summary, benchmark pivot, rows/sec, speedup, and normalized scalability tables.
+- [ ] Add upgraded charts from M3.
+- [ ] Add a short "What is Docker standalone simulation?" paragraph and avoid real-cluster overclaims.
+- [ ] Expand critical discussion of:
+  - Spark SQL expressiveness and window functions.
+  - Spark Core RDD verbosity and accumulator design.
+  - Hive overhead and SQL-on-Hadoop tradeoffs.
+  - Shuffle and aggregation costs for both selected analyses.
+  - Data preparation effects on correctness and benchmark fairness.
+  - Startup overhead and why small datasets can distort runtime comparisons.
 
 Acceptance criteria:
 
-- [x] Hive starts from Docker Compose.
-- [x] Hive can read the prepared dataset or a Hive-compatible export of it.
-- [x] Hive outputs are comparable to Spark SQL outputs.
-- [x] Hive run times are logged.
+- [ ] Every item in the assignment final-report section is explicitly answered.
+- [ ] Claims are traceable to committed tables, figures, outputs, or documented commands.
+- [ ] Limitations are honest but do not substitute for missing required evidence.
+- [ ] The PDF renders cleanly and uses table layouts that fit the page.
 
 Grading evidence:
 
-- Three required technologies are complete.
-- SQL-on-Hadoop tradeoffs can be compared against Spark SQL.
+- The report becomes the evaluator-facing proof that the project is complete, correct, and critically analyzed.
 
-### M7 - Input Size Generation
+### M5 - Repository Polish And Reproducibility Hardening
 
-Status: complete for default local sizes; optional 14M/28M generation is available behind an explicit flag.
+Priority: `P1 evidence upgrade` and `P2 polish`  
+Status: not started.
 
-Goal: create controlled datasets for scalability experiments.
+Goal: remove friction that could cost easy reproducibility and presentation points.
 
-Deliverables:
+Tasks:
 
-- [x] Generator script under `src/preparation/`.
-- [x] Datasets for 100k, 500k, 1M, 3M, and full-size local runs where hardware allows.
-- [ ] Replicated 14M and 28M datasets if local storage and time allow.
-- [x] Record-count validation for every generated dataset.
-- [x] `make generate-sizes` wired.
+- [ ] Fix README encoding corruption in tree diagrams and punctuation.
+- [ ] Document the reliable test command:
+  - `.\.venv\Scripts\python.exe -m pytest -q`
+- [ ] Add or update instructions for regenerating:
+  - prepared data;
+  - input-size datasets;
+  - all technology outputs;
+  - benchmarks;
+  - charts and report tables;
+  - final PDF.
+- [ ] Replace placeholder `run-all-local` roadmap expectations with either an implemented target or a documented non-goal.
+- [ ] Replace placeholder `clean` roadmap expectations with either an implemented safe cleanup target or a documented non-goal.
+- [ ] Verify `.gitignore` still keeps raw, prepared, generated, and bulky output files out of Git.
+- [ ] Add a final submission checklist to README or report docs.
 
 Acceptance criteria:
 
-- [x] Smaller datasets are sampled or selected from original data.
-- [x] Larger datasets are generated through documented controlled replication.
-- [x] Generated datasets are ignored by Git.
+- [ ] A fresh clone plus downloaded raw dataset can follow the documented workflow.
+- [ ] The README renders without mojibake or broken tree characters.
+- [ ] The documented test command passes in the project virtual environment.
+- [ ] Git status is clean except for intentionally edited source/report artifacts.
 
 Grading evidence:
 
-- Scalability experiments vary input size as requested.
-- Replication method is explainable in the final report.
+- Reproducibility is visible, not assumed.
 
-### M8 - Benchmark Runner
+### M6 - MapReduce Flagship Stretch
 
-Status: complete for local benchmark orchestration.
+Priority: `P3 stretch`  
+Status: planned stretch after M1-M5.
 
-Goal: automate local timing collection across jobs, technologies, and input sizes.
+Goal: add MapReduce as the flagship expansion only after the required submission path is strong.
 
-Deliverables:
+Scope:
 
-- [x] `experiments/run_benchmarks.py`.
-- [x] Benchmark result schema implemented.
-- [x] Local benchmark CSV under `experiments/results/local/`.
-- [x] Failure logging for unsuccessful runs.
-- [x] `make benchmark-local` wired.
+- [ ] Use Hadoop Streaming with Python mappers and reducers.
+- [ ] Use a canonical CSV export derived from prepared Parquet instead of reparsing raw CSV.
+- [ ] Reuse existing job names where practical:
+  - `delay_by_airport_month`
+  - `airline_airport_ranking`
+- [ ] Minimum credible stretch: Analysis 1 with the top-three cause schema and benchmark integration.
+- [ ] Preferred stretch: both selected analyses implemented and validated.
+
+Artifacts:
+
+- [ ] Source files under `src/mapreduce/`.
+- [ ] Outputs under `outputs/mapreduce/`.
+- [ ] Runtime metrics following the existing benchmark metadata conventions.
+- [ ] Validator comparing MapReduce outputs against Spark SQL.
+- [ ] Optional Docker service or documented local Hadoop/Hadoop Streaming setup.
+- [ ] Report appendix section if MapReduce is complete enough to discuss.
 
 Acceptance criteria:
 
-- [x] Benchmark rows include technology, job name, input label, records, environment, cluster size, duration, output rows, status, and timestamp.
-- [x] Repeated benchmark runs append or write clearly versioned results.
-- [x] Failed jobs do not corrupt completed metrics.
+- [ ] MapReduce outputs match Spark SQL on keys, numeric fields, ranks if implemented, and top-three causes.
+- [ ] Benchmark rows can be included without breaking existing chart/table generation.
+- [ ] If incomplete, MapReduce is clearly marked as future work and is not used for grade-critical claims.
 
 Grading evidence:
 
-- Execution-time comparison is systematic, not manually assembled.
-- Benchmark data can feed report tables and charts directly.
+- A complete MapReduce stretch can raise the project beyond the minimum three-technology requirement and show deeper understanding of distributed-processing tradeoffs.
 
-### M9 - Docker Cluster Simulation
+### M7 - Final Submission Gate
 
-Status: complete for Docker Spark standalone simulation with Hive documented as single-node containerized execution.
+Priority: `P0 grade blocker`  
+Status: final checkpoint.
 
-Goal: add cluster-style evidence if the Docker setup is stable enough.
+Goal: verify that code, artifacts, report, and repository story are consistent before submission.
 
-Deliverables:
+Final checks:
 
-- [x] Docker Compose services for Spark master/workers or equivalent simulation.
-- [x] Cluster config updated with real service addresses.
-- [x] Cluster benchmark results under `experiments/results/cluster/`.
-- [x] Clear documentation of simulated cluster limits.
-- [x] `make benchmark-cluster` wired if the setup is reliable.
+- [ ] Run Spark SQL outputs after M1 schema changes.
+- [ ] Run Spark Core outputs after M1 schema changes.
+- [ ] Run Hive outputs after M1 schema changes.
+- [ ] Run Spark Core and Hive validators against Spark SQL.
+- [ ] Run MapReduce validator if M6 is implemented.
+- [ ] Run the venv test command:
+  - `.\.venv\Scripts\python.exe -m pytest -q`
+- [ ] Generate report tables and figures.
+- [ ] Build the final PDF.
+- [ ] Inspect PDF pages manually for broken tables, tiny charts, missing captions, and stale wording.
+- [ ] Check Git status for accidental large files.
+- [ ] Confirm GitHub repository link appears in README and PDF.
 
 Acceptance criteria:
 
-- [x] Cluster simulation runs at least one input size for each required technology, or limitations are documented.
-- [x] Results distinguish local mode from Docker cluster simulation.
-- [x] Cluster documentation does not overclaim simulation results as a real production cluster; final report wording must be verified again in M11.
+- [ ] Final PDF and repository agree on outputs, commands, limitations, and terminology.
+- [ ] No chart or paragraph describes Docker as a true distributed cluster.
+- [ ] Every requirement from the assignment PDF is either satisfied or explicitly scoped as a documented limitation only where optional.
+- [ ] The final submission can be defended under a harsh grading review.
 
 Grading evidence:
 
-- Addresses the assignment encouragement to vary execution setting and cluster size where possible.
-- Gives useful scalability discussion even without a university cluster.
+- This gate protects against regressions introduced while upgrading the project.
 
-### M10 - Charts and Tables
+## Public Interfaces And Artifact Expectations
 
-Status: complete.
+Delay-analysis schema:
 
-Goal: turn benchmark outputs and sample results into report-ready artifacts.
+- Current schema to replace:
+  - `top_delay_or_cancellation_cause`
+- Target schema:
+  - `top_1_cause`
+  - `top_1_count`
+  - `top_2_cause`
+  - `top_2_count`
+  - `top_3_cause`
+  - `top_3_count`
 
-Deliverables:
+Benchmark artifacts:
 
-- [x] Chart generation script.
-- [x] Execution-time charts by technology and input size.
-- [x] Tables with benchmark summaries.
-- [x] First 10 result rows for each job and technology.
-- [x] `make charts` wired.
+- Keep existing benchmark metadata fields: technology, job name, input label, records, environment, cluster-size label, duration, output rows, status, timestamp, input path, and metrics path.
+- Add report-ready derived tables for rows/sec, speedup, and normalized scalability.
+- Preserve timestamped benchmark CSVs as immutable run evidence.
 
-Acceptance criteria:
+Report artifacts:
 
-- [x] Figures are saved under `report/figures/`.
-- [x] Tables are saved under `report/tables/`.
-- [x] Artifacts are small enough to commit.
-- [x] Chart labels and units are clear.
+- Benchmark summary and pivot tables.
+- First-10 result samples per technology and job, or evidence appendix with paths/checksums.
+- Hardware and runtime configuration table.
+- Upgraded execution-time charts.
+- Speedup and scalability-ratio charts or tables.
+- Validation summary table.
 
-Grading evidence:
+Terminology:
 
-- Final report has concrete visual and tabular support.
-- Comparisons are easy for the evaluator to inspect.
+- Use "Docker standalone simulation" for the current Docker Compose Spark setup.
+- Use "cluster" only for a true multi-node or managed distributed environment.
+- Describe Hive as containerized local Hive unless a distributed Hive/Hadoop/YARN setup is actually added.
 
-### M11 - Final Report
+MapReduce conventions:
 
-Status: complete.
+- Reuse existing job names and benchmark conventions.
+- Validate against Spark SQL before presenting MapReduce as complete.
+- Keep MapReduce out of grade-critical claims unless it passes the same acceptance bar as the other technologies.
 
-Goal: write and export the PDF submission report.
+## Implementation Order
 
-Deliverables:
+1. M1: fix the actual requirement miss first.
+2. M2: collect enough benchmark evidence to support the report.
+3. M3: make charts and derived metrics match the evidence.
+4. M4: rewrite the final report around the new evidence.
+5. M5: harden README and reproducibility.
+6. M6: add MapReduce if time remains.
+7. M7: run final submission gate.
 
-- [x] `report/draft_final_report.md`.
-- [x] `report/draft_final_report.pdf`.
-- [x] Data preparation section.
-- [x] Implementation choices and pseudocode or textual explanation for each technology.
-- [x] First 10 rows of produced results.
-- [x] Benchmark tables and charts.
-- [x] Critical comparison and scalability discussion.
-- [x] GitHub repository link.
-- [x] `make report` wired.
+Cut line if time becomes tight:
 
-Acceptance criteria:
+- Must ship: M1, M2 core benchmark matrix, M3 chart fixes, M4 report rewrite, M5 README/test-command polish, M7 final gate.
+- Nice to ship: full-size local benchmarks, repeated benchmark runs, worker-count variation.
+- Stretch only: M6 MapReduce.
 
-- [x] Report directly addresses every required item from the assignment.
-- [x] Claims are supported by produced outputs or benchmark files.
-- [x] Limitations are honest and specific.
-- [x] PDF renders cleanly.
+## Test And Acceptance Plan
 
-Grading evidence:
+Roadmap rewrite acceptance:
 
-- The report is the main evaluator-facing proof of correctness, experimentation, and reflection.
+- [ ] `ROADMAP.md` contains no stale "perfect checklist complete" claims.
+- [ ] Every grading finding is mapped to a milestone.
+- [ ] Required fixes appear before optional expansion.
+- [ ] MapReduce is planned as stretch, not as a blocker for the 95+ core path.
 
-### M12 - Submission Hardening
+Later implementation acceptance captured by this roadmap:
 
-Status: complete.
-
-Goal: make the repository and report safe to submit.
-
-Deliverables:
-
-- [x] Final README reproduction pass.
-- [x] Final `make check-env` pass.
-- [x] Final local smoke run for preparation and all implemented analyses.
-- [x] Git status check for accidental data/output files.
-- [x] GitHub link added to README and report.
-- [x] Final PDF reviewed.
-- [x] Tagged or clearly identified submission commit.
-
-Acceptance criteria:
-
-- [x] A fresh clone can follow the documented setup path.
-- [x] Raw data is not committed.
-- [x] Essential scripts, configs, SQL, docs, benchmark summaries, tables, and figures are committed.
-- [x] The repository and PDF are ready before submission.
-
-Grading evidence:
-
-- Reproducibility and polish are visible, not assumed.
-
-## Perfect Grade Checklist
-
-- [x] Correctness: both selected analyses produce consistent outputs across Spark SQL, Spark Core, and Hive.
-- [x] Completeness: Spark SQL, Spark Core, and Hive are all implemented for both jobs.
-- [x] Data preparation: cleaning, normalization, and column mapping are justified and documented.
-- [x] Reproducibility: setup, preparation, execution, benchmarking, charts, and report generation have stable commands.
-- [x] Experimental quality: benchmarks vary technology, job, input size, and execution setting where feasible.
-- [x] Scalability: input-size generation is controlled and explained.
-- [x] Critical discussion: report covers expressiveness, ease of implementation, efficiency, scalability, shuffle, aggregation, and preparation costs.
-- [x] Deliverables: final PDF, GitHub repository, source code, scripts, SQL files, docs, benchmark results, charts, and tables are present.
-- [x] Repository hygiene: raw data and bulky generated artifacts are ignored.
+- [ ] The venv pytest command passes.
+- [ ] Spark Core and Hive validators match Spark SQL after the schema change.
+- [ ] Benchmark charts have enough x-axis evidence to support written claims.
+- [ ] Final report avoids calling Docker a real cluster.
+- [ ] Report artifacts are regenerated after all schema and benchmark changes.
 
 ## Risk Register
 
-| Risk | Mitigation |
-|---|---|
-| Dataset schema differs from expectations | Inspect schema in M2 and use `config/columns.yaml` aliases before implementing preparation. |
-| Hive setup becomes time-consuming | Finish Spark SQL and Spark Core first, then isolate Hive in the Docker milestone. |
-| Local hardware cannot handle full or replicated datasets | Use smaller sizes, document limits, and include controlled replication only where feasible. |
-| Outputs differ across technologies | Treat Spark SQL as the reference and add comparison checks before benchmarking. |
-| Windows local preparation without Hadoop `winutils.exe` uses a PyArrow writer that streams prepared rows through the driver | Treat this as a compatibility fallback only; do not use it as scalability evidence for M7/M8 benchmark claims. |
-| Prepared Parquet directory reads can differ on Windows without Hadoop native tools | Use the shared prepared-data resolver in `src/common/prepared_data.py` for Spark jobs so all technologies agree on the canonical directory shape. |
-| Docker cluster simulation is unstable | Keep local benchmarks as the required baseline and document simulation limits honestly. |
-| Large files are accidentally committed | Use `.gitignore`, `git status --ignored`, and final submission checks. |
-| Report falls behind implementation | Capture metrics, sample rows, and notes at each milestone instead of reconstructing everything at the end. |
+| Risk | Impact | Mitigation |
+|---|---|---|
+| Top-three cause schema change breaks validators and report generation | High | Update outputs, validators, first-10 tables, and docs in the same milestone. |
+| Benchmark runs take too long on local hardware | Medium | Prioritize 100k, 500k, 1m, and 3m; treat full-size and Hive full-size as conditional evidence. |
+| Docker simulation is mistaken for a real cluster | Medium | Rename charts/report language and explicitly document topology limits. |
+| Tiny-input startup overhead creates non-monotonic results | Medium | Explain startup overhead and include rows/sec plus normalized ratios. |
+| MapReduce consumes time before required fixes are complete | High | Keep M6 after M1-M5 and do not make it part of the core grade path. |
+| README polish is skipped as "minor" | Low | Include README encoding and test command in M5 acceptance. |
+| Report falls behind implementation changes | High | Regenerate report artifacts after each output-schema or benchmark change. |
+| Large files are accidentally committed | Medium | Keep data/output/log hygiene in M7 final gate. |
 
-## Stable Commands
+## Stable Commands To Preserve Or Improve
 
 ```powershell
 make setup
@@ -380,10 +416,16 @@ make prepare
 make generate-sizes
 make run-spark-sql
 make run-spark-core
-make run-spark-core-native
-make run-spark-core-docker
 make run-hive
 make benchmark-local
+make benchmark-cluster
 make charts
 make report
+.\.venv\Scripts\python.exe -m pytest -q
 ```
+
+Future command improvements to consider:
+
+- [ ] Implement `make run-all-local` only if it can run the full local workflow reliably.
+- [ ] Implement `make clean` only if it safely removes generated artifacts without touching raw data or user work.
+- [ ] Add MapReduce commands only after M6 has a validated implementation.
