@@ -10,20 +10,26 @@ paths:
   results_dir: experiments/results/cluster
 
 spark:
-  master: spark://CHANGE_ME:7077
+  master: spark://spark-master:7077
   app_name: flight-delay-big-data-analysis-cluster
-  shuffle_partitions: 64
+  shuffle_partitions: 16
+  driver_host: spark-driver
+  driver_bind_address: 0.0.0.0
 
 benchmark:
-  cluster_size: CHANGE_ME
+  cluster_size: "docker-compose Spark standalone: 1 master + 2 workers; Hive single-node container"
+  spark_driver_service: spark-driver
+  container_workspace: /workspace
   input_sizes:
+    - label: 100k
+      records: 100000
+      path: data/generated/flights_100k.parquet
     - label: 1m
       records: 1000000
-    - label: 3m
-      records: 3000000
-    - label: 7m
-      records: 7000000
-    - label: 14m
-      records: 14000000
-    - label: 28m
-      records: 28000000
+      path: data/generated/flights_1m.parquet
+      optional: true
+
+cluster_notes:
+  spark_topology: "Spark standalone on Docker Compose with one master and two workers."
+  hive_topology: "Existing Docker HiveServer2/metastore/Postgres stack; not distributed HDFS/YARN."
+  limitation: "All containers share one host, one local disk, and Docker Desktop resource limits."

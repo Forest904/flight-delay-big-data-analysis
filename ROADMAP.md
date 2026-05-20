@@ -13,7 +13,7 @@ Build a complete, reproducible, well-benchmarked big-data assignment submission 
 - [x] Raw dataset schema inspected.
 - [x] Canonical prepared Parquet dataset created and validated.
 - [ ] MapReduce intentionally out of scope.
-- [ ] Docker-based cluster simulation planned as grade-enhancing evidence if stable.
+- [x] Docker-based cluster simulation added as grade-enhancing evidence with documented limits.
 
 ## Working Principles
 
@@ -240,21 +240,23 @@ Grading evidence:
 
 ### M9 - Docker Cluster Simulation
 
+Status: complete for Docker Spark standalone simulation with Hive documented as single-node containerized execution.
+
 Goal: add cluster-style evidence if the Docker setup is stable enough.
 
 Deliverables:
 
-- [ ] Docker Compose services for Spark master/workers or equivalent simulation.
-- [ ] Cluster config updated with real service addresses.
-- [ ] Cluster benchmark results under `experiments/results/cluster/`.
-- [ ] Clear documentation of simulated cluster limits.
-- [ ] `make benchmark-cluster` wired if the setup is reliable.
+- [x] Docker Compose services for Spark master/workers or equivalent simulation.
+- [x] Cluster config updated with real service addresses.
+- [x] Cluster benchmark results under `experiments/results/cluster/`.
+- [x] Clear documentation of simulated cluster limits.
+- [x] `make benchmark-cluster` wired if the setup is reliable.
 
 Acceptance criteria:
 
-- [ ] Cluster simulation runs at least one input size for each required technology, or limitations are documented.
-- [ ] Results distinguish local mode from Docker cluster simulation.
-- [ ] The report does not overclaim simulation results as a real production cluster.
+- [x] Cluster simulation runs at least one input size for each required technology, or limitations are documented.
+- [x] Results distinguish local mode from Docker cluster simulation.
+- [x] Cluster documentation does not overclaim simulation results as a real production cluster; final report wording must be verified again in M11.
 
 Grading evidence:
 

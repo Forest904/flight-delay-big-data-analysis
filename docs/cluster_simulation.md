@@ -1,0 +1,96 @@
+# Docker Cluster Simulation
+
+This document records the M9 Docker cluster simulation. The goal is to add
+execution-setting evidence without overclaiming that a laptop Docker Compose
+setup is equivalent to a production cluster.
+
+## Topology
+
+The Spark simulation uses standalone Spark services in `docker-compose.yml`:
+
+- `spark-master`: Spark standalone master at `spark://spark-master:7077`.
+- `spark-worker-1`: Spark worker with 2 cores and 2 GB memory.
+- `spark-worker-2`: Spark worker with 2 cores and 2 GB memory.
+- `spark-driver`: stable Python driver container used by the benchmark runner.
+
+All Spark containers reuse the project Python/Spark image from
+`Dockerfile.spark-core`. The PySpark package provides the `spark-class` command
+used to start the standalone master and workers, so the project does not need a
+second Spark distribution image.
+
+The cluster config is `config/cluster.yaml`. It sets the Spark master to
+`spark://spark-master:7077`, configures the driver host as `spark-driver`, and
+keeps benchmark results under `experiments/results/cluster/`.
+
+## Hive Scope
+
+Hive is included in `make benchmark-cluster` so the benchmark CSV still contains
+rows for all three required technologies. Its execution remains the M6 Docker
+Hive stack:
+
+- `hiveserver2`
+- `hive-metastore`
+- `hive-postgres`
+
+This is a single-node containerized Hive setup, not a distributed Hive cluster
+with HDFS and YARN. The final report should describe Hive cluster evidence as a
+limitation, while still using the Docker run as controlled execution-setting
+evidence.
+
+## Command
+
+Run the first cluster simulation benchmark with:
+
+```powershell
+make benchmark-cluster
+```
+
+The target starts the Spark master, workers, and driver, then runs:
+
+```powershell
+.\.venv\Scripts\python.exe experiments\run_benchmarks.py --config config\cluster.yaml --environment docker-cluster --input-label 100k
+```
+
+Additional benchmark flags can be passed through `BENCHMARK_FLAGS`. For example:
+
+```powershell
+make benchmark-cluster BENCHMARK_FLAGS="--technology spark_sql"
+```
+
+The default cluster input is `100k`. Use `CLUSTER_INPUT_LABEL` to run another
+configured and validated input:
+
+```powershell
+make benchmark-cluster CLUSTER_INPUT_LABEL=1m
+```
+
+## Results
+
+Cluster benchmark evidence is written separately from local benchmark evidence:
+
+```text
+experiments/results/cluster/
+  benchmark_<YYYYMMDDTHHMMSSffffffZ>.csv
+  benchmark_latest.csv
+  logs/<run_id>/
+```
+
+Rows from this path use `environment=docker-cluster` and a cluster-size label
+that identifies the Spark standalone topology plus Hive's single-node
+containerized limitation.
+
+## Limits
+
+This simulation varies the execution setting, but it has important limits:
+
+- All containers run on one physical machine.
+- All services share Docker Desktop CPU, memory, and disk limits.
+- Data is read from a bind-mounted local project directory, not HDFS or object
+  storage.
+- Spark worker separation is real at the container/process level, but not at
+  the physical-machine level.
+- Hive does not use a distributed Hadoop execution layer in this setup.
+
+The report should use this evidence for cautious scalability discussion only.
+It can compare local mode against Docker Spark standalone mode, but it should
+not present the result as production-cluster performance.

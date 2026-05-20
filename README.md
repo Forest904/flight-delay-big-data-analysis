@@ -460,6 +460,24 @@ Run cluster benchmarks, if a cluster environment is available:
 make benchmark-cluster
 ```
 
+In this repository, `make benchmark-cluster` starts a Docker Compose Spark
+standalone simulation with one master, two workers, and a driver container. It
+uses `config/cluster.yaml`, writes results under `experiments/results/cluster/`,
+and labels rows with `environment=docker-cluster`. The first required cluster
+input is `100k`; larger inputs such as `1m` can be attempted after the smoke
+run is stable.
+
+Run a different configured cluster input with:
+
+```bash
+make benchmark-cluster CLUSTER_INPUT_LABEL=1m
+```
+
+Hive is included in the cluster benchmark CSV, but it remains the existing
+single-node containerized HiveServer2/metastore/Postgres setup. Treat it as
+controlled Docker execution evidence, not a distributed Hive/Hadoop cluster.
+See `docs/cluster_simulation.md` for the topology and limitations.
+
 Benchmark results are stored in:
 
 ```text
@@ -617,6 +635,7 @@ Recommended documents:
 | File | Purpose |
 |---|---|
 | `architecture.md` | System architecture and data flow |
+| `cluster_simulation.md` | Docker Spark standalone simulation and limits |
 | `data_preparation.md` | Cleaning rules and schema decisions |
 | `reproducibility.md` | Full setup and execution instructions |
 | `technology_comparison.md` | Notes comparing Spark SQL, Spark Core, Hive, and optional MapReduce |
@@ -652,6 +671,8 @@ Current expected limitations:
 
 - The full raw dataset is not stored in the repository.
 - Cluster experiments depend on the availability of a suitable execution environment.
+- The Docker cluster simulation runs all services on one host and must not be
+  described as production-cluster performance.
 - Larger-than-original datasets are generated through controlled replication, so they are intended for scalability testing rather than new statistical insight.
 - Hive execution may require additional local or Docker-based configuration.
 - MapReduce is treated as an optional extension unless explicitly implemented.

@@ -1,4 +1,4 @@
-"""Run local benchmark matrices and normalize technology runtime metrics."""
+"""Run benchmark matrices and normalize technology runtime metrics."""
 
 from __future__ import annotations
 
@@ -81,6 +81,10 @@ def display_path(path: Path, project_root: Path = PROJECT_ROOT) -> str:
         return path.relative_to(project_root).as_posix()
     except ValueError:
         return path.as_posix()
+
+
+def container_workspace_path(path: Path, *, project_root: Path = PROJECT_ROOT, workspace: str = "/workspace") -> str:
+    return f"{workspace.rstrip('/')}/{display_path(path, project_root=project_root)}"
 
 
 def manifest_path(local_config: dict[str, Any], project_root: Path = PROJECT_ROOT) -> Path:
@@ -194,6 +198,7 @@ def build_command(
     input_path: Path,
     local_config: dict[str, Any],
     *,
+    config_path: Path = DEFAULT_CONFIG,
     project_root: Path = PROJECT_ROOT,
     python_executable: str = sys.executable,
     os_name: str = os.name,
@@ -201,9 +206,42 @@ def build_command(
 ) -> CommandSpec:
     input_arg = display_path(input_path, project_root=project_root)
     metrics_path = output_root_for_technology(local_config, technology, project_root=project_root) / "runtime_metrics.json"
+    config_arg = display_path(config_path, project_root=project_root)
+    benchmark_config = local_config.get("benchmark", {})
+    spark_driver_service = benchmark_config.get("spark_driver_service")
+    container_workspace = str(benchmark_config.get("container_workspace", "/workspace"))
+
+    if spark_driver_service and technology in {"spark_sql", "spark_core"}:
+        script = {
+            "spark_sql": "src/spark_sql/run_spark_sql.py",
+            "spark_core": "src/spark_core/run_spark_core.py",
+        }[technology]
+        return CommandSpec(
+            command=[
+                docker_bin or docker_executable(),
+                "compose",
+                "exec",
+                "-T",
+                str(spark_driver_service),
+                "python",
+                script,
+                "--config",
+                container_workspace_path(config_path, project_root=project_root, workspace=container_workspace),
+                "--input-path",
+                container_workspace_path(input_path, project_root=project_root, workspace=container_workspace),
+            ],
+            metrics_path=metrics_path,
+        )
 
     if technology == "spark_sql":
-        command = [python_executable, "src/spark_sql/run_spark_sql.py", "--input-path", input_arg]
+        command = [
+            python_executable,
+            "src/spark_sql/run_spark_sql.py",
+            "--config",
+            config_arg,
+            "--input-path",
+            input_arg,
+        ]
     elif technology == "spark_core":
         if os_name == "nt":
             command = [
@@ -214,13 +252,29 @@ def build_command(
                 "spark-core",
                 "python",
                 "src/spark_core/run_spark_core.py",
+                "--config",
+                config_arg,
                 "--input-path",
                 input_arg,
             ]
         else:
-            command = [python_executable, "src/spark_core/run_spark_core.py", "--input-path", input_arg]
+            command = [
+                python_executable,
+                "src/spark_core/run_spark_core.py",
+                "--config",
+                config_arg,
+                "--input-path",
+                input_arg,
+            ]
     elif technology == "hive":
-        command = [python_executable, "src/hive/run_hive.py", "--input-path", input_arg]
+        command = [
+            python_executable,
+            "src/hive/run_hive.py",
+            "--config",
+            config_arg,
+            "--input-path",
+            input_arg,
+        ]
     else:
         raise ValueError(f"Unsupported technology: {technology}")
 
@@ -266,15 +320,28 @@ def error_excerpt(text: str, max_chars: int = 3000) -> str:
     return f"{text[:max_chars]}... [truncated]"
 
 
-def comparable_display_path(path_value: str | Path) -> str:
-    return str(path_value).replace("\\", "/")
+def comparable_display_path(path_value: str | Path, *, container_workspace: str = "/workspace") -> str:
+    value = str(path_value).replace("\\", "/")
+    workspace = container_workspace.rstrip("/")
+    for prefix in (f"file://{workspace}/", f"{workspace}/"):
+        if value.startswith(prefix):
+            return value[len(prefix) :]
+    return value
 
 
-def metrics_input_matches(metrics: dict[str, Any], benchmark_input: BenchmarkInput) -> bool:
+def metrics_input_matches(
+    metrics: dict[str, Any],
+    benchmark_input: BenchmarkInput,
+    *,
+    container_workspace: str = "/workspace",
+) -> bool:
     actual = metrics.get("input_path")
     if actual is None:
         return False
-    return comparable_display_path(actual) == comparable_display_path(display_path(benchmark_input.path))
+    return comparable_display_path(actual, container_workspace=container_workspace) == comparable_display_path(
+        display_path(benchmark_input.path),
+        container_workspace=container_workspace,
+    )
 
 
 def run_id_from_timestamp(timestamp: datetime) -> str:
@@ -305,6 +372,7 @@ def normalize_metrics_rows(
     returncode: int,
     process_duration_seconds: float,
     stderr: str = "",
+    container_workspace: str = "/workspace",
 ) -> list[dict[str, Any]]:
     common = {
         "run_id": run_id,
@@ -331,7 +399,7 @@ def normalize_metrics_rows(
             }
         ]
 
-    if not metrics_input_matches(metrics, benchmark_input):
+    if not metrics_input_matches(metrics, benchmark_input, container_workspace=container_workspace):
         actual = str(metrics.get("input_path", ""))
         expected = display_path(benchmark_input.path)
         return [
@@ -389,7 +457,7 @@ def write_benchmark_csv(path: Path, rows: list[dict[str, Any]]) -> None:
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="Local YAML config path.")
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="YAML config path.")
     parser.add_argument("--environment", default="local", help="Benchmark environment label.")
     parser.add_argument(
         "--technology",
@@ -431,6 +499,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     technologies = args.technology or list(DEFAULT_TECHNOLOGIES)
     cluster_size = str(local_config.get("benchmark", {}).get("cluster_size", args.environment))
+    container_workspace = str(local_config.get("benchmark", {}).get("container_workspace", "/workspace"))
 
     run_started = datetime.now(timezone.utc)
     run_id = run_id_from_timestamp(run_started)
@@ -446,7 +515,12 @@ def main(argv: list[str] | None = None) -> int:
 
     for benchmark_input in inputs:
         for technology in technologies:
-            spec = build_command(technology, benchmark_input.path, local_config)
+            spec = build_command(
+                technology,
+                benchmark_input.path,
+                local_config,
+                config_path=config_path,
+            )
             print(f"# Running {technology} on {benchmark_input.label}")
             clear_metrics_file(spec.metrics_path)
             result, process_duration_seconds = run_command(spec.command)
@@ -470,6 +544,7 @@ def main(argv: list[str] | None = None) -> int:
                 returncode=result.returncode,
                 process_duration_seconds=process_duration_seconds,
                 stderr=result.stderr,
+                container_workspace=container_workspace,
             )
             rows.extend(normalized)
             if result.returncode != 0 or any(row["status"] != "success" for row in normalized):

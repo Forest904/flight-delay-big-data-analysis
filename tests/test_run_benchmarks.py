@@ -287,11 +287,13 @@ def test_microsecond_run_id_and_unique_result_path(tmp_path):
 def test_build_command_uses_native_spark_core_outside_windows(tmp_path):
     local_config = {"paths": {"outputs_dir": "outputs"}}
     input_path = tmp_path / "data" / "generated" / "flights_100k.parquet"
+    config_path = tmp_path / "config" / "local.yaml"
 
     spec = run_benchmarks.build_command(
         "spark_core",
         input_path,
         local_config,
+        config_path=config_path,
         project_root=tmp_path,
         python_executable="python",
         os_name="posix",
@@ -300,6 +302,8 @@ def test_build_command_uses_native_spark_core_outside_windows(tmp_path):
     assert spec.command == [
         "python",
         "src/spark_core/run_spark_core.py",
+        "--config",
+        "config/local.yaml",
         "--input-path",
         "data/generated/flights_100k.parquet",
     ]
@@ -309,11 +313,13 @@ def test_build_command_uses_native_spark_core_outside_windows(tmp_path):
 def test_build_command_uses_docker_spark_core_on_windows(tmp_path):
     local_config = {"paths": {"outputs_dir": "outputs"}}
     input_path = tmp_path / "data" / "generated" / "flights_100k.parquet"
+    config_path = tmp_path / "config" / "local.yaml"
 
     spec = run_benchmarks.build_command(
         "spark_core",
         input_path,
         local_config,
+        config_path=config_path,
         project_root=tmp_path,
         python_executable="python",
         os_name="nt",
@@ -328,6 +334,143 @@ def test_build_command_uses_docker_spark_core_on_windows(tmp_path):
         "spark-core",
         "python",
         "src/spark_core/run_spark_core.py",
+        "--config",
+        "config/local.yaml",
         "--input-path",
         "data/generated/flights_100k.parquet",
     ]
+
+
+def test_build_command_uses_spark_driver_for_cluster_spark_sql(tmp_path):
+    cluster_config = {
+        "paths": {"outputs_dir": "outputs"},
+        "benchmark": {
+            "spark_driver_service": "spark-driver",
+            "container_workspace": "/workspace",
+        },
+    }
+    input_path = tmp_path / "data" / "generated" / "flights_100k.parquet"
+    config_path = tmp_path / "config" / "cluster.yaml"
+
+    spec = run_benchmarks.build_command(
+        "spark_sql",
+        input_path,
+        cluster_config,
+        config_path=config_path,
+        project_root=tmp_path,
+        python_executable="python",
+        docker_bin="docker",
+    )
+
+    assert spec.command == [
+        "docker",
+        "compose",
+        "exec",
+        "-T",
+        "spark-driver",
+        "python",
+        "src/spark_sql/run_spark_sql.py",
+        "--config",
+        "/workspace/config/cluster.yaml",
+        "--input-path",
+        "/workspace/data/generated/flights_100k.parquet",
+    ]
+    assert spec.metrics_path == tmp_path / "outputs" / "spark_sql" / "runtime_metrics.json"
+
+
+def test_build_command_keeps_hive_on_host_for_cluster_config(tmp_path):
+    cluster_config = {
+        "paths": {"outputs_dir": "outputs"},
+        "benchmark": {
+            "spark_driver_service": "spark-driver",
+            "container_workspace": "/workspace",
+        },
+    }
+    input_path = tmp_path / "data" / "generated" / "flights_100k.parquet"
+    config_path = tmp_path / "config" / "cluster.yaml"
+
+    spec = run_benchmarks.build_command(
+        "hive",
+        input_path,
+        cluster_config,
+        config_path=config_path,
+        project_root=tmp_path,
+        python_executable="python",
+        docker_bin="docker",
+    )
+
+    assert spec.command == [
+        "python",
+        "src/hive/run_hive.py",
+        "--config",
+        "config/cluster.yaml",
+        "--input-path",
+        "data/generated/flights_100k.parquet",
+    ]
+
+
+def test_metrics_input_match_accepts_container_workspace_path():
+    metrics = {"input_path": "/workspace/data/generated/flights_100k.parquet"}
+    benchmark_input = BenchmarkInput("100k", 100000, Path("data/generated/flights_100k.parquet"))
+
+    assert run_benchmarks.metrics_input_matches(metrics, benchmark_input)
+
+
+def test_metrics_input_match_accepts_configured_container_workspace_path():
+    metrics = {"input_path": "/repo/data/generated/flights_100k.parquet"}
+    benchmark_input = BenchmarkInput("100k", 100000, Path("data/generated/flights_100k.parquet"))
+
+    assert run_benchmarks.metrics_input_matches(metrics, benchmark_input, container_workspace="/repo")
+
+
+def test_metrics_input_match_accepts_configured_file_container_workspace_path():
+    metrics = {"input_path": "file:///repo/data/generated/flights_100k.parquet"}
+    benchmark_input = BenchmarkInput("100k", 100000, Path("data/generated/flights_100k.parquet"))
+
+    assert run_benchmarks.metrics_input_matches(metrics, benchmark_input, container_workspace="/repo")
+
+
+def test_normalize_metrics_rows_uses_configured_container_workspace():
+    rows = run_benchmarks.normalize_metrics_rows(
+        run_id="20260520T120000Z",
+        technology="spark_sql",
+        benchmark_input=BenchmarkInput("100k", 100000, Path("data/generated/flights_100k.parquet")),
+        environment="docker-cluster",
+        cluster_size="cluster",
+        timestamp_utc="2026-05-20T12:00:00+00:00",
+        metrics_path=Path("outputs/spark_sql/runtime_metrics.json"),
+        metrics={
+            "status": "success",
+            "stage": "complete",
+            "input_path": "/repo/data/generated/flights_100k.parquet",
+            "jobs": [
+                {
+                    "job_name": "delay_by_airport_month",
+                    "duration_seconds": 2.5,
+                    "output_rows": 42,
+                    "status": "success",
+                }
+            ],
+        },
+        returncode=0,
+        process_duration_seconds=3.0,
+        container_workspace="/repo",
+    )
+
+    assert rows[0]["status"] == "success"
+    assert rows[0]["job_name"] == "delay_by_airport_month"
+
+
+def test_cluster_results_dir_is_respected(tmp_path):
+    config = {"paths": {"outputs_dir": "outputs", "results_dir": "experiments/results/cluster"}}
+
+    results_dir = run_benchmarks.resolve_project_path(config["paths"]["results_dir"], project_root=tmp_path)
+
+    assert results_dir == tmp_path / "experiments" / "results" / "cluster"
+
+
+def test_makefile_cluster_input_label_is_overrideable():
+    makefile = Path("Makefile").read_text(encoding="utf-8")
+
+    assert "CLUSTER_INPUT_LABEL ?= 100k" in makefile
+    assert "--input-label $(CLUSTER_INPUT_LABEL)" in makefile

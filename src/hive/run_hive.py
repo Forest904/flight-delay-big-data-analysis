@@ -19,7 +19,7 @@ import yaml
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-LOCAL_CONFIG = PROJECT_ROOT / "config" / "local.yaml"
+DEFAULT_CONFIG = PROJECT_ROOT / "config" / "local.yaml"
 HIVE_DIR = PROJECT_ROOT / "src" / "hive"
 HIVE_FIELD_DELIMITER = "\x01"
 HIVE_NULL_VALUE = r"\N"
@@ -67,8 +67,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--input-path",
         type=Path,
-        help="Prepared Parquet input to analyze. Defaults to config/local.yaml paths.prepared_file.",
+        help="Prepared Parquet input to analyze. Defaults to the selected config paths.prepared_file.",
     )
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="YAML config path.")
     return parser.parse_args(argv)
 
 
@@ -407,11 +408,12 @@ def print_metrics(metrics: dict[str, Any], output_root: Path) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    local_config = load_yaml(LOCAL_CONFIG)
+    config_path = args.config if args.config.is_absolute() else PROJECT_ROOT / args.config
+    local_config = load_yaml(config_path)
     paths = local_config.get("paths", {})
     prepared_file_value = paths.get("prepared_file")
     if not prepared_file_value:
-        raise ValueError(f"{LOCAL_CONFIG} does not define paths.prepared_file")
+        raise ValueError(f"{config_path} does not define paths.prepared_file")
 
     prepared_file = args.input_path if args.input_path is not None else Path(str(prepared_file_value))
     if not prepared_file.is_absolute():

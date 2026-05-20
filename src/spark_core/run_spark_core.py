@@ -40,7 +40,7 @@ from pyspark.sql.types import (
 from src.common.prepared_data import read_prepared_parquet
 
 
-LOCAL_CONFIG = PROJECT_ROOT / "config" / "local.yaml"
+DEFAULT_CONFIG = PROJECT_ROOT / "config" / "local.yaml"
 
 DELAY_OUTPUT_COLUMNS = [
     "origin_airport",
@@ -105,8 +105,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--input-path",
         type=Path,
-        help="Prepared Parquet input to analyze. Defaults to config/local.yaml paths.prepared_file.",
+        help="Prepared Parquet input to analyze. Defaults to the selected config paths.prepared_file.",
     )
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="YAML config path.")
     return parser.parse_args(argv)
 
 
@@ -164,7 +165,7 @@ def build_spark(local_config: dict[str, Any]) -> SparkSession:
     app_name = str(spark_config.get("app_name", "flight-delay-big-data-analysis-local"))
     shuffle_partitions = str(spark_config.get("shuffle_partitions", 8))
 
-    return (
+    builder = (
         SparkSession.builder.master(master)
         .appName(f"{app_name}-spark-core")
         .config("spark.sql.shuffle.partitions", shuffle_partitions)
@@ -172,8 +173,12 @@ def build_spark(local_config: dict[str, Any]) -> SparkSession:
         .config("spark.pyspark.driver.python", PYSPARK_PYTHON)
         .config("spark.python.worker.faulthandler.enabled", "true")
         .config("spark.sql.execution.pyspark.udf.faulthandler.enabled", "true")
-        .getOrCreate()
     )
+    if spark_config.get("driver_host"):
+        builder = builder.config("spark.driver.host", str(spark_config["driver_host"]))
+    if spark_config.get("driver_bind_address"):
+        builder = builder.config("spark.driver.bindAddress", str(spark_config["driver_bind_address"]))
+    return builder.getOrCreate()
 
 
 def smoke_increment(value: int) -> int:
@@ -549,11 +554,12 @@ def docker_wsl_hint() -> str:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    local_config = load_yaml(LOCAL_CONFIG)
+    config_path = args.config if args.config.is_absolute() else PROJECT_ROOT / args.config
+    local_config = load_yaml(config_path)
     paths = local_config.get("paths", {})
     prepared_file_value = paths.get("prepared_file")
     if not prepared_file_value:
-        raise ValueError(f"{LOCAL_CONFIG} does not define paths.prepared_file")
+        raise ValueError(f"{config_path} does not define paths.prepared_file")
 
     prepared_file = args.input_path if args.input_path is not None else Path(str(prepared_file_value))
     if not prepared_file.is_absolute():
@@ -641,7 +647,9 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def smoke_main() -> int:
-    local_config = load_yaml(LOCAL_CONFIG)
+    args = parse_args()
+    config_path = args.config if args.config.is_absolute() else PROJECT_ROOT / args.config
+    local_config = load_yaml(config_path)
     spark: SparkSession | None = None
     try:
         spark = build_spark(local_config)
