@@ -291,26 +291,28 @@ Grading evidence:
 
 ### M11 - Final Report
 
+Status: complete.
+
 Goal: write and export the PDF submission report.
 
 Deliverables:
 
-- [ ] `report/final_report.md`.
-- [ ] `report/final_report.pdf`.
-- [ ] Data preparation section.
-- [ ] Implementation choices and pseudocode or textual explanation for each technology.
-- [ ] First 10 rows of produced results.
-- [ ] Benchmark tables and charts.
-- [ ] Critical comparison and scalability discussion.
-- [ ] GitHub repository link.
-- [ ] `make report` wired.
+- [x] `report/draft_final_report.md`.
+- [x] `report/draft_final_report.pdf`.
+- [x] Data preparation section.
+- [x] Implementation choices and pseudocode or textual explanation for each technology.
+- [x] First 10 rows of produced results.
+- [x] Benchmark tables and charts.
+- [x] Critical comparison and scalability discussion.
+- [x] GitHub repository link.
+- [x] `make report` wired.
 
 Acceptance criteria:
 
-- [ ] Report directly addresses every required item from the assignment.
-- [ ] Claims are supported by produced outputs or benchmark files.
-- [ ] Limitations are honest and specific.
-- [ ] PDF renders cleanly.
+- [x] Report directly addresses every required item from the assignment.
+- [x] Claims are supported by produced outputs or benchmark files.
+- [x] Limitations are honest and specific.
+- [x] PDF renders cleanly.
 
 Grading evidence:
 
@@ -318,24 +320,26 @@ Grading evidence:
 
 ### M12 - Submission Hardening
 
+Status: complete.
+
 Goal: make the repository and report safe to submit.
 
 Deliverables:
 
-- [ ] Final README reproduction pass.
-- [ ] Final `make check-env` pass.
-- [ ] Final local smoke run for preparation and all implemented analyses.
-- [ ] Git status check for accidental data/output files.
-- [ ] GitHub link added to README and report.
-- [ ] Final PDF reviewed.
-- [ ] Tagged or clearly identified submission commit.
+- [x] Final README reproduction pass.
+- [x] Final `make check-env` pass.
+- [x] Final local smoke run for preparation and all implemented analyses.
+- [x] Git status check for accidental data/output files.
+- [x] GitHub link added to README and report.
+- [x] Final PDF reviewed.
+- [x] Tagged or clearly identified submission commit.
 
 Acceptance criteria:
 
-- [ ] A fresh clone can follow the documented setup path.
-- [ ] Raw data is not committed.
-- [ ] Essential scripts, configs, SQL, docs, benchmark summaries, tables, and figures are committed.
-- [ ] The repository and PDF are ready before submission.
+- [x] A fresh clone can follow the documented setup path.
+- [x] Raw data is not committed.
+- [x] Essential scripts, configs, SQL, docs, benchmark summaries, tables, and figures are committed.
+- [x] The repository and PDF are ready before submission.
 
 Grading evidence:
 
@@ -343,15 +347,15 @@ Grading evidence:
 
 ## Perfect Grade Checklist
 
-- [ ] Correctness: both selected analyses produce consistent outputs across Spark SQL, Spark Core, and Hive.
-- [ ] Completeness: Spark SQL, Spark Core, and Hive are all implemented for both jobs.
+- [x] Correctness: both selected analyses produce consistent outputs across Spark SQL, Spark Core, and Hive.
+- [x] Completeness: Spark SQL, Spark Core, and Hive are all implemented for both jobs.
 - [x] Data preparation: cleaning, normalization, and column mapping are justified and documented.
-- [ ] Reproducibility: setup, preparation, execution, benchmarking, charts, and report generation have stable commands.
-- [ ] Experimental quality: benchmarks vary technology, job, input size, and execution setting where feasible.
-- [ ] Scalability: input-size generation is controlled and explained.
-- [ ] Critical discussion: report covers expressiveness, ease of implementation, efficiency, scalability, shuffle, aggregation, and preparation costs.
-- [ ] Deliverables: final PDF, GitHub repository, source code, scripts, SQL files, docs, benchmark results, charts, and tables are present.
-- [ ] Repository hygiene: raw data and bulky generated artifacts are ignored.
+- [x] Reproducibility: setup, preparation, execution, benchmarking, charts, and report generation have stable commands.
+- [x] Experimental quality: benchmarks vary technology, job, input size, and execution setting where feasible.
+- [x] Scalability: input-size generation is controlled and explained.
+- [x] Critical discussion: report covers expressiveness, ease of implementation, efficiency, scalability, shuffle, aggregation, and preparation costs.
+- [x] Deliverables: final PDF, GitHub repository, source code, scripts, SQL files, docs, benchmark results, charts, and tables are present.
+- [x] Repository hygiene: raw data and bulky generated artifacts are ignored.
 
 ## Risk Register
 

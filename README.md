@@ -2,6 +2,8 @@
 
 Comparative big-data analysis of the **2024 Flight Delay Dataset** using **Spark SQL**, **Spark Core**, and **Hive**, with a focus on data preparation, analytical correctness, execution efficiency, and scalability benchmarking.
 
+Repository: <https://github.com/Forest904/flight-delay-big-data-analysis.git>
+
 This repository is developed for the **Big Data Course — Second Project** at **Roma Tre University**.
 
 ---
@@ -113,45 +115,39 @@ flight-delay-big-data-analysis/
 │
 ├── src/
 │   ├── common/
-│   │   ├── schema.py
-│   │   ├── paths.py
-│   │   ├── metrics.py
-│   │   └── utils.py
+│   │   ├── prepared_data.py
+│   │   └── runtime.py
 │   │
 │   ├── preparation/
 │   │   ├── prepare_spark.py
 │   │   └── generate_input_sizes.py
 │   │
 │   ├── spark_sql/
-│   │   ├── analysis_delay_by_airport_month.py
-│   │   └── analysis_airline_airport_ranking.py
+│   │   └── run_spark_sql.py
 │   │
 │   ├── spark_core/
-│   │   ├── analysis_delay_by_airport_month.py
-│   │   └── analysis_airline_airport_ranking.py
+│   │   └── run_spark_core.py
 │   │
 │   ├── hive/
 │   │   ├── ddl.sql
-│   │   ├── load_data.sql
 │   │   ├── analysis_delay_by_airport_month.sql
-│   │   └── analysis_airline_airport_ranking.sql
+│   │   ├── analysis_airline_airport_ranking.sql
+│   │   └── run_hive.py
 │   │
 │   └── mapreduce/
 │       └── optional/
 │
 ├── scripts/
+│   ├── build_report.py
+│   ├── check_env.py
 │   ├── download_dataset.md
-│   ├── run_prepare_local.sh
-│   ├── run_spark_sql.sh
-│   ├── run_spark_core.sh
-│   ├── run_hive.sh
-│   ├── run_all_local.sh
-│   ├── run_all_cluster.sh
-│   └── collect_results.sh
+│   ├── generate_charts.py
+│   ├── inspect_raw_dataset.py
+│   ├── validate_hive_outputs.py
+│   ├── validate_spark_core_outputs.py
+│   └── validate_spark_sql_outputs.py
 │
 ├── experiments/
-│   ├── benchmark_plan.md
-│   ├── input_sizes.yaml
 │   ├── run_benchmarks.py
 │   └── results/
 │       ├── local/
@@ -164,19 +160,20 @@ flight-delay-big-data-analysis/
 │   └── mapreduce/
 │
 ├── notebooks/
-│   └── exploratory_analysis.ipynb
+│   └── .gitkeep
 │
 ├── report/
-│   ├── final_report.md
+│   ├── draft_final_report.md
 │   ├── figures/
 │   ├── tables/
-│   └── final_report.pdf
+│   └── draft_final_report.pdf
 │
 └── docs/
-    ├── architecture.md
+    ├── cluster_simulation.md
     ├── data_preparation.md
-    ├── reproducibility.md
-    └── technology_comparison.md
+    ├── hive_analyses.md
+    ├── spark_core_analyses.md
+    └── spark_sql_analyses.md
 ```
 
 ---
@@ -236,14 +233,6 @@ Run locally:
 make prepare
 ```
 
-Or directly:
-
-```bash
-bash scripts/run_prepare_local.sh
-```
-
----
-
 ## Generated Input Sizes
 
 For benchmarking and scalability analysis, the project generates reproducible
@@ -300,7 +289,7 @@ with successful validation.
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/flight-delay-big-data-analysis.git
+git clone https://github.com/Forest904/flight-delay-big-data-analysis.git
 cd flight-delay-big-data-analysis
 ```
 
@@ -526,8 +515,8 @@ report/
 Expected report outputs:
 
 ```text
-report/final_report.md
-report/final_report.pdf
+report/draft_final_report.md
+report/draft_final_report.pdf
 report/figures/
 report/tables/
 ```
@@ -563,7 +552,8 @@ make report
 If Hive or cluster execution requires additional setup, see:
 
 ```text
-docs/reproducibility.md
+docs/hive_analyses.md
+docs/cluster_simulation.md
 ```
 
 ---
@@ -634,19 +624,23 @@ Recommended documents:
 
 | File | Purpose |
 |---|---|
-| `architecture.md` | System architecture and data flow |
 | `cluster_simulation.md` | Docker Spark standalone simulation and limits |
 | `data_preparation.md` | Cleaning rules and schema decisions |
-| `reproducibility.md` | Full setup and execution instructions |
-| `technology_comparison.md` | Notes comparing Spark SQL, Spark Core, Hive, and optional MapReduce |
+| `hive_analyses.md` | Hive setup, queries, execution, and validation |
+| `spark_core_analyses.md` | Spark Core implementation and validation notes |
+| `spark_sql_analyses.md` | Spark SQL implementation and validation notes |
 
 ---
 
 ## Git Ignore Policy
 
-The repository should not track large generated artifacts.
+The repository should not track large generated artifacts. Raw data, prepared
+Parquet data, generated benchmark inputs, runtime outputs, raw benchmark logs,
+local virtual environments, caches, and local environment files remain ignored.
+Curated report artifacts under `report/figures/` and `report/tables/` are small
+submission evidence and are intentionally committed.
 
-Recommended ignored paths:
+Ignored runtime artifact paths:
 
 ```text
 data/raw/*
@@ -654,8 +648,6 @@ data/prepared/*
 data/generated/*
 outputs/*
 experiments/results/*
-report/figures/*
-report/tables/*
 *.parquet
 *.csv
 *.log
