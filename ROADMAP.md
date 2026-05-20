@@ -265,22 +265,24 @@ Grading evidence:
 
 ### M10 - Charts and Tables
 
+Status: complete.
+
 Goal: turn benchmark outputs and sample results into report-ready artifacts.
 
 Deliverables:
 
-- [ ] Chart generation script.
-- [ ] Execution-time charts by technology and input size.
-- [ ] Tables with benchmark summaries.
-- [ ] First 10 result rows for each job and technology.
-- [ ] `make charts` wired.
+- [x] Chart generation script.
+- [x] Execution-time charts by technology and input size.
+- [x] Tables with benchmark summaries.
+- [x] First 10 result rows for each job and technology.
+- [x] `make charts` wired.
 
 Acceptance criteria:
 
-- [ ] Figures are saved under `report/figures/`.
-- [ ] Tables are saved under `report/tables/`.
-- [ ] Artifacts are small enough to commit.
-- [ ] Chart labels and units are clear.
+- [x] Figures are saved under `report/figures/`.
+- [x] Tables are saved under `report/tables/`.
+- [x] Artifacts are small enough to commit.
+- [x] Chart labels and units are clear.
 
 Grading evidence:
 

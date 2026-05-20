@@ -69,7 +69,10 @@ run-hive:
 stop-hive:
 	$(DOCKER_COMPOSE) stop hiveserver2 hive-metastore hive-postgres
 
-run-all-local charts report:
+charts:
+	$(VENV_PYTHON) scripts/generate_charts.py
+
+run-all-local report:
 	@echo Target "$@" is not implemented yet. This milestone only sets up the project foundation.
 	@$(FAIL)
 

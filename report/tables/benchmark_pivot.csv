@@ -1,0 +1,7 @@
+environment,input_label,records,job_name,Spark SQL duration_seconds,Spark Core duration_seconds,Hive duration_seconds
+docker-cluster,100k,100000,airline_airport_ranking,8.675909,3.693032,14.975913
+docker-cluster,100k,100000,delay_by_airport_month,15.453764,4.16397,17.509144
+docker-cluster,1m,1000000,airline_airport_ranking,7.540339,3.701681,14.149806
+docker-cluster,1m,1000000,delay_by_airport_month,16.149664,4.082349,19.659685
+local,100k,100000,airline_airport_ranking,1.842222,0.765055,14.831415
+local,100k,100000,delay_by_airport_month,8.581048,0.958934,18.070611

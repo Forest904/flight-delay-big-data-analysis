@@ -1,0 +1,12 @@
+| origin_airport | month | delay_range | flight_count | avg_departure_delay | avg_arrival_delay | top_delay_or_cancellation_cause |
+| --- | --- | --- | --- | --- | --- | --- |
+| ABE | 1 | high | 8 | 231.5 | 221.375 | delay:carrier |
+| ABE | 1 | low | 35 | -6.286 | -19.629 | unknown |
+| ABE | 1 | medium | 4 | 32.75 | 31.25 | delay:late_aircraft |
+| ABE | 2 | high | 3 | 324 | 335.667 | delay:late_aircraft |
+| ABE | 2 | low | 40 | -8.5 | -23.575 | unknown |
+| ABE | 2 | medium | 4 | 45.5 | 29.333 | unknown |
+| ABE | 3 | high | 8 | 127 | 121.625 | delay:carrier |
+| ABE | 3 | low | 41 | -4.756 | -16.39 | unknown |
+| ABE | 3 | medium | 3 | 32.333 | 12.667 | unknown |
+| ABE | 4 | high | 6 | 158.333 | 150.333 | delay:carrier |
