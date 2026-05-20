@@ -443,7 +443,7 @@ Run a smaller smoke benchmark:
 make benchmark-local BENCHMARK_FLAGS="--input-label 100k"
 ```
 
-Run cluster benchmarks, if a cluster environment is available:
+Run Docker standalone simulation benchmarks:
 
 ```bash
 make benchmark-cluster
@@ -452,17 +452,16 @@ make benchmark-cluster
 In this repository, `make benchmark-cluster` starts a Docker Compose Spark
 standalone simulation with one master, two workers, and a driver container. It
 uses `config/cluster.yaml`, writes results under `experiments/results/cluster/`,
-and labels rows with `environment=docker-cluster`. The first required cluster
-input is `100k`; larger inputs such as `1m` can be attempted after the smoke
-run is stable.
+and labels rows with `environment=docker-simulation`. The default M2 matrix runs
+`100k`, `500k`, and `1m` for Spark SQL, Spark Core, and Hive.
 
-Run a different configured cluster input with:
+Run a narrower simulation slice with benchmark flags:
 
 ```bash
-make benchmark-cluster CLUSTER_INPUT_LABEL=1m
+make benchmark-cluster BENCHMARK_FLAGS="--input-label 1m --technology spark_sql"
 ```
 
-Hive is included in the cluster benchmark CSV, but it remains the existing
+Hive is included in the Docker simulation benchmark CSV, but it remains the existing
 single-node containerized HiveServer2/metastore/Postgres setup. Treat it as
 controlled Docker execution evidence, not a distributed Hive/Hadoop cluster.
 See `docs/cluster_simulation.md` for the topology and limitations.
@@ -527,6 +526,9 @@ Generate charts:
 make charts
 ```
 
+This also regenerates `report/tables/environment_summary.*` with hardware,
+runtime, Spark, Hive, Docker, and Docker Compose configuration evidence.
+
 Generate final report:
 
 ```bash
@@ -588,7 +590,7 @@ The project compares execution times across:
 - Different technologies
 - Different analytical jobs
 - Different input sizes
-- Local and cluster environments, where available
+- Local mode and Docker standalone simulation, where available
 
 Suggested local benchmark matrix:
 
@@ -600,15 +602,13 @@ Suggested local benchmark matrix:
 | 3M | Yes | Yes | Yes |
 | 7M+ | Yes | Yes | Yes |
 
-Suggested cluster benchmark matrix:
+M2 Docker standalone simulation benchmark matrix:
 
 | Input Size | Spark SQL | Spark Core | Hive |
 |---:|---|---|---|
+| 100k | Yes | Yes | Yes |
+| 500k | Yes | Yes | Yes |
 | 1M | Yes | Yes | Yes |
-| 3M | Yes | Yes | Yes |
-| 7M+ | Yes | Yes | Yes |
-| 14M | Yes | Yes | Yes |
-| 28M | Yes | Yes | Yes |
 
 ---
 
@@ -663,8 +663,8 @@ Current expected limitations:
 
 - The full raw dataset is not stored in the repository.
 - Cluster experiments depend on the availability of a suitable execution environment.
-- The Docker cluster simulation runs all services on one host and must not be
-  described as production-cluster performance.
+- The Docker standalone simulation runs all services on one host and must not
+  be described as production-cluster performance.
 - Larger-than-original datasets are generated through controlled replication, so they are intended for scalability testing rather than new statistical insight.
 - Hive execution may require additional local or Docker-based configuration.
 - MapReduce is treated as an optional extension unless explicitly implemented.

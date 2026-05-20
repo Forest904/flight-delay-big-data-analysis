@@ -1,6 +1,6 @@
-# Docker Cluster Simulation
+# Docker Standalone Simulation
 
-This document records the M9 Docker cluster simulation. The goal is to add
+This document records the Docker standalone simulation. The goal is to add
 execution-setting evidence without overclaiming that a laptop Docker Compose
 setup is equivalent to a production cluster.
 
@@ -18,14 +18,14 @@ All Spark containers reuse the project Python/Spark image from
 used to start the standalone master and workers, so the project does not need a
 second Spark distribution image.
 
-The cluster config is `config/cluster.yaml`. It sets the Spark master to
+The Docker simulation config is `config/cluster.yaml`. It sets the Spark master to
 `spark://spark-master:7077`, configures the driver host as `spark-driver`, and
 keeps benchmark results under `experiments/results/cluster/`.
 
 ## Hive Scope
 
 Hive is included in `make benchmark-cluster` so the benchmark CSV still contains
-rows for all three required technologies. Its execution remains the M6 Docker
+rows for all three required technologies. Its execution remains the Docker
 Hive stack:
 
 - `hiveserver2`
@@ -33,13 +33,13 @@ Hive stack:
 - `hive-postgres`
 
 This is a single-node containerized Hive setup, not a distributed Hive cluster
-with HDFS and YARN. The final report should describe Hive cluster evidence as a
+with HDFS and YARN. The final report should describe Hive Docker evidence as a
 limitation, while still using the Docker run as controlled execution-setting
 evidence.
 
 ## Command
 
-Run the first cluster simulation benchmark with:
+Run the Docker simulation benchmark matrix with:
 
 ```powershell
 make benchmark-cluster
@@ -48,7 +48,7 @@ make benchmark-cluster
 The target starts the Spark master, workers, and driver, then runs:
 
 ```powershell
-.\.venv\Scripts\python.exe experiments\run_benchmarks.py --config config\cluster.yaml --environment docker-cluster --input-label 100k
+.\.venv\Scripts\python.exe experiments\run_benchmarks.py --config config\cluster.yaml --environment docker-simulation
 ```
 
 Additional benchmark flags can be passed through `BENCHMARK_FLAGS`. For example:
@@ -57,16 +57,16 @@ Additional benchmark flags can be passed through `BENCHMARK_FLAGS`. For example:
 make benchmark-cluster BENCHMARK_FLAGS="--technology spark_sql"
 ```
 
-The default cluster input is `100k`. Use `CLUSTER_INPUT_LABEL` to run another
-configured and validated input:
+The default M2 simulation matrix is `100k`, `500k`, and `1m`. Use
+`BENCHMARK_FLAGS` to run a narrower configured and validated input:
 
 ```powershell
-make benchmark-cluster CLUSTER_INPUT_LABEL=1m
+make benchmark-cluster BENCHMARK_FLAGS="--input-label 1m"
 ```
 
 ## Results
 
-Cluster benchmark evidence is written separately from local benchmark evidence:
+Docker simulation benchmark evidence is written separately from local benchmark evidence:
 
 ```text
 experiments/results/cluster/
@@ -75,7 +75,7 @@ experiments/results/cluster/
   logs/<run_id>/
 ```
 
-Rows from this path use `environment=docker-cluster` and a cluster-size label
+Rows from this path use `environment=docker-simulation` and a cluster-size label
 that identifies the Spark standalone topology plus Hive's single-node
 containerized limitation.
 

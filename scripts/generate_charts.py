@@ -33,7 +33,28 @@ JOB_LABELS = {
     "delay_by_airport_month": "Delay by airport, month, and delay range",
     "airline_airport_ranking": "Airline-airport delay ranking",
 }
-BENCHMARK_FILE_RE = re.compile(r"^benchmark_\d{8}T\d{6}(?:\d{6})?Z\.csv$")
+ENVIRONMENT_LABELS = {
+    "local": "Local",
+    "docker-simulation": "Docker standalone simulation",
+}
+BENCHMARK_FILE_RE = re.compile(r"^benchmark_\d{8}T\d{6}(?:\d{6})?Z(?:_\d+)?\.csv$")
+EXPECTED_INPUTS_BY_ENVIRONMENT = {
+    "local": (
+        ("100k", 100_000),
+        ("500k", 500_000),
+        ("1m", 1_000_000),
+        ("3m", 3_000_000),
+        ("full", 7_079_081),
+    ),
+    "docker-simulation": (
+        ("100k", 100_000),
+        ("500k", 500_000),
+        ("1m", 1_000_000),
+    ),
+}
+LEGACY_ENVIRONMENT_LABELS = {
+    "docker-cluster": "docker-simulation",
+}
 
 
 @dataclass(frozen=True)
@@ -55,6 +76,11 @@ def display_path(path: Path) -> str:
         return path.relative_to(PROJECT_ROOT).as_posix()
     except ValueError:
         return path.as_posix()
+
+
+def canonical_environment(value: object) -> str:
+    text = str(value or "")
+    return LEGACY_ENVIRONMENT_LABELS.get(text, text)
 
 
 def discover_benchmark_csvs(results_dirs: Iterable[Path]) -> list[Path]:
@@ -83,21 +109,54 @@ def parse_timestamp(value: object) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
-def read_successful_benchmark_rows(csv_paths: Iterable[Path]) -> list[dict[str, object]]:
+def read_benchmark_rows(csv_paths: Iterable[Path]) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for csv_path in csv_paths:
         with csv_path.open(newline="", encoding="utf-8") as file:
             reader = csv.DictReader(file)
             for row in reader:
-                if str(row.get("status", "")).lower() != "success":
-                    continue
+                row["environment"] = canonical_environment(row.get("environment", ""))
                 row["_source_file"] = csv_path.name
                 row["_timestamp"] = parse_timestamp(row.get("timestamp_utc"))
                 rows.append(row)
     return rows
 
 
+def read_successful_benchmark_rows(csv_paths: Iterable[Path]) -> list[dict[str, object]]:
+    return [
+        row
+        for row in read_benchmark_rows(csv_paths)
+        if str(row.get("status", "")).lower() == "success"
+    ]
+
+
 def latest_successful_rows(rows: Iterable[dict[str, object]]) -> list[dict[str, object]]:
+    latest_by_key: dict[tuple[str, str, str, str], dict[str, object]] = {}
+    for row in rows:
+        key = (
+            str(row.get("environment", "")),
+            str(row.get("input_label", "")),
+            str(row.get("job_name", "")),
+            str(row.get("technology", "")),
+        )
+        current = latest_by_key.get(key)
+        if current is None or row["_timestamp"] > current["_timestamp"]:
+            latest_by_key[key] = row
+    return sorted(
+        latest_by_key.values(),
+        key=lambda row: (
+            str(row.get("environment", "")),
+            int(float(row.get("records") or 0)),
+            str(row.get("input_label", "")),
+            str(row.get("job_name", "")),
+            TECHNOLOGY_ORDER.index(str(row.get("technology")))
+            if str(row.get("technology")) in TECHNOLOGY_ORDER
+            else len(TECHNOLOGY_ORDER),
+        ),
+    )
+
+
+def latest_benchmark_rows(rows: Iterable[dict[str, object]]) -> list[dict[str, object]]:
     latest_by_key: dict[tuple[str, str, str, str], dict[str, object]] = {}
     for row in rows:
         key = (
@@ -178,6 +237,121 @@ def benchmark_pivot_records(summary: list[dict[str, object]]) -> list[dict[str, 
     return pivot.where(pd.notna(pivot), "").to_dict(orient="records")
 
 
+def row_reason(row: dict[str, object]) -> str:
+    error = str(row.get("error", "") or "").strip()
+    stage = str(row.get("stage", "") or "").strip()
+    if error and stage:
+        return f"{stage}: {error}"
+    if error:
+        return error
+    if stage:
+        return stage
+    status = str(row.get("status", "") or "").strip()
+    return status
+
+
+def benchmark_status_record(row: dict[str, object], *, records: int | None = None) -> dict[str, object]:
+    technology = str(row.get("technology", ""))
+    return {
+        "environment": row.get("environment", ""),
+        "input_label": row.get("input_label", ""),
+        "records": records if records is not None else int(float(row.get("records") or 0)),
+        "job_name": row.get("job_name", ""),
+        "technology": TECHNOLOGY_LABELS.get(technology, technology),
+        "status": row.get("status", ""),
+        "duration_seconds": row.get("duration_seconds", ""),
+        "output_rows": row.get("output_rows", ""),
+        "reason": "" if str(row.get("status", "")).lower() == "success" else row_reason(row),
+        "run_id": row.get("run_id", ""),
+        "timestamp_utc": row.get("timestamp_utc", ""),
+        "source_file": row.get("_source_file", ""),
+    }
+
+
+def benchmark_status_records(rows: Iterable[dict[str, object]]) -> list[dict[str, object]]:
+    latest_rows = latest_benchmark_rows(rows)
+    latest_by_key = {
+        (
+            str(row.get("environment", "")),
+            str(row.get("input_label", "")),
+            str(row.get("job_name", "")),
+            str(row.get("technology", "")),
+        ): row
+        for row in latest_rows
+    }
+    latest_run_failures = {
+        (
+            str(row.get("environment", "")),
+            str(row.get("input_label", "")),
+            str(row.get("technology", "")),
+        ): row
+        for row in latest_rows
+        if str(row.get("job_name", "")) == "__run__"
+        and str(row.get("status", "")).lower() != "success"
+    }
+
+    expected_keys: set[tuple[str, str, str, str]] = set()
+    status_rows: list[dict[str, object]] = []
+    for environment, inputs in EXPECTED_INPUTS_BY_ENVIRONMENT.items():
+        for input_label, records in inputs:
+            for job_name in JOB_LABELS:
+                for technology in TECHNOLOGY_ORDER:
+                    key = (environment, input_label, job_name, technology)
+                    expected_keys.add(key)
+                    row = latest_by_key.get(key)
+                    if row is not None:
+                        status_rows.append(benchmark_status_record(row, records=records))
+                        continue
+
+                    run_failure = latest_run_failures.get((environment, input_label, technology))
+                    if run_failure is not None:
+                        failed_row = dict(run_failure)
+                        failed_row["job_name"] = job_name
+                        status_rows.append(benchmark_status_record(failed_row, records=records))
+                        continue
+
+                    status_rows.append(
+                        {
+                            "environment": environment,
+                            "input_label": input_label,
+                            "records": records,
+                            "job_name": job_name,
+                            "technology": TECHNOLOGY_LABELS[technology],
+                            "status": "not_run",
+                            "duration_seconds": "",
+                            "output_rows": "",
+                            "reason": "No benchmark row found for this expected cell.",
+                            "run_id": "",
+                            "timestamp_utc": "",
+                            "source_file": "",
+                        }
+                    )
+
+    extras = [
+        row
+        for row in latest_rows
+        if (
+            str(row.get("environment", "")),
+            str(row.get("input_label", "")),
+            str(row.get("job_name", "")),
+            str(row.get("technology", "")),
+        )
+        not in expected_keys
+        and str(row.get("job_name", "")) != "__run__"
+    ]
+    status_rows.extend(benchmark_status_record(row) for row in extras)
+    return sorted(
+        status_rows,
+        key=lambda row: (
+            str(row.get("environment", "")),
+            int(float(row.get("records") or 0)),
+            str(row.get("input_label", "")),
+            str(row.get("job_name", "")),
+            str(row.get("technology", "")),
+        ),
+    )
+
+
 def write_csv(path: Path, records: list[dict[str, object]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = list(records[0].keys()) if records else []
@@ -255,7 +429,8 @@ def generate_execution_time_charts(rows: list[dict[str, object]], figures_dir: P
                 label=technology_label,
             )
 
-        plt.title(f"{JOB_LABELS.get(str(job_name), job_name)} - {environment}")
+        environment_label = ENVIRONMENT_LABELS.get(str(environment), str(environment))
+        plt.title(f"{JOB_LABELS.get(str(job_name), job_name)} - {environment_label}")
         plt.xlabel("Input size (record count)")
         plt.ylabel("Execution time (seconds)")
         plt.xticks(
@@ -312,14 +487,21 @@ def generate_artifacts(
     if not benchmark_csvs:
         warnings.append("No timestamped benchmark CSV files found.")
 
-    successful_rows = read_successful_benchmark_rows(benchmark_csvs)
+    all_rows = read_benchmark_rows(benchmark_csvs)
+    successful_rows = [
+        row
+        for row in all_rows
+        if str(row.get("status", "")).lower() == "success"
+    ]
     latest_rows = latest_successful_rows(successful_rows)
     summary = benchmark_summary_records(latest_rows)
     pivot = benchmark_pivot_records(summary)
+    status = benchmark_status_records(all_rows)
 
     tables: list[Path] = []
     tables.extend(write_table_pair(tables_dir, "benchmark_summary", summary))
     tables.extend(write_table_pair(tables_dir, "benchmark_pivot", pivot))
+    tables.extend(write_table_pair(tables_dir, "benchmark_status", status))
 
     first_10_tables, first_10_warnings = copy_first_10_tables(outputs_dir, tables_dir)
     tables.extend(first_10_tables)

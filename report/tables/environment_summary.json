@@ -1,0 +1,215 @@
+{
+  "generated_at_utc": "2026-05-20T16:30:59.082000+00:00",
+  "records": [
+    {
+      "category": "campaign",
+      "item": "summary_generated_at_utc",
+      "source": "script timestamp",
+      "value": "2026-05-20T16:30:55.208339+00:00"
+    },
+    {
+      "category": "host",
+      "item": "os",
+      "source": "platform.platform",
+      "value": "Windows-11-10.0.26200-SP0"
+    },
+    {
+      "category": "host",
+      "item": "python_executable",
+      "source": "sys.executable",
+      "value": "C:\\Users\\lucap\\Documents\\VSC Repository\\flight-delay-big-data-analysis\\.venv\\Scripts\\python.exe"
+    },
+    {
+      "category": "host",
+      "item": "python_version",
+      "source": "platform.python_version",
+      "value": "3.12.2"
+    },
+    {
+      "category": "host",
+      "item": "cpu_model",
+      "source": "platform.processor",
+      "value": "AMD64 Family 26 Model 96 Stepping 0, AuthenticAMD"
+    },
+    {
+      "category": "host",
+      "item": "physical_cores",
+      "source": "psutil",
+      "value": "8"
+    },
+    {
+      "category": "host",
+      "item": "logical_cores",
+      "source": "psutil",
+      "value": "16"
+    },
+    {
+      "category": "host",
+      "item": "ram_bytes",
+      "source": "psutil",
+      "value": "33598853120"
+    },
+    {
+      "category": "host",
+      "item": "project_drive_total_bytes",
+      "source": "psutil.disk_usage",
+      "value": "957397069824"
+    },
+    {
+      "category": "host",
+      "item": "project_drive_free_bytes",
+      "source": "psutil.disk_usage",
+      "value": "544146681856"
+    },
+    {
+      "category": "host",
+      "item": "windows_cpu_model",
+      "source": "Win32_Processor",
+      "value": "AMD Ryzen AI 7 350 w/ Radeon 860M"
+    },
+    {
+      "category": "host",
+      "item": "windows_os_detail",
+      "source": "Win32_OperatingSystem",
+      "value": "Microsoft Windows 11 Home 10.0.26200 build 26200 64-bit"
+    },
+    {
+      "category": "host",
+      "item": "disk_type",
+      "source": "Get-PhysicalDisk",
+      "value": "WD PC SN5000S SDEPMSJ-1T00-1101; media=SSD; bus=NVMe; size=1024209543168"
+    },
+    {
+      "category": "runtime",
+      "item": "java_version",
+      "source": "java -version",
+      "value": "openjdk version \"17.0.19\" 2026-04-21"
+    },
+    {
+      "category": "runtime",
+      "item": "docker_version",
+      "source": "docker --version",
+      "value": "Docker version 29.4.3, build 055a478"
+    },
+    {
+      "category": "runtime",
+      "item": "docker_compose_version",
+      "source": "docker compose version",
+      "value": "Docker Compose version v5.1.3"
+    },
+    {
+      "category": "runtime",
+      "item": "docker_desktop_limits",
+      "source": "docker info",
+      "value": "CPUs=16; MemBytes=16391536640; Server=29.4.3; OS=Docker Desktop"
+    },
+    {
+      "category": "runtime",
+      "item": "hive_base_image",
+      "source": "Dockerfile.hive",
+      "value": "apache/hive:4.0.1"
+    },
+    {
+      "category": "runtime",
+      "item": "pyspark_version",
+      "source": "Python import",
+      "value": "4.1.1"
+    },
+    {
+      "category": "runtime",
+      "item": "pandas_version",
+      "source": "Python import",
+      "value": "3.0.3"
+    },
+    {
+      "category": "runtime",
+      "item": "pyarrow_version",
+      "source": "Python import",
+      "value": "24.0.0"
+    },
+    {
+      "category": "spark_config",
+      "item": "local_config_path",
+      "source": "config yaml",
+      "value": "config/local.yaml"
+    },
+    {
+      "category": "spark_config",
+      "item": "local_spark_master",
+      "source": "config yaml",
+      "value": "local[*]"
+    },
+    {
+      "category": "spark_config",
+      "item": "local_shuffle_partitions",
+      "source": "config yaml",
+      "value": "8"
+    },
+    {
+      "category": "spark_config",
+      "item": "local_cluster_size",
+      "source": "config yaml",
+      "value": "local"
+    },
+    {
+      "category": "spark_config",
+      "item": "docker-simulation_config_path",
+      "source": "config yaml",
+      "value": "config/cluster.yaml"
+    },
+    {
+      "category": "spark_config",
+      "item": "docker-simulation_spark_master",
+      "source": "config yaml",
+      "value": "spark://spark-master:7077"
+    },
+    {
+      "category": "spark_config",
+      "item": "docker-simulation_shuffle_partitions",
+      "source": "config yaml",
+      "value": "16"
+    },
+    {
+      "category": "spark_config",
+      "item": "docker-simulation_cluster_size",
+      "source": "config yaml",
+      "value": "docker-compose Spark standalone: 1 master + 2 workers; Hive single-node container"
+    },
+    {
+      "category": "spark_config",
+      "item": "docker-simulation_spark_driver_service",
+      "source": "config yaml",
+      "value": "spark-driver"
+    },
+    {
+      "category": "spark_config",
+      "item": "docker-simulation_container_workspace",
+      "source": "config yaml",
+      "value": "/workspace"
+    },
+    {
+      "category": "docker_topology",
+      "item": "compose_services",
+      "source": "docker-compose.yml",
+      "value": "hive-metastore, hive-postgres, hiveserver2, spark-core, spark-driver, spark-master, spark-worker-1, spark-worker-2"
+    },
+    {
+      "category": "docker_topology",
+      "item": "spark-worker-1_command",
+      "source": "docker-compose.yml",
+      "value": "spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077 --host spark-worker-1 --webui-port 8081 --cores 2 --memory 2g"
+    },
+    {
+      "category": "docker_topology",
+      "item": "spark-worker-2_command",
+      "source": "docker-compose.yml",
+      "value": "spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077 --host spark-worker-2 --webui-port 8081 --cores 2 --memory 2g"
+    },
+    {
+      "category": "docker_topology",
+      "item": "worker_count_variation",
+      "source": "M2 plan",
+      "value": "not used in M2; Compose defines two named workers"
+    }
+  ]
+}

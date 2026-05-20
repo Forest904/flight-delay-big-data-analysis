@@ -94,37 +94,44 @@ Grading evidence:
 ### M2 - Strengthen Benchmark Evidence
 
 Priority: `P0 grade blocker` and `P1 evidence upgrade`  
-Status: partially supported by existing tooling, evidence incomplete.
+Status: completed.
 
 Goal: make the experimental analysis broad enough to support efficiency and scalability claims.
 
 Benchmark target:
 
 - Local benchmark matrix:
-  - [ ] `100k`, `500k`, `1m`, and `3m` for Spark SQL, Spark Core, and Hive.
-  - [ ] `full` for Spark SQL and Spark Core if runtime and hardware allow.
-  - [ ] Hive full-size run only if it is practical; otherwise document the limit.
+  - [x] `100k`, `500k`, `1m`, and `3m` for Spark SQL, Spark Core, and Hive.
+  - [x] `full` for Spark SQL and Spark Core if runtime and hardware allow.
+  - [x] Hive full-size run only if it is practical; otherwise document the limit.
 - Docker standalone simulation matrix:
-  - [ ] `100k`, `500k`, and `1m` for Spark SQL, Spark Core, and Hive.
-  - [ ] Optional worker-count variation only if Docker Compose can support it reliably.
+  - [x] `100k`, `500k`, and `1m` for Spark SQL, Spark Core, and Hive.
+  - [x] Document optional worker-count variation as skipped because the fixed two-worker Docker Compose topology is the reliable M2 setup.
 
 Runtime configuration evidence:
 
-- [ ] Record CPU model, core count, RAM, OS, disk type if known, and timestamp of benchmark campaign.
-- [ ] Record Python, Java, Spark, Hive, Docker, and Docker Compose versions.
-- [ ] Record Spark master, shuffle partitions, executor/worker topology, worker memory, worker cores, and Docker Desktop CPU/RAM limits.
-- [ ] Store this as a report-ready artifact, for example `report/tables/environment_summary.*`.
+- [x] Record CPU model, core count, RAM, OS, disk type if known, and timestamp of benchmark campaign.
+- [x] Record Python, Java, Spark, Hive, Docker, and Docker Compose versions.
+- [x] Record Spark master, shuffle partitions, executor/worker topology, worker memory, worker cores, and Docker Desktop CPU/RAM limits.
+- [x] Store this as a report-ready artifact, for example `report/tables/environment_summary.*`.
 
 Acceptance criteria:
 
-- [ ] Benchmark summary tables no longer rely on only local `100k` and Docker `100k`/`1m`.
-- [ ] Failed or skipped benchmark cells are explicitly marked with a reason.
-- [ ] The report can discuss input-size trends without overgeneralizing.
-- [ ] Docker results are labeled as Docker standalone simulation, not as real distributed-cluster performance.
+- [x] Benchmark summary tables no longer rely on only local `100k` and Docker `100k`/`1m`.
+- [x] Failed or skipped benchmark cells are explicitly marked with a reason.
+- [x] The report can discuss input-size trends without overgeneralizing.
+- [x] Docker results are labeled as Docker standalone simulation, not as real distributed-cluster performance.
 
 Grading evidence:
 
 - The project visibly addresses the assignment request to compare execution times while varying input size and, where possible, execution setting.
+- Implemented Docker benchmark label standardization from `docker-cluster` to `docker-simulation`, while keeping legacy benchmark CSV rows readable through report-generation normalization.
+- Local benchmark campaign completed successfully for `100k`, `500k`, `1m`, `3m`, and `full` across Spark SQL, Spark Core, and Hive: 30/30 expected local job cells succeeded.
+- Docker standalone simulation benchmark campaign completed successfully for `100k`, `500k`, and `1m` across Spark SQL, Spark Core, and Hive: 18/18 expected Docker simulation job cells succeeded.
+- Generated report-ready benchmark artifacts: `report/tables/benchmark_summary.*`, `report/tables/benchmark_pivot.*`, and `report/tables/benchmark_status.*`.
+- Generated runtime configuration artifacts: `report/tables/environment_summary.csv`, `report/tables/environment_summary.md`, and `report/tables/environment_summary.json`.
+- Worker-count variation was intentionally not added because the current Docker Compose topology uses two named Spark workers; M2 focuses on input-size variation and documents this limit in the environment summary.
+- Verification completed: `.\.venv\Scripts\python.exe -m pytest -q` passed with 44 tests, `make benchmark-local` passed, `make benchmark-cluster` passed, `make charts` regenerated report tables and figures, and `make report` rebuilt `report/draft_final_report.pdf`.
 
 ### M3 - Upgrade Charts And Derived Metrics
 

@@ -66,15 +66,17 @@ def benchmark_row(
 def test_discover_benchmark_csvs_ignores_latest_copy(tmp_path):
     results_dir = tmp_path / "results"
     timestamped = results_dir / "benchmark_20260520T120000123456Z.csv"
+    rerun = results_dir / "benchmark_20260520T120000123456Z_1.csv"
     latest = results_dir / "benchmark_latest.csv"
     unrelated = results_dir / "benchmark_notes.csv"
     write_benchmark_csv(timestamped, [])
+    write_benchmark_csv(rerun, [])
     write_benchmark_csv(latest, [])
     unrelated.write_text("not a benchmark\n", encoding="utf-8")
 
     discovered = generate_charts.discover_benchmark_csvs([results_dir])
 
-    assert discovered == [timestamped]
+    assert discovered == [timestamped, rerun]
 
 
 def test_latest_successful_rows_keeps_newest_success_and_excludes_failed(tmp_path):
@@ -121,6 +123,25 @@ def test_latest_successful_rows_keeps_newest_success_and_excludes_failed(tmp_pat
     assert latest[0]["duration_seconds"] == "7.5"
 
 
+def test_read_benchmark_rows_normalizes_legacy_docker_cluster_label(tmp_path):
+    csv_path = tmp_path / "benchmark_20260520T120000000000Z.csv"
+    write_benchmark_csv(
+        csv_path,
+        [
+            benchmark_row(
+                run_id="run",
+                timestamp_utc="2026-05-20T12:00:00+00:00",
+                duration_seconds=8.5,
+                environment="docker-cluster",
+            )
+        ],
+    )
+
+    rows = generate_charts.read_benchmark_rows([csv_path])
+
+    assert rows[0]["environment"] == "docker-simulation"
+
+
 def test_benchmark_pivot_contains_available_technology_duration_columns():
     rows = [
         benchmark_row(
@@ -145,6 +166,47 @@ def test_benchmark_pivot_contains_available_technology_duration_columns():
     assert len(pivot) == 1
     assert pivot[0]["Spark SQL duration_seconds"] == 8.5
     assert pivot[0]["Spark Core duration_seconds"] == 2.25
+
+
+def test_benchmark_status_records_include_success_failure_and_not_run():
+    success = benchmark_row(
+        run_id="success",
+        timestamp_utc=datetime(2026, 5, 20, 12, 0, tzinfo=timezone.utc).isoformat(),
+        duration_seconds=8.5,
+        status="success",
+        technology="spark_sql",
+        job_name="delay_by_airport_month",
+        input_label="100k",
+        records=100000,
+        environment="local",
+    )
+    failure = benchmark_row(
+        run_id="failed",
+        timestamp_utc=datetime(2026, 5, 20, 13, 0, tzinfo=timezone.utc).isoformat(),
+        duration_seconds=0.5,
+        status="failed",
+        technology="hive",
+        job_name="__run__",
+        input_label="full",
+        records=7079081,
+        environment="local",
+    )
+    failure["stage"] = "preflight"
+    failure["error"] = "Hive full run exceeded practical limit"
+    for row in (success, failure):
+        row["_timestamp"] = generate_charts.parse_timestamp(row["timestamp_utc"])
+        row["_source_file"] = "benchmark_20260520T120000000000Z.csv"
+
+    status = generate_charts.benchmark_status_records([success, failure])
+    by_key = {
+        (row["environment"], row["input_label"], row["job_name"], row["technology"]): row
+        for row in status
+    }
+
+    assert by_key[("local", "100k", "delay_by_airport_month", "Spark SQL")]["status"] == "success"
+    assert by_key[("local", "full", "delay_by_airport_month", "Hive")]["status"] == "failed"
+    assert "exceeded practical limit" in by_key[("local", "full", "delay_by_airport_month", "Hive")]["reason"]
+    assert by_key[("docker-simulation", "500k", "airline_airport_ranking", "Spark SQL")]["status"] == "not_run"
 
 
 def test_first_10_csv_inputs_are_written_as_report_tables(tmp_path):

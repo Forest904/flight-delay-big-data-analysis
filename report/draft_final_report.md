@@ -186,9 +186,9 @@ versions of both analyses, and exports CSV outputs with the same schemas as
 Spark SQL and Spark Core.
 
 Hive is useful as a SQL-on-Hadoop comparison point, but in this project it is
-run as a containerized local Hive service. The Docker cluster benchmark includes
-Hive rows for controlled execution-setting evidence, but Hive is not a
-distributed Hive-on-YARN cluster in this setup.
+run as a containerized local Hive service. The Docker standalone simulation
+benchmark includes Hive rows for controlled execution-setting evidence, but
+Hive is not a distributed Hive-on-YARN cluster in this setup.
 
 # Produced Result Samples
 
@@ -249,18 +249,34 @@ This output is split into two narrow tables. Together they represent the same
 
 The benchmark runner records technology, job name, input size, environment,
 cluster-size label, duration, output rows, status, and timestamp. The
-report-ready summary is generated under `report/tables/`.
+report-ready summary, status matrix, and environment summary are generated
+under `report/tables/`.
 
 ## Benchmark Pivot
 
-| Env. | Input | Records | Job | SQL s | Core s | Hive s |
+The M2 benchmark campaign completed all expected local and Docker simulation
+cells. The complete status matrix is stored in
+`report/tables/benchmark_status.md`; all 48 expected job cells were successful
+in this run.
+
+| environment | input_label | records | job_name | Spark SQL s | Spark Core s | Hive s |
 | --- | --- | --- | --- | --- | --- | --- |
-| docker | 100k | 100000 | ranking | 8.676 | 3.693 | 14.976 |
-| docker | 100k | 100000 | delay | 15.454 | 4.164 | 17.509 |
-| docker | 1m | 1000000 | ranking | 7.54 | 3.702 | 14.15 |
-| docker | 1m | 1000000 | delay | 16.15 | 4.082 | 19.66 |
-| local | 100k | 100000 | ranking | 1.842 | 0.765 | 14.831 |
-| local | 100k | 100000 | delay | 8.581 | 0.959 | 18.071 |
+| docker-simulation | 100k | 100000 | airline_airport_ranking | 5.136 | 2.148 | 9.189 |
+| docker-simulation | 100k | 100000 | delay_by_airport_month | 9.642 | 2.386 | 12.267 |
+| docker-simulation | 500k | 500000 | airline_airport_ranking | 5.164 | 2.191 | 8.986 |
+| docker-simulation | 500k | 500000 | delay_by_airport_month | 9.393 | 2.505 | 12.046 |
+| docker-simulation | 1m | 1000000 | airline_airport_ranking | 3.902 | 2.112 | 8.889 |
+| docker-simulation | 1m | 1000000 | delay_by_airport_month | 8.765 | 2.638 | 13.03 |
+| local | 100k | 100000 | airline_airport_ranking | 1.291 | 0.552 | 8.993 |
+| local | 100k | 100000 | delay_by_airport_month | 6.666 | 0.713 | 12.075 |
+| local | 500k | 500000 | airline_airport_ranking | 1.491 | 0.567 | 9.102 |
+| local | 500k | 500000 | delay_by_airport_month | 7.164 | 0.763 | 12.926 |
+| local | 1m | 1000000 | airline_airport_ranking | 1.693 | 0.624 | 8.972 |
+| local | 1m | 1000000 | delay_by_airport_month | 8.388 | 0.857 | 13.009 |
+| local | 3m | 3000000 | airline_airport_ranking | 2.201 | 0.607 | 12.141 |
+| local | 3m | 3000000 | delay_by_airport_month | 9.2 | 0.957 | 14.728 |
+| local | full | 7079081 | airline_airport_ranking | 2.204 | 0.592 | 12.699 |
+| local | full | 7079081 | delay_by_airport_month | 9.066 | 0.898 | 19.878 |
 
 ## Benchmark Charts
 
@@ -268,9 +284,9 @@ report-ready summary is generated under `report/tables/`.
 
 ![Local execution time for airline-airport ranking](figures/execution_time_local_airline_airport_ranking.png)
 
-![Docker cluster execution time for delay by airport/month](figures/execution_time_docker-cluster_delay_by_airport_month.png)
+![Docker standalone simulation execution time for delay by airport/month](figures/execution_time_docker-simulation_delay_by_airport_month.png)
 
-![Docker cluster execution time for airline-airport ranking](figures/execution_time_docker-cluster_airline_airport_ranking.png)
+![Docker standalone simulation execution time for airline-airport ranking](figures/execution_time_docker-simulation_airline_airport_ranking.png)
 
 # Critical Comparison
 
@@ -281,9 +297,10 @@ functions, so concise code does not mean zero distributed cost.
 
 Spark Core is the most explicit implementation. It exposes each aggregation,
 join, sort, and ranking step. In the available benchmark rows it is the fastest
-technology, especially for the local 100k runs. That result should be read with
-care: the RDD implementation writes small final result tables locally after
-aggregation, and the measured workload is not a full production cluster run.
+technology across the local and Docker simulation matrices. That result should
+be read with care: the RDD implementation writes small final result tables
+locally after aggregation, and the measured workload is not a full production
+cluster run.
 Still, Spark Core shows how map-side combining with `reduceByKey` can reduce
 shuffle volume compared with moving raw records by key.
 
@@ -302,20 +319,19 @@ compact airport-airline aggregates after the first stage.
 # Scalability And Execution Setting
 
 The project includes local benchmark evidence and Docker execution-setting
-evidence. The Spark Docker cluster uses a standalone Spark master and two Spark
+evidence. The Docker standalone simulation uses a Spark master and two Spark
 workers. This varies the execution environment, but all containers run on one
 physical laptop, share Docker Desktop CPU, memory, and disk limits, and read
 from a bind-mounted local directory rather than HDFS or object storage.
 
-Hive benchmark rows are included in the Docker cluster benchmark output so the
-tables cover all three technologies. However, Hive remains a single-node
+Hive benchmark rows are included in the Docker simulation benchmark output so
+the tables cover all three technologies. However, Hive remains a single-node
 containerized Hive setup in this project. It should not be presented as a
 distributed Hive cluster.
 
-Because the benchmark artifacts currently include local 100k rows and Docker
-100k/1m rows, the report can support cautious scalability discussion but not
-strong production-scaling claims. The generated input-size machinery supports
-larger local experiments where hardware allows.
+The benchmark status table explicitly marks failed or skipped cells with a
+reason, so the report can discuss input-size trends without hiding limits such
+as an impractical Hive full-size run.
 
 # Reproducibility And Validation
 
@@ -343,8 +359,8 @@ files.
 - The raw dataset does not include airline names, so analyses use
   `airline_code`.
 - MapReduce is out of scope.
-- The Docker Spark cluster is a simulation on one physical machine, not a true
-  multi-machine cluster.
+- The Docker Spark setup is a standalone simulation on one physical machine,
+  not a true multi-machine cluster.
 - Hive is containerized locally and is not running on a distributed Hadoop/YARN
   cluster.
 - Windows Spark runs require care around Java, Hadoop `winutils.exe`, and

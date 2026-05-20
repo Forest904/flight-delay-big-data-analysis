@@ -1,4 +1,4 @@
-environment: cluster
+environment: docker-simulation
 
 paths:
   raw_dir: data/raw
@@ -11,7 +11,7 @@ paths:
 
 spark:
   master: spark://spark-master:7077
-  app_name: flight-delay-big-data-analysis-cluster
+  app_name: flight-delay-big-data-analysis-docker-simulation
   shuffle_partitions: 16
   driver_host: spark-driver
   driver_bind_address: 0.0.0.0
@@ -24,10 +24,12 @@ benchmark:
     - label: 100k
       records: 100000
       path: data/generated/flights_100k.parquet
+    - label: 500k
+      records: 500000
+      path: data/generated/flights_500k.parquet
     - label: 1m
       records: 1000000
       path: data/generated/flights_1m.parquet
-      optional: true
 
 cluster_notes:
   spark_topology: "Spark standalone on Docker Compose with one master and two workers."

@@ -469,8 +469,17 @@ def test_cluster_results_dir_is_respected(tmp_path):
     assert results_dir == tmp_path / "experiments" / "results" / "cluster"
 
 
-def test_makefile_cluster_input_label_is_overrideable():
+def test_cluster_config_lists_required_docker_simulation_inputs():
+    import yaml
+
+    config = yaml.safe_load(Path("config/cluster.yaml").read_text(encoding="utf-8"))
+
+    assert config["environment"] == "docker-simulation"
+    assert [entry["label"] for entry in config["benchmark"]["input_sizes"]] == ["100k", "500k", "1m"]
+
+
+def test_makefile_uses_docker_simulation_default_matrix():
     makefile = Path("Makefile").read_text(encoding="utf-8")
 
-    assert "CLUSTER_INPUT_LABEL ?= 100k" in makefile
-    assert "--input-label $(CLUSTER_INPUT_LABEL)" in makefile
+    assert "--environment docker-simulation" in makefile
+    assert "--input-label $(CLUSTER_INPUT_LABEL)" not in makefile

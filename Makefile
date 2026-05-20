@@ -14,7 +14,6 @@ DOCKER_COMPOSE := $(DOCKER) compose
 endif
 
 GENERATE_SIZE_FLAGS :=
-CLUSTER_INPUT_LABEL ?= 100k
 ifeq ($(FORCE),1)
 GENERATE_SIZE_FLAGS += --force
 endif
@@ -46,7 +45,7 @@ benchmark-local:
 
 benchmark-cluster:
 	$(DOCKER_COMPOSE) up -d --build spark-master spark-worker-1 spark-worker-2 spark-driver
-	$(VENV_PYTHON) experiments/run_benchmarks.py --config config/cluster.yaml --environment docker-cluster --input-label $(CLUSTER_INPUT_LABEL) $(BENCHMARK_FLAGS)
+	$(VENV_PYTHON) experiments/run_benchmarks.py --config config/cluster.yaml --environment docker-simulation $(BENCHMARK_FLAGS)
 
 run-spark-sql:
 	$(VENV_PYTHON) src/spark_sql/run_spark_sql.py
@@ -70,6 +69,7 @@ stop-hive:
 	$(DOCKER_COMPOSE) stop hiveserver2 hive-metastore hive-postgres
 
 charts:
+	$(VENV_PYTHON) scripts/generate_environment_summary.py
 	$(VENV_PYTHON) scripts/generate_charts.py
 
 report:
