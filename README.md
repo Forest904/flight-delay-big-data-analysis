@@ -423,27 +423,35 @@ make run-all-local
 
 ## Benchmarking
 
-The benchmark runner executes analytical jobs across multiple input sizes and records execution metrics.
+The local benchmark runner executes Spark SQL, Spark Core, and Hive jobs across
+validated generated input sizes from `data/generated/input_size_manifest.json`.
+Run `make generate-sizes` before benchmarking.
 
 Metrics collected include:
 
 ```text
 technology
 job_name
-input_size_label
-input_records
+input_label
+records
 environment
 cluster_size
-execution_time_seconds
+duration_seconds
 output_rows
 status
-timestamp
+timestamp_utc
 ```
 
 Run local benchmarks:
 
 ```bash
 make benchmark-local
+```
+
+Run a smaller smoke benchmark:
+
+```bash
+make benchmark-local BENCHMARK_FLAGS="--input-label 100k"
 ```
 
 Run cluster benchmarks, if a cluster environment is available:
@@ -458,6 +466,17 @@ Benchmark results are stored in:
 experiments/results/local/
 experiments/results/cluster/
 ```
+
+Each local benchmark run writes:
+
+```text
+experiments/results/local/benchmark_<YYYYMMDDTHHMMSSffffffZ>.csv
+experiments/results/local/benchmark_latest.csv
+experiments/results/local/logs/<run_id>/
+```
+
+The timestamped CSV is immutable run evidence. `benchmark_latest.csv` is a
+convenience copy for report tables and charts.
 
 ---
 

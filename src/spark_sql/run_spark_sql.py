@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import shutil
 import sys
@@ -56,6 +57,16 @@ def load_yaml(path: Path) -> dict[str, Any]:
     return data
 
 
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--input-path",
+        type=Path,
+        help="Prepared Parquet input to analyze. Defaults to config/local.yaml paths.prepared_file.",
+    )
+    return parser.parse_args(argv)
+
+
 def resolve_project_path(path_value: str) -> Path:
     path = Path(path_value)
     if not path.is_absolute():
@@ -99,7 +110,7 @@ def validate_preconditions(prepared_file: Path) -> list[str]:
     errors: list[str] = []
     if not prepared_file.exists():
         errors.append(
-            f"Prepared dataset was not found: {prepared_file}. Run `make prepare` before `make run-spark-sql`."
+            f"Prepared dataset was not found: {prepared_file}. Run `make prepare` or `make generate-sizes` first."
         )
     if not has_windows_winutils():
         errors.append(
@@ -334,7 +345,14 @@ def write_metrics(metrics: dict[str, Any], output_root: Path) -> None:
         file.write("\n")
 
 
-def main() -> int:
+def print_metrics(metrics: dict[str, Any], output_root: Path) -> None:
+    print("# Spark SQL Runtime Metrics")
+    print(json.dumps(metrics, indent=2, sort_keys=True))
+    print(f"Spark SQL outputs written to: {display_path(output_root)}")
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     ensure_java_17()
 
     local_config = load_yaml(LOCAL_CONFIG)
@@ -343,30 +361,41 @@ def main() -> int:
     if not prepared_file_value:
         raise ValueError(f"{LOCAL_CONFIG} does not define paths.prepared_file")
 
-    prepared_file = resolve_project_path(str(prepared_file_value))
+    prepared_file = args.input_path if args.input_path is not None else Path(str(prepared_file_value))
+    if not prepared_file.is_absolute():
+        prepared_file = PROJECT_ROOT / prepared_file
     output_root = spark_sql_output_root(local_config)
-
-    preflight_errors = validate_preconditions(prepared_file)
-    if preflight_errors:
-        print("# Spark SQL preflight failed", file=sys.stderr)
-        for error in preflight_errors:
-            print(f"- {error}", file=sys.stderr)
-        return 1
-
-    clear_spark_sql_outputs(output_root)
-    spark = build_spark(local_config)
     spark_config = local_config.get("spark", {})
     run_metrics: dict[str, Any] = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "technology": "spark_sql",
-        "status": "success",
+        "status": "running",
+        "stage": "preflight",
         "input_path": display_path(prepared_file),
         "spark_master": str(spark_config.get("master", "local[*]")),
         "spark_shuffle_partitions": int(spark_config.get("shuffle_partitions", 8)),
         "jobs": [],
     }
 
+    preflight_errors = validate_preconditions(prepared_file)
+    if preflight_errors:
+        print("# Spark SQL preflight failed", file=sys.stderr)
+        for error in preflight_errors:
+            print(f"- {error}", file=sys.stderr)
+        run_metrics["status"] = "failed"
+        run_metrics["error"] = "; ".join(preflight_errors)
+        write_metrics(run_metrics, output_root)
+        print_metrics(run_metrics, output_root)
+        return 1
+
+    clear_spark_sql_outputs(output_root)
+    spark: SparkSession | None = None
+
     try:
+        run_metrics["stage"] = "spark_create"
+        spark = build_spark(local_config)
+
+        run_metrics["stage"] = "input_read"
         flights = read_prepared_parquet(spark, prepared_file)
         flights.createOrReplaceTempView("flights")
 
@@ -386,18 +415,25 @@ def main() -> int:
         ]
 
         for name, df, full_path, sample_path in analyses:
+            run_metrics["stage"] = f"job:{name}"
             job_metrics = run_analysis(name, df, full_path, sample_path)
             run_metrics["jobs"].append(job_metrics)
             if job_metrics["status"] != "success":
                 run_metrics["status"] = "failed"
+                run_metrics["error"] = job_metrics.get("error")
                 break
+        else:
+            run_metrics["status"] = "success"
+            run_metrics["stage"] = "complete"
+    except Exception as exc:
+        run_metrics["status"] = "failed"
+        run_metrics["error"] = str(exc)
     finally:
-        spark.stop()
+        if spark is not None:
+            spark.stop()
 
     write_metrics(run_metrics, output_root)
-    print("# Spark SQL Runtime Metrics")
-    print(json.dumps(run_metrics, indent=2, sort_keys=True))
-    print(f"Spark SQL outputs written to: {display_path(output_root)}")
+    print_metrics(run_metrics, output_root)
     return 0 if run_metrics["status"] == "success" else 1
 
 

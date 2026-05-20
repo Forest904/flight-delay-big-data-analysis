@@ -40,6 +40,9 @@ prepare:
 generate-sizes:
 	$(VENV_PYTHON) src/preparation/generate_input_sizes.py $(GENERATE_SIZE_FLAGS)
 
+benchmark-local:
+	$(VENV_PYTHON) experiments/run_benchmarks.py --environment local $(BENCHMARK_FLAGS)
+
 run-spark-sql:
 	$(VENV_PYTHON) src/spark_sql/run_spark_sql.py
 
@@ -61,7 +64,7 @@ run-hive:
 stop-hive:
 	$(DOCKER_COMPOSE) stop hiveserver2 hive-metastore hive-postgres
 
-run-all-local benchmark-local benchmark-cluster charts report:
+run-all-local benchmark-cluster charts report:
 	@echo Target "$@" is not implemented yet. This milestone only sets up the project foundation.
 	@$(FAIL)
 

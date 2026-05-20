@@ -215,21 +215,23 @@ Grading evidence:
 
 ### M8 - Benchmark Runner
 
+Status: complete for local benchmark orchestration.
+
 Goal: automate local timing collection across jobs, technologies, and input sizes.
 
 Deliverables:
 
-- [ ] `experiments/run_benchmarks.py`.
-- [ ] Benchmark result schema implemented.
-- [ ] Local benchmark CSV under `experiments/results/local/`.
-- [ ] Failure logging for unsuccessful runs.
-- [ ] `make benchmark-local` wired.
+- [x] `experiments/run_benchmarks.py`.
+- [x] Benchmark result schema implemented.
+- [x] Local benchmark CSV under `experiments/results/local/`.
+- [x] Failure logging for unsuccessful runs.
+- [x] `make benchmark-local` wired.
 
 Acceptance criteria:
 
-- [ ] Benchmark rows include technology, job name, input label, records, environment, cluster size, duration, output rows, status, and timestamp.
-- [ ] Repeated benchmark runs append or write clearly versioned results.
-- [ ] Failed jobs do not corrupt completed metrics.
+- [x] Benchmark rows include technology, job name, input label, records, environment, cluster size, duration, output rows, status, and timestamp.
+- [x] Repeated benchmark runs append or write clearly versioned results.
+- [x] Failed jobs do not corrupt completed metrics.
 
 Grading evidence:
 

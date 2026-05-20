@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -27,6 +29,7 @@ DELAY_QUERY_FILE = HIVE_DIR / "analysis_delay_by_airport_month.sql"
 RANKING_QUERY_FILE = HIVE_DIR / "analysis_airline_airport_ranking.sql"
 
 HIVE_JDBC_URL = "jdbc:hive2://localhost:10000/"
+LOCATION_PATTERN = re.compile(r"\bLOCATION\s+'[^']+'", re.IGNORECASE)
 
 DELAY_OUTPUT_COLUMNS = [
     "origin_airport",
@@ -57,6 +60,16 @@ def load_yaml(path: Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError(f"{path} did not contain a YAML mapping")
     return data
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--input-path",
+        type=Path,
+        help="Prepared Parquet input to analyze. Defaults to config/local.yaml paths.prepared_file.",
+    )
+    return parser.parse_args(argv)
 
 
 def resolve_project_path(path_value: str) -> Path:
@@ -155,7 +168,7 @@ def validate_preconditions(prepared_file: Path) -> list[str]:
     errors: list[str] = []
     if not prepared_file.exists():
         errors.append(
-            f"Prepared dataset was not found: {display_path(prepared_file)}. Run `make prepare` before `make run-hive`."
+            f"Prepared dataset was not found: {display_path(prepared_file)}. Run `make prepare` or `make generate-sizes` first."
         )
     for sql_file in (DDL_FILE, DELAY_QUERY_FILE, RANKING_QUERY_FILE):
         if not sql_file.exists():
@@ -253,6 +266,26 @@ def query_without_trailing_semicolon(sql_file: Path) -> str:
 
 def container_workspace_path(path: Path) -> str:
     return f"/workspace/{path.relative_to(PROJECT_ROOT).as_posix()}"
+
+
+def hive_file_location(path: Path) -> str:
+    return f"file://{container_workspace_path(path)}"
+
+
+def build_ddl_sql(input_path: Path) -> str:
+    ddl = DDL_FILE.read_text(encoding="utf-8")
+    replacement = f"LOCATION '{hive_file_location(input_path)}'"
+    updated, replacements = LOCATION_PATTERN.subn(replacement, ddl)
+    if replacements != 1:
+        raise ValueError(f"Expected exactly one LOCATION clause in {display_path(DDL_FILE)}, found {replacements}")
+    return updated
+
+
+def write_runtime_ddl(input_path: Path, query_root: Path) -> Path:
+    query_root.mkdir(parents=True, exist_ok=True)
+    runtime_ddl = query_root / "ddl.sql"
+    runtime_ddl.write_text(build_ddl_sql(input_path), encoding="utf-8")
+    return runtime_ddl
 
 
 def build_export_sql(name: str, sql_file: Path, container_export_path: str) -> str:
@@ -372,16 +405,21 @@ def print_metrics(metrics: dict[str, Any], output_root: Path) -> None:
     print(f"Hive outputs written to: {display_path(output_root)}")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     local_config = load_yaml(LOCAL_CONFIG)
     paths = local_config.get("paths", {})
     prepared_file_value = paths.get("prepared_file")
     if not prepared_file_value:
         raise ValueError(f"{LOCAL_CONFIG} does not define paths.prepared_file")
 
-    prepared_file = resolve_project_path(str(prepared_file_value))
+    prepared_file = args.input_path if args.input_path is not None else Path(str(prepared_file_value))
+    if not prepared_file.is_absolute():
+        prepared_file = PROJECT_ROOT / prepared_file
     output_root = hive_output_root(local_config)
     export_root = output_root / ".tmp_exports"
+    query_root = output_root / ".tmp_queries"
+    hive_table_location = hive_file_location(prepared_file)
     run_metrics: dict[str, Any] = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "technology": "hive",
@@ -390,7 +428,7 @@ def main() -> int:
         "input_path": display_path(prepared_file),
         "hive_jdbc_url": HIVE_JDBC_URL,
         "hive_table": "flight_delay.flights_2024_clean",
-        "hive_table_location": "file:///workspace/data/prepared/flights_2024_clean.parquet",
+        "hive_table_location": hive_table_location,
         "jobs": [],
     }
 
@@ -417,7 +455,8 @@ def main() -> int:
 
         run_metrics["stage"] = "ddl"
         write_metrics(run_metrics, output_root)
-        run_beeline_file(DDL_FILE, show_header=False, timeout_seconds=600)
+        runtime_ddl = write_runtime_ddl(prepared_file, query_root)
+        run_beeline_file(runtime_ddl, show_header=False, timeout_seconds=600)
 
         run_metrics["stage"] = "analysis"
         write_metrics(run_metrics, output_root)

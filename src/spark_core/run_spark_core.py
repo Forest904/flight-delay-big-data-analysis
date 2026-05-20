@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import math
 import os
@@ -98,6 +99,17 @@ def load_yaml(path: Path) -> dict[str, Any]:
     return data
 
 
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--smoke-rdd", action="store_true", help="Run only the Spark Core RDD worker smoke check.")
+    parser.add_argument(
+        "--input-path",
+        type=Path,
+        help="Prepared Parquet input to analyze. Defaults to config/local.yaml paths.prepared_file.",
+    )
+    return parser.parse_args(argv)
+
+
 def resolve_project_path(path_value: str) -> Path:
     path = Path(path_value)
     if not path.is_absolute():
@@ -141,7 +153,7 @@ def validate_preconditions(prepared_file: Path) -> list[str]:
     errors: list[str] = []
     if not prepared_file.exists():
         errors.append(
-            f"Prepared dataset was not found: {prepared_file}. Run `make prepare` before `make run-spark-core`."
+            f"Prepared dataset was not found: {prepared_file}. Run `make prepare` or `make generate-sizes` first."
         )
     return errors
 
@@ -535,14 +547,17 @@ def docker_wsl_hint() -> str:
     )
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     local_config = load_yaml(LOCAL_CONFIG)
     paths = local_config.get("paths", {})
     prepared_file_value = paths.get("prepared_file")
     if not prepared_file_value:
         raise ValueError(f"{LOCAL_CONFIG} does not define paths.prepared_file")
 
-    prepared_file = resolve_project_path(str(prepared_file_value))
+    prepared_file = args.input_path if args.input_path is not None else Path(str(prepared_file_value))
+    if not prepared_file.is_absolute():
+        prepared_file = PROJECT_ROOT / prepared_file
     output_root = spark_core_output_root(local_config)
     spark_config = local_config.get("spark", {})
     run_metrics: dict[str, Any] = {
@@ -643,6 +658,7 @@ def smoke_main() -> int:
 
 
 if __name__ == "__main__":
-    if "--smoke-rdd" in sys.argv:
+    args = parse_args()
+    if args.smoke_rdd:
         raise SystemExit(smoke_main())
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))
