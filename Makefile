@@ -72,7 +72,10 @@ stop-hive:
 charts:
 	$(VENV_PYTHON) scripts/generate_charts.py
 
-run-all-local report:
+report:
+	$(VENV_PYTHON) scripts/build_report.py
+
+run-all-local:
 	@echo Target "$@" is not implemented yet. This milestone only sets up the project foundation.
 	@$(FAIL)
 
