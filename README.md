@@ -4,7 +4,7 @@ Comparative big-data analysis of the **2024 Flight Delay Dataset** using **Spark
 
 Repository: <https://github.com/Forest904/flight-delay-big-data-analysis.git>
 
-This repository is developed for the **Big Data Course — Second Project** at **Roma Tre University**.
+This repository is developed for the **Big Data Course - Second Project** at **Roma Tre University**.
 
 ---
 
@@ -91,89 +91,90 @@ For each pair of departure airport and airline, the job computes:
 
 ```text
 flight-delay-big-data-analysis/
-│
-├── README.md
-├── Makefile
-├── docker-compose.yml
-├── requirements.txt
-├── .gitignore
-│
-├── config/
-│   ├── local.yaml
-│   ├── cluster.yaml
-│   └── columns.yaml
-│
-├── data/
-│   ├── raw/
-│   │   └── .gitkeep
-│   ├── prepared/
-│   │   └── .gitkeep
-│   ├── samples/
-│   │   └── .gitkeep
-│   └── generated/
-│       └── .gitkeep
-│
-├── src/
-│   ├── common/
-│   │   ├── prepared_data.py
-│   │   └── runtime.py
-│   │
-│   ├── preparation/
-│   │   ├── prepare_spark.py
-│   │   └── generate_input_sizes.py
-│   │
-│   ├── spark_sql/
-│   │   └── run_spark_sql.py
-│   │
-│   ├── spark_core/
-│   │   └── run_spark_core.py
-│   │
-│   ├── hive/
-│   │   ├── ddl.sql
-│   │   ├── analysis_delay_by_airport_month.sql
-│   │   ├── analysis_airline_airport_ranking.sql
-│   │   └── run_hive.py
-│   │
-│   └── mapreduce/
-│       └── optional/
-│
-├── scripts/
-│   ├── build_report.py
-│   ├── check_env.py
-│   ├── download_dataset.md
-│   ├── generate_charts.py
-│   ├── inspect_raw_dataset.py
-│   ├── validate_hive_outputs.py
-│   ├── validate_spark_core_outputs.py
-│   └── validate_spark_sql_outputs.py
-│
-├── experiments/
-│   ├── run_benchmarks.py
-│   └── results/
-│       ├── local/
-│       └── cluster/
-│
-├── outputs/
-│   ├── spark_sql/
-│   ├── spark_core/
-│   ├── hive/
-│   └── mapreduce/
-│
-├── notebooks/
-│   └── .gitkeep
-│
-├── report/
-│   ├── draft_final_report.md
-│   ├── figures/
-│   ├── tables/
-│   └── draft_final_report.pdf
-│
-└── docs/
-    ├── cluster_simulation.md
-    ├── data_preparation.md
-    ├── hive_analyses.md
-    ├── spark_core_analyses.md
-    └── spark_sql_analyses.md
+|
+|-- README.md
+|-- Makefile
+|-- docker-compose.yml
+|-- requirements.txt
+|-- .gitignore
+|
+|-- config/
+|   |-- local.yaml
+|   |-- cluster.yaml
+|   `-- columns.yaml
+|
+|-- data/
+|   |-- raw/
+|   |   `-- .gitkeep
+|   |-- prepared/
+|   |   `-- .gitkeep
+|   |-- samples/
+|   |   `-- .gitkeep
+|   `-- generated/
+|       `-- .gitkeep
+|
+|-- src/
+|   |-- common/
+|   |   |-- prepared_data.py
+|   |   `-- runtime.py
+|   |
+|   |-- preparation/
+|   |   |-- prepare_spark.py
+|   |   `-- generate_input_sizes.py
+|   |
+|   |-- spark_sql/
+|   |   `-- run_spark_sql.py
+|   |
+|   |-- spark_core/
+|   |   `-- run_spark_core.py
+|   |
+|   |-- hive/
+|   |   |-- ddl.sql
+|   |   |-- analysis_delay_by_airport_month.sql
+|   |   |-- analysis_airline_airport_ranking.sql
+|   |   `-- run_hive.py
+|   |
+|   `-- mapreduce/
+|       `-- optional/
+|
+|-- scripts/
+|   |-- build_report.py
+|   |-- check_env.py
+|   |-- clean_generated_artifacts.py
+|   |-- download_dataset.md
+|   |-- generate_charts.py
+|   |-- inspect_raw_dataset.py
+|   |-- validate_hive_outputs.py
+|   |-- validate_spark_core_outputs.py
+|   `-- validate_spark_sql_outputs.py
+|
+|-- experiments/
+|   |-- run_benchmarks.py
+|   `-- results/
+|       |-- local/
+|       `-- cluster/
+|
+|-- outputs/
+|   |-- spark_sql/
+|   |-- spark_core/
+|   |-- hive/
+|   `-- mapreduce/
+|
+|-- notebooks/
+|   `-- .gitkeep
+|
+|-- report/
+|   |-- draft_final_report.md
+|   |-- figures/
+|   |-- tables/
+|   `-- draft_final_report.pdf
+|
+`-- docs/
+    |-- cluster_simulation.md
+    |-- data_preparation.md
+    |-- hive_analyses.md
+    |-- spark_core_analyses.md
+    `-- spark_sql_analyses.md
 ```
 
 ---
@@ -194,8 +195,8 @@ Expected local structure:
 
 ```text
 data/
-└── raw/
-    └── flight_data_2024.csv
+`-- raw/
+    `-- flight_data_2024.csv
 ```
 
 The exact filename can be configured in:
@@ -300,6 +301,14 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
+On Windows PowerShell, the equivalent setup path is:
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
 ### 3. Install Python dependencies
 
 ```bash
@@ -339,6 +348,12 @@ Or on Windows:
 On Windows, Spark SQL output writing requires Hadoop `winutils.exe` configured
 through `HADOOP_HOME` or `hadoop.home.dir`.
 
+Validate Spark SQL outputs with:
+
+```powershell
+make validate-spark-sql
+```
+
 ### Run Spark Core jobs
 
 ```bash
@@ -358,7 +373,7 @@ make run-spark-core-native
 Validate Spark Core outputs against the Spark SQL reference with:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\validate_spark_core_outputs.py
+make validate-spark-core
 ```
 
 Run only the Spark Core RDD worker smoke check with:
@@ -399,7 +414,7 @@ make stop-hive
 Validate the Hive outputs against the Spark SQL reference with:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\validate_hive_outputs.py
+make validate-hive
 ```
 
 ### Run all local jobs
@@ -407,6 +422,10 @@ Validate the Hive outputs against the Spark SQL reference with:
 ```bash
 make run-all-local
 ```
+
+`make run-all-local` runs Spark SQL, Spark Core, and Hive, then validates all
+outputs. It expects the prepared Parquet dataset to already exist. Run
+`make prepare` first after placing the raw Kaggle CSV under `data/raw/`.
 
 ---
 
@@ -535,20 +554,51 @@ Generate final report:
 make report
 ```
 
+This rebuilds `report/draft_final_report.pdf` from
+`report/draft_final_report.md`.
+
 ---
 
 ## Reproducibility
 
-A complete reproduction should follow this sequence:
+A complete fresh-clone reproduction should follow this sequence after the raw
+Kaggle CSV has been downloaded into `data/raw/`:
 
 ```bash
 make setup
+make check-env
 make inspect-raw
 make prepare
 make generate-sizes
+make run-all-local
 make benchmark-local
+make benchmark-cluster
 make charts
 make report
+```
+
+Regeneration map:
+
+| Artifact | Command |
+|---|---|
+| Prepared Parquet data | `make prepare` |
+| Input-size datasets | `make generate-sizes` |
+| Spark SQL, Spark Core, and Hive outputs | `make run-all-local` |
+| Local benchmark CSVs and logs | `make benchmark-local` |
+| Docker standalone simulation benchmark CSVs and logs | `make benchmark-cluster` |
+| Charts and report tables | `make charts` |
+| Final PDF | `make report` |
+
+The reliable Windows test command is:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+On Linux, WSL, or macOS, use:
+
+```bash
+.venv/bin/python -m pytest -q
 ```
 
 If Hive or cluster execution requires additional setup, see:
@@ -562,10 +612,11 @@ docs/cluster_simulation.md
 
 ## Expected Makefile Commands
 
-The project is expected to expose the following commands:
+The project exposes the following supported commands:
 
 ```text
 setup
+check-env
 inspect-raw
 prepare
 generate-sizes
@@ -573,6 +624,9 @@ run-spark-sql
 run-spark-core
 run-hive
 stop-hive
+validate-spark-sql
+validate-spark-core
+validate-hive
 run-all-local
 benchmark-local
 benchmark-cluster
@@ -580,6 +634,34 @@ charts
 report
 clean
 ```
+
+`make clean` is intentionally conservative. It removes generated data,
+technology outputs, and benchmark runtime results while preserving raw Kaggle
+data, `.gitkeep` files, committed report figures/tables/PDFs, source code,
+configuration, and documentation.
+
+Dry-run the cleanup helper directly with:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\clean_generated_artifacts.py --dry-run
+```
+
+---
+
+## Final Submission Checklist
+
+- [ ] Raw Kaggle CSV is present under `data/raw/` and matches `config/local.yaml`.
+- [ ] Environment checks pass with `make check-env`.
+- [ ] Prepared Parquet data has been regenerated with `make prepare`.
+- [ ] Input-size datasets and manifest have been regenerated with `make generate-sizes`.
+- [ ] Spark SQL, Spark Core, and Hive outputs plus validations pass with `make run-all-local`.
+- [ ] Local benchmarks have been regenerated with `make benchmark-local`.
+- [ ] Docker standalone simulation benchmarks have been regenerated with `make benchmark-cluster`, if Docker is available.
+- [ ] Report charts and tables have been regenerated with `make charts`.
+- [ ] Final PDF has been rebuilt with `make report`.
+- [ ] Tests pass with `.\.venv\Scripts\python.exe -m pytest -q`.
+- [ ] `git status --short` shows only intentional source, documentation, test, and report-evidence changes.
+- [ ] No raw, prepared, generated, runtime output, benchmark log, virtual environment, or bulky local artifact is staged for Git.
 
 ---
 

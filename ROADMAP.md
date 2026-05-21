@@ -213,37 +213,41 @@ Grading evidence:
 ### M5 - Repository Polish And Reproducibility Hardening
 
 Priority: `P1 evidence upgrade` and `P2 polish`  
-Status: not started.
+Status: completed.
 
 Goal: remove friction that could cost easy reproducibility and presentation points.
 
 Tasks:
 
-- [ ] Fix README encoding corruption in tree diagrams and punctuation.
-- [ ] Document the reliable test command:
+- [x] Fix README encoding corruption in tree diagrams and punctuation.
+- [x] Document the reliable test command:
   - `.\.venv\Scripts\python.exe -m pytest -q`
-- [ ] Add or update instructions for regenerating:
+- [x] Add or update instructions for regenerating:
   - prepared data;
   - input-size datasets;
   - all technology outputs;
   - benchmarks;
   - charts and report tables;
   - final PDF.
-- [ ] Replace placeholder `run-all-local` roadmap expectations with either an implemented target or a documented non-goal.
-- [ ] Replace placeholder `clean` roadmap expectations with either an implemented safe cleanup target or a documented non-goal.
-- [ ] Verify `.gitignore` still keeps raw, prepared, generated, and bulky output files out of Git.
-- [ ] Add a final submission checklist to README or report docs.
+- [x] Replace placeholder `run-all-local` roadmap expectations with either an implemented target or a documented non-goal.
+- [x] Replace placeholder `clean` roadmap expectations with either an implemented safe cleanup target or a documented non-goal.
+- [x] Verify `.gitignore` still keeps raw, prepared, generated, and bulky output files out of Git.
+- [x] Add a final submission checklist to README or report docs.
 
 Acceptance criteria:
 
-- [ ] A fresh clone plus downloaded raw dataset can follow the documented workflow.
-- [ ] The README renders without mojibake or broken tree characters.
-- [ ] The documented test command passes in the project virtual environment.
-- [ ] Git status is clean except for intentionally edited source/report artifacts.
+- [x] A fresh clone plus downloaded raw dataset can follow the documented workflow.
+- [x] The README renders without mojibake or broken tree characters.
+- [x] The documented test command passes in the project virtual environment.
+- [x] Git status is clean except for intentionally edited source/report artifacts.
 
 Grading evidence:
 
 - Reproducibility is visible, not assumed.
+- Implemented `make run-all-local` as the supported local output workflow: Spark SQL, Spark Core, Hive, then all three validators.
+- Implemented `make clean` through a conservative allowlisted cleanup helper that preserves raw data, `.gitkeep` files, committed report evidence, source code, configs, and docs.
+- Rewrote README tree diagrams and punctuation as ASCII, added the fresh-clone reproduction sequence, regeneration map, canonical venv test command, cleanup semantics, and final submission checklist.
+- Verification completed: `.\.venv\Scripts\python.exe -m pytest -q` passed with 54 tests, README ASCII/mojibake checks passed, cleanup dry-run listed only generated/runtime artifacts, and `git check-ignore -v` confirmed raw, prepared, generated, output, benchmark, and `.venv` paths remain ignored.
 
 ### M6 - MapReduce Flagship Stretch
 
@@ -420,6 +424,6 @@ make report
 
 Future command improvements to consider:
 
-- [ ] Implement `make run-all-local` only if it can run the full local workflow reliably.
-- [ ] Implement `make clean` only if it safely removes generated artifacts without touching raw data or user work.
+- [x] Implement `make run-all-local` only if it can run the full local workflow reliably.
+- [x] Implement `make clean` only if it safely removes generated artifacts without touching raw data or user work.
 - [ ] Add MapReduce commands only after M6 has a validated implementation.

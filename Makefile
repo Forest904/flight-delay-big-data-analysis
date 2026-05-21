@@ -21,7 +21,7 @@ ifeq ($(GENERATE_LARGE),1)
 GENERATE_SIZE_FLAGS += --include-large
 endif
 
-.PHONY: setup check-env inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive stop-hive run-all-local benchmark-local benchmark-cluster charts report clean
+.PHONY: setup check-env inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive stop-hive validate-spark-sql validate-spark-core validate-hive run-all-local benchmark-local benchmark-cluster charts report clean
 
 setup:
 	$(PYTHON_LAUNCHER) -m venv .venv
@@ -68,6 +68,15 @@ run-hive:
 stop-hive:
 	$(DOCKER_COMPOSE) stop hiveserver2 hive-metastore hive-postgres
 
+validate-spark-sql:
+	$(VENV_PYTHON) scripts/validate_spark_sql_outputs.py
+
+validate-spark-core:
+	$(VENV_PYTHON) scripts/validate_spark_core_outputs.py
+
+validate-hive:
+	$(VENV_PYTHON) scripts/validate_hive_outputs.py
+
 charts:
 	$(VENV_PYTHON) scripts/generate_environment_summary.py
 	$(VENV_PYTHON) scripts/generate_charts.py
@@ -75,10 +84,7 @@ charts:
 report:
 	$(VENV_PYTHON) scripts/build_report.py
 
-run-all-local:
-	@echo Target "$@" is not implemented yet. This milestone only sets up the project foundation.
-	@$(FAIL)
+run-all-local: run-spark-sql run-spark-core run-hive validate-spark-sql validate-spark-core validate-hive
 
 clean:
-	@echo Target "clean" is not implemented yet. This milestone does not remove generated artifacts.
-	@$(FAIL)
+	$(VENV_PYTHON) scripts/clean_generated_artifacts.py
