@@ -1,6 +1,6 @@
 | category | item | value | source |
 | --- | --- | --- | --- |
-| campaign | summary_generated_at_utc | 2026-05-21T14:37:56.906167+00:00 | script timestamp |
+| campaign | summary_generated_at_utc | 2026-05-21T16:06:20.530986+00:00 | script timestamp |
 | host | os | Windows-11-10.0.26200-SP0 | platform.platform |
 | host | python_executable | C:\Users\lucap\Documents\VSC Repository\flight-delay-big-data-analysis\.venv\Scripts\python.exe | sys.executable |
 | host | python_version | 3.12.2 | platform.python_version |
@@ -9,7 +9,7 @@
 | host | logical_cores | 16 | psutil |
 | host | ram_bytes | 33598853120 | psutil |
 | host | project_drive_total_bytes | 957397069824 | psutil.disk_usage |
-| host | project_drive_free_bytes | 541298802688 | psutil.disk_usage |
+| host | project_drive_free_bytes | 541335920640 | psutil.disk_usage |
 | host | windows_cpu_model | AMD Ryzen AI 7 350 w/ Radeon 860M | Win32_Processor |
 | host | windows_os_detail | Microsoft Windows 11 Home 10.0.26200 build 26200 64-bit | Win32_OperatingSystem |
 | host | disk_type | WD PC SN5000S SDEPMSJ-1T00-1101; media=SSD; bus=NVMe; size=1024209543168 | Get-PhysicalDisk |
@@ -25,11 +25,11 @@
 | spark_config | local_config_path | config/local.yaml | config yaml |
 | spark_config | local_spark_master | local[*] | config yaml |
 | spark_config | local_shuffle_partitions | 8 | config yaml |
-| spark_config | local_cluster_size | local | config yaml |
-| spark_config | docker-simulation_config_path | config/cluster.yaml | config yaml |
+| spark_config | local_execution_setting | local | config yaml |
+| spark_config | docker-simulation_config_path | config/docker_simulation.yaml | config yaml |
 | spark_config | docker-simulation_spark_master | spark://spark-master:7077 | config yaml |
 | spark_config | docker-simulation_shuffle_partitions | 16 | config yaml |
-| spark_config | docker-simulation_cluster_size | docker-compose Spark standalone: 1 master + 2 workers; Hive single-node container | config yaml |
+| spark_config | docker-simulation_execution_setting | docker-compose Spark standalone: 1 master + 2 workers; Hive single-node container | config yaml |
 | spark_config | docker-simulation_spark_driver_service | spark-driver | config yaml |
 | spark_config | docker-simulation_container_workspace | /workspace | config yaml |
 | docker_topology | compose_services | hive-metastore, hive-postgres, hiveserver2, mapreduce-runner, spark-core, spark-driver, spark-master, spark-worker-1, spark-worker-2 | docker-compose.yml |

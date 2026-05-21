@@ -21,7 +21,7 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RESULTS_DIRS = (
     PROJECT_ROOT / "experiments" / "results" / "local",
-    PROJECT_ROOT / "experiments" / "results" / "cluster",
+    PROJECT_ROOT / "experiments" / "results" / "docker-simulation",
 )
 DEFAULT_OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 DEFAULT_FIGURES_DIR = PROJECT_ROOT / "report" / "figures"
@@ -58,11 +58,6 @@ EXPECTED_INPUTS_BY_ENVIRONMENT = {
         ("1m", 1_000_000),
     ),
 }
-LEGACY_ENVIRONMENT_LABELS = {
-    "docker-cluster": "docker-simulation",
-}
-
-
 @dataclass(frozen=True)
 class GeneratedArtifacts:
     figures: list[Path]
@@ -85,8 +80,7 @@ def display_path(path: Path) -> str:
 
 
 def canonical_environment(value: object) -> str:
-    text = str(value or "")
-    return LEGACY_ENVIRONMENT_LABELS.get(text, text)
+    return str(value or "")
 
 
 def discover_benchmark_csvs(results_dirs: Iterable[Path]) -> list[Path]:
@@ -663,7 +657,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--results-dir",
         action="append",
         type=Path,
-        help="Benchmark results directory to scan. Repeatable. Defaults to local and cluster result directories.",
+        help="Benchmark results directory to scan. Repeatable. Defaults to local and Docker simulation result directories.",
     )
     parser.add_argument(
         "--benchmark-csv",

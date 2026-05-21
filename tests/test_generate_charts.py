@@ -12,7 +12,7 @@ BENCHMARK_COLUMNS = [
     "input_label",
     "records",
     "environment",
-    "cluster_size",
+    "execution_setting",
     "duration_seconds",
     "output_rows",
     "status",
@@ -51,7 +51,7 @@ def benchmark_row(
         "input_label": input_label,
         "records": records,
         "environment": environment,
-        "cluster_size": environment,
+        "execution_setting": environment,
         "duration_seconds": duration_seconds,
         "output_rows": 12,
         "status": status,
@@ -123,7 +123,7 @@ def test_latest_successful_rows_keeps_newest_success_and_excludes_failed(tmp_pat
     assert latest[0]["duration_seconds"] == "7.5"
 
 
-def test_read_benchmark_rows_normalizes_legacy_docker_cluster_label(tmp_path):
+def test_read_benchmark_rows_keeps_docker_simulation_label(tmp_path):
     csv_path = tmp_path / "benchmark_20260520T120000000000Z.csv"
     write_benchmark_csv(
         csv_path,
@@ -132,7 +132,7 @@ def test_read_benchmark_rows_normalizes_legacy_docker_cluster_label(tmp_path):
                 run_id="run",
                 timestamp_utc="2026-05-20T12:00:00+00:00",
                 duration_seconds=8.5,
-                environment="docker-cluster",
+                environment="docker-simulation",
             )
         ],
     )
@@ -368,7 +368,7 @@ def test_execution_time_chart_uses_marker_for_single_optional_technology_point(t
     assert calls["scatter"] == 1
 
 
-def test_legacy_docker_cluster_rows_generate_docker_simulation_figure_name(tmp_path):
+def test_docker_simulation_rows_generate_docker_simulation_figure_name(tmp_path):
     csv_path = tmp_path / "benchmark_20260520T120000000000Z.csv"
     write_benchmark_csv(
         csv_path,
@@ -377,7 +377,7 @@ def test_legacy_docker_cluster_rows_generate_docker_simulation_figure_name(tmp_p
                 run_id="run",
                 timestamp_utc="2026-05-20T12:00:00+00:00",
                 duration_seconds=8.5,
-                environment="docker-cluster",
+                environment="docker-simulation",
             )
         ],
     )

@@ -21,7 +21,7 @@ ifeq ($(GENERATE_LARGE),1)
 GENERATE_SIZE_FLAGS += --include-large
 endif
 
-.PHONY: setup check-env inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive run-mapreduce stop-hive validate-spark-sql validate-spark-core validate-hive validate-mapreduce run-all-local benchmark-local benchmark-cluster benchmark-mapreduce-local charts report clean
+.PHONY: setup check-env inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive run-mapreduce stop-hive validate-spark-sql validate-spark-core validate-hive validate-mapreduce run-all-local benchmark-local benchmark-docker-simulation benchmark-mapreduce-local charts report clean
 
 setup:
 	$(PYTHON_LAUNCHER) -m venv .venv
@@ -43,9 +43,9 @@ generate-sizes:
 benchmark-local:
 	$(VENV_PYTHON) experiments/run_benchmarks.py --environment local $(BENCHMARK_FLAGS)
 
-benchmark-cluster:
+benchmark-docker-simulation:
 	$(DOCKER_COMPOSE) up -d --build spark-master spark-worker-1 spark-worker-2 spark-driver
-	$(VENV_PYTHON) experiments/run_benchmarks.py --config config/cluster.yaml --environment docker-simulation $(BENCHMARK_FLAGS)
+	$(VENV_PYTHON) experiments/run_benchmarks.py --config config/docker_simulation.yaml --environment docker-simulation $(BENCHMARK_FLAGS)
 
 run-spark-sql:
 	$(VENV_PYTHON) src/spark_sql/run_spark_sql.py

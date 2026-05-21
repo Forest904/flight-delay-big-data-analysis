@@ -42,14 +42,13 @@ make run-hive
 make run-mapreduce
 make benchmark-local
 make benchmark-mapreduce-local
-make benchmark-cluster
+make benchmark-docker-simulation
 make charts
 make report
 ```
 
-The `make benchmark-cluster` target name is kept for repository compatibility,
-but in this project it runs Docker standalone simulation evidence, not a true
-multi-machine cluster.
+The `make benchmark-docker-simulation` target runs single-host Docker standalone
+simulation evidence.
 
 # Assignment Coverage
 
@@ -59,7 +58,7 @@ multi-machine cluster.
 | Implementation choices and pseudocode | Analyses And Implementations |
 | First 10 result rows | Evidence Appendix |
 | Execution-time tables and charts | Benchmark Evidence |
-| Local and cluster-style execution settings | Docker Standalone Simulation and Benchmark Evidence |
+| Local execution and Docker standalone simulation settings | Docker Standalone Simulation and Benchmark Evidence |
 | Critical discussion | Critical Discussion |
 | GitHub repository link | Executive Summary |
 
@@ -245,9 +244,8 @@ as Spark SQL and Spark Core.
 Hive is useful as a SQL-on-Hadoop comparison point. Its SQL syntax is familiar
 for aggregation-heavy work, but this project runs Hive as a local
 containerized HiveServer2/metastore/PostgreSQL stack. The setup does not use a
-distributed Hive-on-YARN or HDFS deployment, so the Hive results should be read
-as controlled local/container evidence rather than as production distributed
-Hive performance.
+Hive-on-YARN or HDFS service, so the Hive results should be read as controlled
+local/container evidence rather than as managed-service Hive performance.
 
 ## MapReduce Stretch
 
@@ -266,7 +264,8 @@ The delay reducer computes the same grouped counts, averages, and top-three
 cause ordering as Spark SQL. The ranking reducer groups by airport, aggregates
 airline statistics, computes the airport average departure delay, and applies
 Spark SQL `RANK()` semantics with null averages last. Validation passed against
-Spark SQL for the `1m` benchmark input.
+Spark SQL for the full prepared dataset; the separate benchmark smoke run uses
+the `100k` generated input.
 
 The supported runtime is Docker-local Hadoop Streaming, not YARN/HDFS.
 Benchmark smoke runs use isolated output roots under
@@ -285,13 +284,13 @@ directory, not HDFS or object storage.
 Hive is included in the Docker benchmark CSV so the report contains rows for
 all three required technologies, but Hive remains a single-node containerized
 Hive setup. Therefore the report uses the phrase "Docker standalone simulation"
-and avoids presenting these runs as real multi-machine cluster performance.
+and avoids presenting these runs as future remote-service performance.
 
-The documented topology is stored in `docs/cluster_simulation.md`. The command
+The documented topology is stored in `docs/docker_simulation.md`. The command
 used to run the simulation evidence is:
 
 ```powershell
-make benchmark-cluster
+make benchmark-docker-simulation
 ```
 
 # Environment And Runtime Configuration
@@ -336,9 +335,9 @@ the required default benchmark matrix:
 | Docker standalone simulation | `100k`, `500k`, `1m` | Spark SQL, Spark Core, Hive | both jobs | 18/18 successful |
 | Local stretch | `100k` | Hadoop Streaming MapReduce | both jobs | 2/2 successful |
 
-The local run ID is `20260520T161558752230Z`. The Docker standalone simulation
-run ID is `20260520T162530812695Z`. The MapReduce smoke run ID is
-`20260521T143350526019Z`. The full status matrix is stored in
+The local run ID is `20260521T153035251181Z`. The Docker standalone simulation
+run ID is `20260521T160042313560Z`. The MapReduce smoke run ID is
+`20260521T153912538439Z`. The full status matrix is stored in
 `report/tables/benchmark_status.md`.
 
 ## Benchmark Pivot
@@ -349,22 +348,22 @@ include the optional MapReduce smoke columns when present.
 
 | environment | input_label | records | job_name | Spark SQL s | Spark Core s | Hive s |
 | --- | --- | --- | --- | --- | --- | --- |
-| docker-simulation | 100k | 100000 | airline_airport_ranking | 5.136 | 2.148 | 9.189 |
-| docker-simulation | 100k | 100000 | delay_by_airport_month | 9.642 | 2.386 | 12.267 |
-| docker-simulation | 500k | 500000 | airline_airport_ranking | 5.164 | 2.191 | 8.986 |
-| docker-simulation | 500k | 500000 | delay_by_airport_month | 9.393 | 2.505 | 12.046 |
-| docker-simulation | 1m | 1000000 | airline_airport_ranking | 3.902 | 2.112 | 8.889 |
-| docker-simulation | 1m | 1000000 | delay_by_airport_month | 8.765 | 2.638 | 13.03 |
-| local | 100k | 100000 | airline_airport_ranking | 1.291 | 0.552 | 8.993 |
-| local | 100k | 100000 | delay_by_airport_month | 6.666 | 0.713 | 12.075 |
-| local | 500k | 500000 | airline_airport_ranking | 1.491 | 0.567 | 9.102 |
-| local | 500k | 500000 | delay_by_airport_month | 7.164 | 0.763 | 12.926 |
-| local | 1m | 1000000 | airline_airport_ranking | 1.693 | 0.624 | 8.972 |
-| local | 1m | 1000000 | delay_by_airport_month | 8.388 | 0.857 | 13.009 |
-| local | 3m | 3000000 | airline_airport_ranking | 2.201 | 0.607 | 12.141 |
-| local | 3m | 3000000 | delay_by_airport_month | 9.2 | 0.957 | 14.728 |
-| local | full | 7079081 | airline_airport_ranking | 2.204 | 0.592 | 12.699 |
-| local | full | 7079081 | delay_by_airport_month | 9.066 | 0.898 | 19.878 |
+| docker-simulation | 100k | 100000 | airline_airport_ranking | 4.01 | 2.325 | 8.983 |
+| docker-simulation | 100k | 100000 | delay_by_airport_month | 9.385 | 2.543 | 12.025 |
+| docker-simulation | 500k | 500000 | airline_airport_ranking | 5.617 | 2.434 | 8.972 |
+| docker-simulation | 500k | 500000 | delay_by_airport_month | 9.978 | 2.623 | 12.619 |
+| docker-simulation | 1m | 1000000 | airline_airport_ranking | 4.444 | 2.334 | 8.901 |
+| docker-simulation | 1m | 1000000 | delay_by_airport_month | 10.921 | 2.619 | 12.584 |
+| local | 100k | 100000 | airline_airport_ranking | 1.056 | 0.57 | 8.924 |
+| local | 100k | 100000 | delay_by_airport_month | 5.215 | 0.916 | 11.932 |
+| local | 500k | 500000 | airline_airport_ranking | 1.104 | 0.592 | 8.813 |
+| local | 500k | 500000 | delay_by_airport_month | 5.74 | 0.873 | 12.692 |
+| local | 1m | 1000000 | airline_airport_ranking | 1.31 | 0.563 | 8.861 |
+| local | 1m | 1000000 | delay_by_airport_month | 5.901 | 0.812 | 12.683 |
+| local | 3m | 3000000 | airline_airport_ranking | 1.659 | 0.615 | 8.861 |
+| local | 3m | 3000000 | delay_by_airport_month | 6.662 | 0.935 | 13.797 |
+| local | full | 7079081 | airline_airport_ranking | 2.33 | 0.583 | 12.382 |
+| local | full | 7079081 | delay_by_airport_month | 7.641 | 0.962 | 19.2 |
 
 ## Rows Per Second
 
@@ -375,22 +374,22 @@ slightly.
 
 | environment | input | job | Spark SQL rows/s | Spark Core rows/s | Hive rows/s |
 | --- | --- | --- | --- | --- | --- |
-| docker-simulation | 100k | airline_airport_ranking | 19470.807 | 46560.874 | 10882.366 |
-| docker-simulation | 100k | delay_by_airport_month | 10371.378 | 41911.588 | 8151.962 |
-| docker-simulation | 500k | airline_airport_ranking | 96828.274 | 228218.694 | 55644.414 |
-| docker-simulation | 500k | delay_by_airport_month | 53233.26 | 199606.615 | 41505.914 |
-| docker-simulation | 1m | airline_airport_ranking | 256255.583 | 473416.033 | 112496.493 |
-| docker-simulation | 1m | delay_by_airport_month | 114084.925 | 379025.775 | 76747.944 |
-| local | 100k | airline_airport_ranking | 77484.482 | 181312.485 | 11120.294 |
-| local | 100k | delay_by_airport_month | 15001.178 | 140269.177 | 8281.492 |
-| local | 500k | airline_airport_ranking | 335425.944 | 882604.743 | 54930.737 |
-| local | 500k | delay_by_airport_month | 69797.25 | 655615.61 | 38681.203 |
-| local | 1m | airline_airport_ranking | 590656.29 | 1601365.645 | 111458.577 |
-| local | 1m | delay_by_airport_month | 119217.22 | 1166350.78 | 76868.967 |
-| local | 3m | airline_airport_ranking | 1363059.542 | 4945500.584 | 247099.83 |
-| local | 3m | delay_by_airport_month | 326079.726 | 3136218.515 | 203697.199 |
-| local | full | airline_airport_ranking | 3211817.848 | 11948864.71 | 557468.879 |
-| local | full | delay_by_airport_month | 780827.038 | 7883067.134 | 356119.936 |
+| docker-simulation | 100k | airline_airport_ranking | 24940.511 | 43008.699 | 11131.84 |
+| docker-simulation | 100k | delay_by_airport_month | 10654.924 | 39330.733 | 8315.777 |
+| docker-simulation | 500k | airline_airport_ranking | 89016.757 | 205410.597 | 55729.003 |
+| docker-simulation | 500k | delay_by_airport_month | 50111.307 | 190653.625 | 39622.019 |
+| docker-simulation | 1m | airline_airport_ranking | 225042.606 | 428401.292 | 112352.734 |
+| docker-simulation | 1m | delay_by_airport_month | 91570.396 | 381793.636 | 79463.103 |
+| local | 100k | airline_airport_ranking | 94656.991 | 175531.597 | 11206.355 |
+| local | 100k | delay_by_airport_month | 19175.216 | 109155.648 | 8380.722 |
+| local | 500k | airline_airport_ranking | 452990.462 | 844253.756 | 56732.374 |
+| local | 500k | delay_by_airport_month | 87100.791 | 572454.41 | 39393.811 |
+| local | 1m | airline_airport_ranking | 763139.74 | 1775987.582 | 112859.06 |
+| local | 1m | delay_by_airport_month | 169476.703 | 1231376.963 | 78843.778 |
+| local | 3m | airline_airport_ranking | 1807870.383 | 4878413.67 | 338549.593 |
+| local | 3m | delay_by_airport_month | 450294.74 | 3207389.826 | 217435.311 |
+| local | full | airline_airport_ranking | 3038232.189 | 12144151.609 | 571725.628 |
+| local | full | delay_by_airport_month | 926412.613 | 7357534.241 | 368709.471 |
 
 ## Speedup Ratios
 
@@ -399,22 +398,22 @@ longer than the denominator in that run.
 
 | environment | input | job | SQL/Core | Hive/SQL | Hive/Core |
 | --- | --- | --- | --- | --- | --- |
-| docker-simulation | 100k | airline_airport_ranking | 2.391 | 1.789 | 4.279 |
-| docker-simulation | 100k | delay_by_airport_month | 4.041 | 1.272 | 5.141 |
-| docker-simulation | 500k | airline_airport_ranking | 2.357 | 1.74 | 4.101 |
-| docker-simulation | 500k | delay_by_airport_month | 3.75 | 1.283 | 4.809 |
-| docker-simulation | 1m | airline_airport_ranking | 1.847 | 2.278 | 4.208 |
-| docker-simulation | 1m | delay_by_airport_month | 3.322 | 1.486 | 4.939 |
-| local | 100k | airline_airport_ranking | 2.34 | 6.968 | 16.305 |
-| local | 100k | delay_by_airport_month | 9.351 | 1.811 | 16.938 |
-| local | 500k | airline_airport_ranking | 2.631 | 6.106 | 16.068 |
-| local | 500k | delay_by_airport_month | 9.393 | 1.804 | 16.949 |
-| local | 1m | airline_airport_ranking | 2.711 | 5.299 | 14.367 |
-| local | 1m | delay_by_airport_month | 9.783 | 1.551 | 15.173 |
-| local | 3m | airline_airport_ranking | 3.628 | 5.516 | 20.014 |
-| local | 3m | delay_by_airport_month | 9.618 | 1.601 | 15.396 |
-| local | full | airline_airport_ranking | 3.72 | 5.761 | 21.434 |
-| local | full | delay_by_airport_month | 10.096 | 2.193 | 22.136 |
+| docker-simulation | 100k | airline_airport_ranking | 1.724 | 2.24 | 3.864 |
+| docker-simulation | 100k | delay_by_airport_month | 3.691 | 1.281 | 4.73 |
+| docker-simulation | 500k | airline_airport_ranking | 2.308 | 1.597 | 3.686 |
+| docker-simulation | 500k | delay_by_airport_month | 3.805 | 1.265 | 4.812 |
+| docker-simulation | 1m | airline_airport_ranking | 1.904 | 2.003 | 3.813 |
+| docker-simulation | 1m | delay_by_airport_month | 4.169 | 1.152 | 4.805 |
+| local | 100k | airline_airport_ranking | 1.854 | 8.447 | 15.664 |
+| local | 100k | delay_by_airport_month | 5.693 | 2.288 | 13.025 |
+| local | 500k | airline_airport_ranking | 1.864 | 7.985 | 14.881 |
+| local | 500k | delay_by_airport_month | 6.572 | 2.211 | 14.532 |
+| local | 1m | airline_airport_ranking | 2.327 | 6.762 | 15.736 |
+| local | 1m | delay_by_airport_month | 7.266 | 2.15 | 15.618 |
+| local | 3m | airline_airport_ranking | 2.698 | 5.34 | 14.41 |
+| local | 3m | delay_by_airport_month | 7.123 | 2.071 | 14.751 |
+| local | full | airline_airport_ranking | 3.997 | 5.314 | 21.241 |
+| local | full | delay_by_airport_month | 7.942 | 2.513 | 19.955 |
 
 ## Normalized Scalability
 
@@ -427,53 +426,53 @@ the baseline. The compact columns `dur`, `rec`, and `thr` mean
 | env | input | job | tech | dur | rec | thr |
 | --- | --- | --- | --- | --- | --- | --- |
 | docker | 100k | ranking | Hive | 1 | 1 | 1 |
-| docker | 500k | ranking | Hive | 0.978 | 5 | 5.113 |
-| docker | 1m | ranking | Hive | 0.967 | 10 | 10.338 |
+| docker | 500k | ranking | Hive | 0.999 | 5 | 5.006 |
+| docker | 1m | ranking | Hive | 0.991 | 10 | 10.093 |
 | docker | 100k | ranking | Core | 1 | 1 | 1 |
-| docker | 500k | ranking | Core | 1.02 | 5 | 4.902 |
-| docker | 1m | ranking | Core | 0.984 | 10 | 10.168 |
+| docker | 500k | ranking | Core | 1.047 | 5 | 4.776 |
+| docker | 1m | ranking | Core | 1.004 | 10 | 9.961 |
 | docker | 100k | ranking | SQL | 1 | 1 | 1 |
-| docker | 500k | ranking | SQL | 1.005 | 5 | 4.973 |
-| docker | 1m | ranking | SQL | 0.76 | 10 | 13.161 |
+| docker | 500k | ranking | SQL | 1.401 | 5 | 3.569 |
+| docker | 1m | ranking | SQL | 1.108 | 10 | 9.023 |
 | docker | 100k | delay | Hive | 1 | 1 | 1 |
-| docker | 500k | delay | Hive | 0.982 | 5 | 5.092 |
-| docker | 1m | delay | Hive | 1.062 | 10 | 9.415 |
+| docker | 500k | delay | Hive | 1.049 | 5 | 4.765 |
+| docker | 1m | delay | Hive | 1.046 | 10 | 9.556 |
 | docker | 100k | delay | Core | 1 | 1 | 1 |
-| docker | 500k | delay | Core | 1.05 | 5 | 4.763 |
-| docker | 1m | delay | Core | 1.106 | 10 | 9.043 |
+| docker | 500k | delay | Core | 1.031 | 5 | 4.847 |
+| docker | 1m | delay | Core | 1.03 | 10 | 9.707 |
 | docker | 100k | delay | SQL | 1 | 1 | 1 |
-| docker | 500k | delay | SQL | 0.974 | 5 | 5.133 |
-| docker | 1m | delay | SQL | 0.909 | 10 | 11 |
+| docker | 500k | delay | SQL | 1.063 | 5 | 4.703 |
+| docker | 1m | delay | SQL | 1.164 | 10 | 8.594 |
 | local | 100k | ranking | Hive | 1 | 1 | 1 |
-| local | 500k | ranking | Hive | 1.012 | 5 | 4.94 |
-| local | 1m | ranking | Hive | 0.998 | 10 | 10.023 |
-| local | 3m | ranking | Hive | 1.35 | 30 | 22.221 |
-| local | full | ranking | Hive | 1.412 | 70.791 | 50.131 |
+| local | 500k | ranking | Hive | 0.988 | 5 | 5.063 |
+| local | 1m | ranking | Hive | 0.993 | 10 | 10.071 |
+| local | 3m | ranking | Hive | 0.993 | 30 | 30.21 |
+| local | full | ranking | Hive | 1.388 | 70.791 | 51.018 |
 | local | 100k | ranking | Core | 1 | 1 | 1 |
-| local | 500k | ranking | Core | 1.027 | 5 | 4.868 |
-| local | 1m | ranking | Core | 1.132 | 10 | 8.832 |
-| local | 3m | ranking | Core | 1.1 | 30 | 27.276 |
-| local | full | ranking | Core | 1.074 | 70.791 | 65.902 |
+| local | 500k | ranking | Core | 1.04 | 5 | 4.81 |
+| local | 1m | ranking | Core | 0.988 | 10 | 10.118 |
+| local | 3m | ranking | Core | 1.079 | 30 | 27.792 |
+| local | full | ranking | Core | 1.023 | 70.791 | 69.185 |
 | local | 100k | ranking | SQL | 1 | 1 | 1 |
-| local | 500k | ranking | SQL | 1.155 | 5 | 4.329 |
-| local | 1m | ranking | SQL | 1.312 | 10 | 7.623 |
-| local | 3m | ranking | SQL | 1.705 | 30 | 17.591 |
-| local | full | ranking | SQL | 1.708 | 70.791 | 41.451 |
+| local | 500k | ranking | SQL | 1.045 | 5 | 4.786 |
+| local | 1m | ranking | SQL | 1.24 | 10 | 8.062 |
+| local | 3m | ranking | SQL | 1.571 | 30 | 19.099 |
+| local | full | ranking | SQL | 2.206 | 70.791 | 32.097 |
 | local | 100k | delay | Hive | 1 | 1 | 1 |
-| local | 500k | delay | Hive | 1.07 | 5 | 4.671 |
-| local | 1m | delay | Hive | 1.077 | 10 | 9.282 |
-| local | 3m | delay | Hive | 1.22 | 30 | 24.597 |
-| local | full | delay | Hive | 1.646 | 70.791 | 43.002 |
+| local | 500k | delay | Hive | 1.064 | 5 | 4.701 |
+| local | 1m | delay | Hive | 1.063 | 10 | 9.408 |
+| local | 3m | delay | Hive | 1.156 | 30 | 25.945 |
+| local | full | delay | Hive | 1.609 | 70.791 | 43.995 |
 | local | 100k | delay | Core | 1 | 1 | 1 |
-| local | 500k | delay | Core | 1.07 | 5 | 4.674 |
-| local | 1m | delay | Core | 1.203 | 10 | 8.315 |
-| local | 3m | delay | Core | 1.342 | 30 | 22.359 |
-| local | full | delay | Core | 1.26 | 70.791 | 56.2 |
+| local | 500k | delay | Core | 0.953 | 5 | 5.244 |
+| local | 1m | delay | Core | 0.886 | 10 | 11.281 |
+| local | 3m | delay | Core | 1.021 | 30 | 29.384 |
+| local | full | delay | Core | 1.05 | 70.791 | 67.404 |
 | local | 100k | delay | SQL | 1 | 1 | 1 |
-| local | 500k | delay | SQL | 1.075 | 5 | 4.653 |
-| local | 1m | delay | SQL | 1.258 | 10 | 7.947 |
-| local | 3m | delay | SQL | 1.38 | 30 | 21.737 |
-| local | full | delay | SQL | 1.36 | 70.791 | 52.051 |
+| local | 500k | delay | SQL | 1.101 | 5 | 4.542 |
+| local | 1m | delay | SQL | 1.131 | 10 | 8.838 |
+| local | 3m | delay | SQL | 1.278 | 30 | 23.483 |
+| local | full | delay | SQL | 1.465 | 70.791 | 48.313 |
 
 ## Benchmark Charts
 
@@ -511,8 +510,8 @@ Hive provides SQL-on-Hadoop style expressiveness, but it has the highest
 overhead in this project. The containerized Hive stack pays service, query
 startup, metastore, and export costs that are visible in the benchmark rows.
 Hive remains useful as a third technology and as a contrast with Spark, but the
-current local container setup does not demonstrate the strengths of a large
-distributed Hive deployment.
+current local container setup does not demonstrate the strengths of a managed
+Hive service.
 
 MapReduce is the most manual implementation. Hadoop Streaming makes the map
 and reduce boundaries explicit, and the Python reducers show the accumulator
@@ -571,10 +570,8 @@ sample files.
   `airline_code`.
 - MapReduce depends on Docker-based Hadoop Streaming and is kept outside the
   default `make run-all-local` and `make benchmark-local` paths.
-- The Docker Spark setup is a standalone simulation on one physical machine,
-  not true multi-machine cluster performance.
-- Hive is containerized locally and is not running on a distributed Hadoop/YARN
-  deployment.
+- The Docker Spark setup is a standalone simulation on one physical machine.
+- Hive is containerized locally and is not running on a Hadoop/YARN service.
 - Worker-count variation was not used in M2 because the reliable Docker Compose
   topology has two named Spark workers.
 - Windows Spark runs require care around Java, Hadoop `winutils.exe`, and

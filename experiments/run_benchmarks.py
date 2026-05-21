@@ -29,7 +29,7 @@ BENCHMARK_COLUMNS = [
     "input_label",
     "records",
     "environment",
-    "cluster_size",
+    "execution_setting",
     "duration_seconds",
     "output_rows",
     "status",
@@ -400,7 +400,7 @@ def normalize_metrics_rows(
     technology: str,
     benchmark_input: BenchmarkInput,
     environment: str,
-    cluster_size: str,
+    execution_setting: str,
     timestamp_utc: str,
     metrics_path: Path,
     metrics: dict[str, Any] | None,
@@ -415,7 +415,7 @@ def normalize_metrics_rows(
         "input_label": benchmark_input.label,
         "records": benchmark_input.records,
         "environment": environment,
-        "cluster_size": cluster_size,
+        "execution_setting": execution_setting,
         "timestamp_utc": timestamp_utc,
         "input_path": display_path(benchmark_input.path),
         "metrics_path": display_path(metrics_path),
@@ -533,7 +533,7 @@ def main(argv: list[str] | None = None) -> int:
         labels=args.input_label,
     )
     technologies = args.technology or list(DEFAULT_TECHNOLOGIES)
-    cluster_size = str(local_config.get("benchmark", {}).get("cluster_size", args.environment))
+    execution_setting = str(local_config.get("benchmark", {}).get("execution_setting", args.environment))
     container_workspace = str(local_config.get("benchmark", {}).get("container_workspace", "/workspace"))
 
     run_started = datetime.now(timezone.utc)
@@ -574,7 +574,7 @@ def main(argv: list[str] | None = None) -> int:
                 technology=technology,
                 benchmark_input=benchmark_input,
                 environment=args.environment,
-                cluster_size=cluster_size,
+                execution_setting=execution_setting,
                 timestamp_utc=timestamp_utc,
                 metrics_path=spec.metrics_path,
                 metrics=metrics,

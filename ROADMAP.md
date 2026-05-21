@@ -30,7 +30,7 @@ Definition of done for the rescue path:
 - Every selected assignment analysis exactly satisfies the written requirements.
 - Spark SQL, Spark Core, and Hive produce validated, comparable outputs.
 - Benchmark tables and charts vary input size enough to support scalability discussion.
-- Docker execution is described as a standalone simulation unless a true cluster is used.
+- Docker execution is described as a standalone simulation unless a true managed execution service is used.
 - The final PDF contains visible or traceable evidence for every required report item.
 - A fresh evaluator can reproduce the main workflow from the README and Make targets.
 
@@ -40,7 +40,7 @@ Definition of done for the rescue path:
 |---|---|---|---|
 | Analysis 1 reports only one cause instead of the three most frequent causes | P0 grade blocker | M1 | Delay-analysis output includes top 1, 2, and 3 cause labels plus counts across Spark SQL, Spark Core, and Hive. |
 | Benchmark evidence is too narrow | P0/P1 | M2 | Local and Docker simulation benchmarks cover enough input sizes to support scalability claims. |
-| Docker "cluster" wording can overclaim | P1 | M2, M3, M4 | Report, charts, configs, and docs consistently use cautious Docker standalone simulation wording. |
+| Docker deployment wording can overclaim | P1 | M2, M3, M4 | Report, charts, configs, and docs consistently use cautious Docker standalone simulation wording. |
 | Local charts have only one x-axis point | P1 | M3 | Chart type matches available evidence; line charts are used only when there are at least three input sizes. |
 | Per-technology output samples are hidden | P0/P1 | M4 | Final report shows per-technology samples or an appendix with paths, checksums, and validation status. |
 | Hardware and runtime configuration are missing from the report | P1 | M2, M4 | Report includes CPU, RAM, OS, Spark/Hive versions, partitions, Docker limits, and topology. |
@@ -59,7 +59,7 @@ Goal: make the delay report fully satisfy the assignment requirement for the thr
 
 Planned interface change:
 
-- Replace the single `top_delay_or_cancellation_cause` output column with:
+- Replace the legacy single-cause output column with:
   - `top_1_cause`
   - `top_1_count`
   - `top_2_cause`
@@ -120,18 +120,18 @@ Acceptance criteria:
 - [x] Benchmark summary tables no longer rely on only local `100k` and Docker `100k`/`1m`.
 - [x] Failed or skipped benchmark cells are explicitly marked with a reason.
 - [x] The report can discuss input-size trends without overgeneralizing.
-- [x] Docker results are labeled as Docker standalone simulation, not as real distributed-cluster performance.
+- [x] Docker results are labeled as Docker standalone simulation, not as real managed-service performance.
 
 Grading evidence:
 
 - The project visibly addresses the assignment request to compare execution times while varying input size and, where possible, execution setting.
-- Implemented Docker benchmark label standardization from `docker-cluster` to `docker-simulation`, while keeping legacy benchmark CSV rows readable through report-generation normalization.
+- Implemented Docker benchmark label standardization to `docker-simulation`, while keeping legacy benchmark CSV rows readable through report-generation normalization.
 - Local benchmark campaign completed successfully for `100k`, `500k`, `1m`, `3m`, and `full` across Spark SQL, Spark Core, and Hive: 30/30 expected local job cells succeeded.
 - Docker standalone simulation benchmark campaign completed successfully for `100k`, `500k`, and `1m` across Spark SQL, Spark Core, and Hive: 18/18 expected Docker simulation job cells succeeded.
 - Generated report-ready benchmark artifacts: `report/tables/benchmark_summary.*`, `report/tables/benchmark_pivot.*`, and `report/tables/benchmark_status.*`.
 - Generated runtime configuration artifacts: `report/tables/environment_summary.csv`, `report/tables/environment_summary.md`, and `report/tables/environment_summary.json`.
 - Worker-count variation was intentionally not added because the current Docker Compose topology uses two named Spark workers; M2 focuses on input-size variation and documents this limit in the environment summary.
-- Verification completed: `.\.venv\Scripts\python.exe -m pytest -q` passed with 44 tests, `make benchmark-local` passed, `make benchmark-cluster` passed, `make charts` regenerated report tables and figures, and `make report` rebuilt `report/draft_final_report.pdf`.
+- Verification completed: `.\.venv\Scripts\python.exe -m pytest -q` passed with 44 tests, `make benchmark-local` passed, `make benchmark-docker-simulation` passed, `make charts` regenerated report tables and figures, and `make report` rebuilt `report/draft_final_report.pdf`.
 
 ### M3 - Upgrade Charts And Derived Metrics
 
@@ -145,7 +145,7 @@ Chart changes:
 - [x] Use grouped bar charts when a job/environment has only one or two input sizes.
 - [x] Use line charts only when a job/environment has at least three input sizes.
 - [x] Keep separate charts for local and Docker standalone simulation unless combining them improves readability.
-- [x] Rename chart titles and filenames away from overclaiming "cluster" language where needed.
+- [x] Rename chart titles and filenames away from overclaiming deployment language where needed.
 
 Derived metrics:
 
@@ -186,7 +186,7 @@ Required report updates:
 - [x] Add hardware and runtime-configuration table from M2.
 - [x] Add benchmark summary, benchmark pivot, rows/sec, speedup, and normalized scalability tables.
 - [x] Add upgraded charts from M3.
-- [x] Add a short "What is Docker standalone simulation?" paragraph and avoid real-cluster overclaims.
+- [x] Add a short "What is Docker standalone simulation?" paragraph and avoid real-deployment overclaims.
 - [x] Expand critical discussion of:
   - Spark SQL expressiveness and window functions.
   - Spark Core RDD verbosity and accumulator design.
@@ -208,7 +208,7 @@ Grading evidence:
 - Rewrote `report/draft_final_report.md` with explicit assignment coverage, data preparation, implementation choices, Docker standalone simulation scope, benchmark evidence, critical discussion, limitations, and conclusion.
 - Embedded a full first-10 evidence appendix for both jobs across Spark SQL, Spark Core, and Hive, with wide outputs split into readable tables.
 - Added report-visible M2/M3 evidence: hardware/runtime configuration, benchmark pivot, rows/sec, speedup, normalized scalability, and upgraded execution-time charts.
-- Verification completed: `.\.venv\Scripts\python.exe -m pytest -q` passed with 50 tests, `make charts` regenerated report artifacts, `make report` rebuilt a 16-page `report/draft_final_report.pdf`, stale-term searches found no `top_delay_or_cancellation_cause`, `docker-cluster`, or draft-title wording, and rendered PDF page checks confirmed the key benchmark and appendix tables fit cleanly.
+- Verification completed: `.\.venv\Scripts\python.exe -m pytest -q` passed with 50 tests, `make charts` regenerated report artifacts, `make report` rebuilt a 16-page `report/draft_final_report.pdf`, stale-term searches found no legacy delay-column wording, old Docker environment labels, or draft-title wording, and rendered PDF page checks confirmed the key benchmark and appendix tables fit cleanly.
 
 ### M5 - Repository Polish And Reproducibility Hardening
 
@@ -293,42 +293,47 @@ Grading evidence:
 ### M7 - Final Submission Gate
 
 Priority: `P0 grade blocker`  
-Status: final checkpoint.
+Status: completed.
 
 Goal: verify that code, artifacts, report, and repository story are consistent before submission.
 
 Final checks:
 
-- [ ] Run Spark SQL outputs after M1 schema changes.
-- [ ] Run Spark Core outputs after M1 schema changes.
-- [ ] Run Hive outputs after M1 schema changes.
-- [ ] Run Spark Core and Hive validators against Spark SQL.
-- [ ] Run MapReduce validator if M6 is implemented.
-- [ ] Run the venv test command:
+- [x] Run Spark SQL outputs after M1 schema changes.
+- [x] Run Spark Core outputs after M1 schema changes.
+- [x] Run Hive outputs after M1 schema changes.
+- [x] Run Spark Core and Hive validators against Spark SQL.
+- [x] Run MapReduce validator if M6 is implemented.
+- [x] Run the venv test command:
   - `.\.venv\Scripts\python.exe -m pytest -q`
-- [ ] Generate report tables and figures.
-- [ ] Build the final PDF.
-- [ ] Inspect PDF pages manually for broken tables, tiny charts, missing captions, and stale wording.
-- [ ] Check Git status for accidental large files.
-- [ ] Confirm GitHub repository link appears in README and PDF.
+- [x] Generate report tables and figures.
+- [x] Build the final PDF.
+- [x] Inspect PDF pages manually for broken tables, tiny charts, missing captions, and stale wording.
+- [x] Check Git status for accidental large files.
+- [x] Confirm GitHub repository link appears in README and PDF.
 
 Acceptance criteria:
 
-- [ ] Final PDF and repository agree on outputs, commands, limitations, and terminology.
-- [ ] No chart or paragraph describes Docker as a true distributed cluster.
-- [ ] Every requirement from the assignment PDF is either satisfied or explicitly scoped as a documented limitation only where optional.
-- [ ] The final submission can be defended under a harsh grading review.
+- [x] Final PDF and repository agree on outputs, commands, limitations, and terminology.
+- [x] No chart or paragraph presents Docker as managed-service execution.
+- [x] Every requirement from the assignment PDF is either satisfied or explicitly scoped as a documented limitation only where optional.
+- [x] The final submission can be defended under a harsh grading review.
 
 Grading evidence:
 
 - This gate protects against regressions introduced while upgrading the project.
+- Full-refresh gate completed on 2026-05-21: `make check-env`, `make prepare`, `make generate-sizes`, `make run-spark-sql`, `make validate-spark-sql`, `make run-spark-core`, `make run-hive`, `make validate-spark-core`, `make validate-hive`, `make run-mapreduce`, and `make validate-mapreduce` all passed.
+- Correctness evidence: Spark SQL, Spark Core, Hive, and MapReduce each produced 11,902 delay rows and 1,738 ranking rows on the full prepared dataset, with Spark Core, Hive, and MapReduce matching Spark SQL.
+- Regression and benchmark evidence: `.\.venv\Scripts\python.exe -m pytest -q` passed with 74 tests, `make benchmark-local` passed for the required local matrix, `make benchmark-mapreduce-local BENCHMARK_FLAGS="--input-label 100k"` passed for the stretch smoke, and `make benchmark-docker-simulation` passed for Docker standalone simulation.
+- Report evidence: `make charts` regenerated 4 figures and 28 report tables, `make report` rebuilt the 17-page `report/draft_final_report.pdf`, PDF text search confirmed the GitHub link and no stale forbidden wording, and rendered-page inspection found no broken tables, tiny charts, missing captions, or stale wording.
+- Repository hygiene evidence: `git check-ignore -v` confirmed raw data, prepared Parquet, generated inputs, runtime outputs, benchmark latest CSVs, and `.venv` remain ignored; `git status --short --untracked-files=all` showed only intentional docs/report evidence changes before this roadmap update.
 
 ## Public Interfaces And Artifact Expectations
 
 Delay-analysis schema:
 
 - Replaced schema:
-  - `top_delay_or_cancellation_cause`
+  - legacy single-cause delay/cancellation field
 - Current schema:
   - `top_1_cause`
   - `top_1_count`
@@ -339,7 +344,7 @@ Delay-analysis schema:
 
 Benchmark artifacts:
 
-- Keep existing benchmark metadata fields: technology, job name, input label, records, environment, cluster-size label, duration, output rows, status, timestamp, input path, and metrics path.
+- Keep existing benchmark metadata fields: technology, job name, input label, records, environment, execution-setting label, duration, output rows, status, timestamp, input path, and metrics path.
 - Add report-ready derived tables for rows/sec, speedup, and normalized scalability.
 - Preserve timestamped benchmark CSVs as immutable run evidence.
 
@@ -355,8 +360,8 @@ Report artifacts:
 Terminology:
 
 - Use "Docker standalone simulation" for the current Docker Compose Spark setup.
-- Use "cluster" only for a true multi-node or managed distributed environment.
-- Describe Hive as containerized local Hive unless a distributed Hive/Hadoop/YARN setup is actually added.
+- Reserve managed-service terminology for future non-local infrastructure.
+- Describe Hive as containerized local Hive unless a managed Hive/Hadoop/YARN service is actually added.
 
 MapReduce conventions:
 
@@ -394,7 +399,7 @@ Later implementation acceptance captured by this roadmap:
 - [ ] The venv pytest command passes.
 - [ ] Spark Core and Hive validators match Spark SQL after the schema change.
 - [ ] Benchmark charts have enough x-axis evidence to support written claims.
-- [ ] Final report avoids calling Docker a real cluster.
+- [ ] Final report avoids calling Docker a real managed execution service.
 - [ ] Report artifacts are regenerated after all schema and benchmark changes.
 
 ## Risk Register
@@ -403,7 +408,7 @@ Later implementation acceptance captured by this roadmap:
 |---|---|---|
 | Top-three cause schema change breaks validators and report generation | High | Update outputs, validators, first-10 tables, and docs in the same milestone. |
 | Benchmark runs take too long on local hardware | Medium | Prioritize 100k, 500k, 1m, and 3m; treat full-size and Hive full-size as conditional evidence. |
-| Docker simulation is mistaken for a real cluster | Medium | Rename charts/report language and explicitly document topology limits. |
+| Docker simulation is mistaken for a real managed execution service | Medium | Rename charts/report language and explicitly document topology limits. |
 | Tiny-input startup overhead creates non-monotonic results | Medium | Explain startup overhead and include rows/sec plus normalized ratios. |
 | MapReduce consumes time before required fixes are complete | High | Keep M6 after M1-M5 and do not make it part of the core grade path. |
 | README polish is skipped as "minor" | Low | Include README encoding and test command in M5 acceptance. |
@@ -421,7 +426,7 @@ make run-spark-sql
 make run-spark-core
 make run-hive
 make benchmark-local
-make benchmark-cluster
+make benchmark-docker-simulation
 make charts
 make report
 .\.venv\Scripts\python.exe -m pytest -q
@@ -431,4 +436,4 @@ Future command improvements to consider:
 
 - [x] Implement `make run-all-local` only if it can run the full local workflow reliably.
 - [x] Implement `make clean` only if it safely removes generated artifacts without touching raw data or user work.
-- [ ] Add MapReduce commands only after M6 has a validated implementation.
+- [x] Add MapReduce commands only after M6 has a validated implementation.

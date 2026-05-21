@@ -243,5 +243,5 @@ outputs/mapreduce/*
 
 experiments/results/local/*
 !experiments/results/local/.gitkeep
-experiments/results/cluster/*
-!experiments/results/cluster/.gitkeep
+experiments/results/docker-simulation/*
+!experiments/results/docker-simulation/.gitkeep

@@ -22,7 +22,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TABLES_DIR = PROJECT_ROOT / "report" / "tables"
 DEFAULT_CONFIGS = (
     PROJECT_ROOT / "config" / "local.yaml",
-    PROJECT_ROOT / "config" / "cluster.yaml",
+    PROJECT_ROOT / "config" / "docker_simulation.yaml",
 )
 
 
@@ -165,7 +165,7 @@ def collect_config_records(records: list[dict[str, str]], configs: list[Path]) -
         add_record(records, "spark_config", f"{label}_config_path", display_path(config_path), "config yaml")
         add_record(records, "spark_config", f"{label}_spark_master", spark.get("master", ""), "config yaml")
         add_record(records, "spark_config", f"{label}_shuffle_partitions", spark.get("shuffle_partitions", ""), "config yaml")
-        add_record(records, "spark_config", f"{label}_cluster_size", benchmark.get("cluster_size", ""), "config yaml")
+        add_record(records, "spark_config", f"{label}_execution_setting", benchmark.get("execution_setting", ""), "config yaml")
         if benchmark.get("spark_driver_service"):
             add_record(records, "spark_config", f"{label}_spark_driver_service", benchmark["spark_driver_service"], "config yaml")
         if benchmark.get("container_workspace"):

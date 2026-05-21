@@ -38,7 +38,7 @@ The project must address the following goals:
 2. Implement at least two required analytical tasks.
 3. Execute the analyses using at least three technologies among MapReduce, Hive, Spark Core, and Spark SQL.
 4. Compare execution performance across technologies.
-5. Evaluate scalability by varying input size and, where possible, cluster size.
+5. Evaluate scalability by varying input size and, where possible, execution setting.
 6. Produce result samples, benchmark tables, and charts.
 7. Discuss the strengths and weaknesses of each technology.
 8. Provide a reproducible GitHub repository and final PDF report.
@@ -64,7 +64,8 @@ The project includes:
 - Execution-time benchmarking.
 - Comparison of technologies.
 - Local execution.
-- Optional cluster execution.
+- Docker standalone simulation evidence.
+- Future managed-service execution is reserved for a later extension.
 - Generation of tables and charts for the final report.
 - Final PDF report.
 - GitHub repository with code, scripts, and documentation.
@@ -400,7 +401,7 @@ technology
 job_name
 input_size
 environment
-cluster_size
+execution_setting
 execution_time_seconds
 records_processed
 output_rows
@@ -411,7 +412,7 @@ timestamp
 
 - Metrics are saved in CSV or JSON format.
 - Local execution results are stored under `experiments/results/local/`.
-- Cluster execution results, if available, are stored under `experiments/results/cluster/`.
+- Docker standalone simulation results, if available, are stored under `experiments/results/docker-simulation/`.
 - Failed runs are logged with error information.
 
 ---
@@ -424,7 +425,7 @@ The system must generate tables and charts comparing execution times.
 
 - Charts compare execution time by technology.
 - Charts compare execution time by input size.
-- Charts distinguish local and cluster execution where available.
+- Charts distinguish local and Docker standalone simulation execution where available.
 - Generated figures are saved under `report/figures/`.
 
 ---
@@ -468,7 +469,8 @@ The system must support processing the full dataset and generated larger dataset
 
 - Jobs must run on datasets from 100k records to at least the full 7M+ dataset.
 - Larger replicated datasets should be supported where hardware allows.
-- The architecture must support both local and cluster execution.
+- The architecture must support local execution and Docker standalone simulation,
+  while leaving room for a future managed execution service.
 
 ---
 
@@ -518,12 +520,14 @@ Each job must log:
 
 ### 9.5 Portability
 
-The project should run in at least one local environment and should be adaptable to a cluster environment.
+The project should run in at least one local environment and should be adaptable
+to a future managed execution service.
 
 **Requirements:**
 
 - Local execution should be supported through scripts and/or Docker Compose.
-- Cluster execution should be supported through separate configuration files.
+- Docker standalone simulation should be supported through a separate configuration
+  file; future managed-service execution should use its own configuration.
 - Configuration must avoid hard-coded absolute paths.
 
 ---
@@ -563,7 +567,7 @@ big-data-flight-delay-analysis/
 │
 ├── config/
 │   ├── local.yaml
-│   ├── cluster.yaml
+│   ├── docker_simulation.yaml
 │   └── columns.yaml
 │
 ├── data/
@@ -611,7 +615,7 @@ big-data-flight-delay-analysis/
 │   ├── run_spark_core.sh
 │   ├── run_hive.sh
 │   ├── run_all_local.sh
-│   ├── run_all_cluster.sh
+│   ├── run_docker_simulation.sh
 │   └── collect_results.sh
 │
 ├── experiments/
@@ -620,7 +624,7 @@ big-data-flight-delay-analysis/
 │   ├── run_benchmarks.py
 │   └── results/
 │       ├── local/
-│       └── cluster/
+│       └── docker-simulation/
 │
 ├── outputs/
 │   ├── spark_sql/
@@ -799,14 +803,14 @@ Benchmarks must vary:
 - Analytical job.
 - Input size.
 - Execution environment.
-- Cluster size, where possible.
+- Execution setting, where possible.
 
 ### 14.2 Required Benchmark Matrix
 
 | Environment | Input Sizes | Technologies |
 |---|---:|---|
 | Local | 100k, 500k, 1M, 3M, 7M | Spark SQL, Spark Core, Hive |
-| Cluster, if available | 1M, 3M, 7M, 14M, 28M | Spark SQL, Spark Core, Hive |
+| Docker standalone simulation, if available | 100k, 500k, 1M | Spark SQL, Spark Core, Hive |
 
 ### 14.3 Metrics Schema
 
@@ -818,7 +822,7 @@ job_name
 input_size_label
 input_records
 environment
-cluster_size
+execution_setting
 execution_time_seconds
 output_rows
 status
@@ -829,7 +833,7 @@ timestamp
 
 ```text
 experiments/results/local/benchmark_results.csv
-experiments/results/cluster/benchmark_results.csv
+experiments/results/docker-simulation/benchmark_results.csv
 ```
 
 ---
@@ -1034,7 +1038,7 @@ run-spark-sql
 run-spark-core
 run-hive
 benchmark-local
-benchmark-cluster
+benchmark-docker-simulation
 charts
 report
 clean
@@ -1090,7 +1094,7 @@ Download it manually from Kaggle and place it under data/raw/.
 | Dataset column names differ from expectations | Jobs may fail | Build a schema-normalization layer |
 | Local machine cannot process larger datasets | Benchmarking may be limited | Use smaller local sizes and document hardware limits |
 | Hive setup takes too long | Delays implementation | Start with Spark SQL and Spark Core first |
-| Cluster unavailable | Scalability section weaker | Use controlled local scaling and clearly explain limitation |
+| Future managed execution service unavailable | Scalability section weaker | Use controlled local scaling and Docker standalone simulation while clearly explaining the limitation |
 | MapReduce too verbose | Time loss | Treat MapReduce as optional |
 | Outputs differ across technologies | Comparison becomes unreliable | Use Spark SQL as correctness reference |
 | Large files accidentally committed | GitHub repository becomes unusable | Use `.gitignore` for `data/`, `outputs/`, and benchmark artifacts |
@@ -1118,12 +1122,12 @@ Download it manually from Kaggle and place it under data/raw/.
 These decisions should be finalized during implementation:
 
 1. What are the exact column names in the Kaggle CSV?
-2. Is a real cluster available for experiments?
+2. Should a real managed execution service be added in a future project phase?
 3. Will MapReduce be implemented as an optional fourth technology?
 4. Should outputs be written as CSV, Parquet, or both?
 5. Should cancellation causes and delay causes be combined into one “cause” field or reported separately?
 6. What local hardware will be used for benchmarks?
-7. What cluster configuration, if any, will be used?
+7. What docker simulation configuration, if any, will be used?
 
 ---
 
@@ -1147,7 +1151,7 @@ Before submission, the project must satisfy this checklist:
 [ ] Analysis 2 implemented in Hive
 [ ] Benchmark scripts implemented
 [ ] Local benchmark results collected
-[ ] Cluster benchmark results collected or limitation documented
+[ ] Docker standalone simulation benchmark results collected or limitation documented
 [ ] First 10 rows of results exported
 [ ] Benchmark tables generated
 [ ] Benchmark charts generated

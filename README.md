@@ -101,7 +101,7 @@ flight-delay-big-data-analysis/
 |
 |-- config/
 |   |-- local.yaml
-|   |-- cluster.yaml
+|   |-- docker_simulation.yaml
 |   `-- columns.yaml
 |
 |-- data/
@@ -159,7 +159,7 @@ flight-delay-big-data-analysis/
 |   |-- run_benchmarks.py
 |   `-- results/
 |       |-- local/
-|       `-- cluster/
+|       `-- docker-simulation/
 |
 |-- outputs/
 |   |-- spark_sql/
@@ -177,7 +177,7 @@ flight-delay-big-data-analysis/
 |   `-- draft_final_report.pdf
 |
 `-- docs/
-    |-- cluster_simulation.md
+    |-- docker_simulation.md
     |-- data_preparation.md
     |-- hive_analyses.md
     |-- mapreduce_analyses.md
@@ -479,7 +479,7 @@ job_name
 input_label
 records
 environment
-cluster_size
+execution_setting
 duration_seconds
 output_rows
 status
@@ -514,31 +514,31 @@ benchmark outputs are written under
 Run Docker standalone simulation benchmarks:
 
 ```bash
-make benchmark-cluster
+make benchmark-docker-simulation
 ```
 
-In this repository, `make benchmark-cluster` starts a Docker Compose Spark
+In this repository, `make benchmark-docker-simulation` starts a Docker Compose Spark
 standalone simulation with one master, two workers, and a driver container. It
-uses `config/cluster.yaml`, writes results under `experiments/results/cluster/`,
+uses `config/docker_simulation.yaml`, writes results under `experiments/results/docker-simulation/`,
 and labels rows with `environment=docker-simulation`. The default M2 matrix runs
 `100k`, `500k`, and `1m` for Spark SQL, Spark Core, and Hive.
 
 Run a narrower simulation slice with benchmark flags:
 
 ```bash
-make benchmark-cluster BENCHMARK_FLAGS="--input-label 1m --technology spark_sql"
+make benchmark-docker-simulation BENCHMARK_FLAGS="--input-label 1m --technology spark_sql"
 ```
 
 Hive is included in the Docker simulation benchmark CSV, but it remains the existing
 single-node containerized HiveServer2/metastore/Postgres setup. Treat it as
-controlled Docker execution evidence, not a distributed Hive/Hadoop cluster.
-See `docs/cluster_simulation.md` for the topology and limitations.
+controlled Docker execution evidence, not a managed Hive/Hadoop service.
+See `docs/docker_simulation.md` for the topology and limitations.
 
 Benchmark results are stored in:
 
 ```text
 experiments/results/local/
-experiments/results/cluster/
+experiments/results/docker-simulation/
 ```
 
 Each local benchmark run writes:
@@ -638,7 +638,7 @@ make prepare
 make generate-sizes
 make run-all-local
 make benchmark-local
-make benchmark-cluster
+make benchmark-docker-simulation
 make charts
 make report
 ```
@@ -653,7 +653,7 @@ Regeneration map:
 | MapReduce stretch outputs | `make run-mapreduce` |
 | Local benchmark CSVs and logs | `make benchmark-local` |
 | MapReduce local benchmark CSVs and logs | `make benchmark-mapreduce-local` |
-| Docker standalone simulation benchmark CSVs and logs | `make benchmark-cluster` |
+| Docker standalone simulation benchmark CSVs and logs | `make benchmark-docker-simulation` |
 | Charts and report tables | `make charts` |
 | Final PDF | `make report` |
 
@@ -669,11 +669,11 @@ On Linux, WSL, or macOS, use:
 .venv/bin/python -m pytest -q
 ```
 
-If Hive or cluster execution requires additional setup, see:
+If Hive or future remote-service execution requires additional setup, see:
 
 ```text
 docs/hive_analyses.md
-docs/cluster_simulation.md
+docs/docker_simulation.md
 docs/mapreduce_analyses.md
 ```
 
@@ -700,7 +700,7 @@ validate-hive
 validate-mapreduce
 run-all-local
 benchmark-local
-benchmark-cluster
+benchmark-docker-simulation
 benchmark-mapreduce-local
 charts
 report
@@ -730,7 +730,7 @@ Dry-run the cleanup helper directly with:
 - [ ] MapReduce stretch outputs pass with `make run-mapreduce` and `make validate-mapreduce`, if claiming M6.
 - [ ] Local benchmarks have been regenerated with `make benchmark-local`.
 - [ ] MapReduce benchmark smoke has been regenerated with `make benchmark-mapreduce-local BENCHMARK_FLAGS="--input-label 100k"`, if claiming M6.
-- [ ] Docker standalone simulation benchmarks have been regenerated with `make benchmark-cluster`, if Docker is available.
+- [ ] Docker standalone simulation benchmarks have been regenerated with `make benchmark-docker-simulation`, if Docker is available.
 - [ ] Report charts and tables have been regenerated with `make charts`.
 - [ ] Final PDF has been rebuilt with `make report`.
 - [ ] Tests pass with `.\.venv\Scripts\python.exe -m pytest -q`.
@@ -780,7 +780,7 @@ Recommended documents:
 
 | File | Purpose |
 |---|---|
-| `cluster_simulation.md` | Docker Spark standalone simulation and limits |
+| `docker_simulation.md` | Docker Spark standalone simulation and limits |
 | `data_preparation.md` | Cleaning rules and schema decisions |
 | `hive_analyses.md` | Hive setup, queries, execution, and validation |
 | `spark_core_analyses.md` | Spark Core implementation and validation notes |
@@ -818,9 +818,9 @@ Keep `.gitkeep` files where empty directories need to be preserved.
 Current expected limitations:
 
 - The full raw dataset is not stored in the repository.
-- Cluster experiments depend on the availability of a suitable execution environment.
+- Future remote-service experiments depend on the availability of a suitable execution environment.
 - The Docker standalone simulation runs all services on one host and must not
-  be described as production-cluster performance.
+  be described as production remote-service performance.
 - Larger-than-original datasets are generated through controlled replication, so they are intended for scalability testing rather than new statistical insight.
 - Hive execution may require additional local or Docker-based configuration.
 - MapReduce is implemented as an optional stretch and depends on Docker-based

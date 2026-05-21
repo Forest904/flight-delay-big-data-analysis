@@ -1,4 +1,4 @@
-environment: docker-simulation
+﻿environment: docker-simulation
 
 paths:
   raw_dir: data/raw
@@ -7,7 +7,7 @@ paths:
   prepared_file: data/prepared/flights_2024_clean.parquet
   generated_dir: data/generated
   outputs_dir: outputs
-  results_dir: experiments/results/cluster
+  results_dir: experiments/results/docker-simulation
 
 spark:
   master: spark://spark-master:7077
@@ -17,7 +17,7 @@ spark:
   driver_bind_address: 0.0.0.0
 
 benchmark:
-  cluster_size: "docker-compose Spark standalone: 1 master + 2 workers; Hive single-node container"
+  execution_setting: "docker-compose Spark standalone: 1 master + 2 workers; Hive single-node container"
   spark_driver_service: spark-driver
   container_workspace: /workspace
   input_sizes:
@@ -31,7 +31,7 @@ benchmark:
       records: 1000000
       path: data/generated/flights_1m.parquet
 
-cluster_notes:
+docker_simulation_notes:
   spark_topology: "Spark standalone on Docker Compose with one master and two workers."
-  hive_topology: "Existing Docker HiveServer2/metastore/Postgres stack; not distributed HDFS/YARN."
+  hive_topology: "Existing Docker HiveServer2/metastore/Postgres stack; no HDFS/YARN service."
   limitation: "All containers share one host, one local disk, and Docker Desktop resource limits."

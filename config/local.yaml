@@ -15,7 +15,7 @@ spark:
   shuffle_partitions: 8
 
 benchmark:
-  cluster_size: local
+  execution_setting: local
   input_sizes:
     - label: 100k
       records: 100000

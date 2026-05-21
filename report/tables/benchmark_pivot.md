@@ -1,18 +1,18 @@
 | environment | input_label | records | job_name | Spark SQL duration_seconds | Spark Core duration_seconds | Hive duration_seconds | MapReduce duration_seconds |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| docker-simulation | 100k | 100000 | airline_airport_ranking | 5.136 | 2.148 | 9.189 |  |
-| docker-simulation | 100k | 100000 | delay_by_airport_month | 9.642 | 2.386 | 12.267 |  |
-| docker-simulation | 500k | 500000 | airline_airport_ranking | 5.164 | 2.191 | 8.986 |  |
-| docker-simulation | 500k | 500000 | delay_by_airport_month | 9.393 | 2.505 | 12.046 |  |
-| docker-simulation | 1m | 1000000 | airline_airport_ranking | 3.902 | 2.112 | 8.889 |  |
-| docker-simulation | 1m | 1000000 | delay_by_airport_month | 8.765 | 2.638 | 13.03 |  |
-| local | 100k | 100000 | airline_airport_ranking | 1.291 | 0.552 | 8.993 | 11.592 |
-| local | 100k | 100000 | delay_by_airport_month | 6.666 | 0.713 | 12.075 | 13.194 |
-| local | 500k | 500000 | airline_airport_ranking | 1.491 | 0.567 | 9.102 |  |
-| local | 500k | 500000 | delay_by_airport_month | 7.164 | 0.763 | 12.926 |  |
-| local | 1m | 1000000 | airline_airport_ranking | 1.693 | 0.624 | 8.972 |  |
-| local | 1m | 1000000 | delay_by_airport_month | 8.388 | 0.857 | 13.009 |  |
-| local | 3m | 3000000 | airline_airport_ranking | 2.201 | 0.607 | 12.141 |  |
-| local | 3m | 3000000 | delay_by_airport_month | 9.2 | 0.957 | 14.728 |  |
-| local | full | 7079081 | airline_airport_ranking | 2.204 | 0.592 | 12.699 |  |
-| local | full | 7079081 | delay_by_airport_month | 9.066 | 0.898 | 19.878 |  |
+| docker-simulation | 100k | 100000 | airline_airport_ranking | 4.01 | 2.325 | 8.983 |  |
+| docker-simulation | 100k | 100000 | delay_by_airport_month | 9.385 | 2.543 | 12.025 |  |
+| docker-simulation | 500k | 500000 | airline_airport_ranking | 5.617 | 2.434 | 8.972 |  |
+| docker-simulation | 500k | 500000 | delay_by_airport_month | 9.978 | 2.623 | 12.619 |  |
+| docker-simulation | 1m | 1000000 | airline_airport_ranking | 4.444 | 2.334 | 8.901 |  |
+| docker-simulation | 1m | 1000000 | delay_by_airport_month | 10.921 | 2.619 | 12.584 |  |
+| local | 100k | 100000 | airline_airport_ranking | 1.056 | 0.57 | 8.924 | 6.551 |
+| local | 100k | 100000 | delay_by_airport_month | 5.215 | 0.916 | 11.932 | 7.49 |
+| local | 500k | 500000 | airline_airport_ranking | 1.104 | 0.592 | 8.813 |  |
+| local | 500k | 500000 | delay_by_airport_month | 5.74 | 0.873 | 12.692 |  |
+| local | 1m | 1000000 | airline_airport_ranking | 1.31 | 0.563 | 8.861 |  |
+| local | 1m | 1000000 | delay_by_airport_month | 5.901 | 0.812 | 12.683 |  |
+| local | 3m | 3000000 | airline_airport_ranking | 1.659 | 0.615 | 8.861 |  |
+| local | 3m | 3000000 | delay_by_airport_month | 6.662 | 0.935 | 13.797 |  |
+| local | full | 7079081 | airline_airport_ranking | 2.33 | 0.583 | 12.382 |  |
+| local | full | 7079081 | delay_by_airport_month | 7.641 | 0.962 | 19.2 |  |

@@ -17,7 +17,7 @@ def test_benchmark_csv_schema_is_stable(tmp_path):
         "input_label": "100k",
         "records": 100000,
         "environment": "local",
-        "cluster_size": "local",
+        "execution_setting": "local",
         "duration_seconds": 1.25,
         "output_rows": 10,
         "status": "success",
@@ -146,7 +146,7 @@ def test_normalize_metrics_rows_expands_successful_jobs():
         technology="spark_sql",
         benchmark_input=BenchmarkInput("100k", 100000, Path("data/generated/flights_100k.parquet")),
         environment="local",
-        cluster_size="local",
+        execution_setting="local",
         timestamp_utc="2026-05-20T12:00:00+00:00",
         metrics_path=Path("outputs/spark_sql/runtime_metrics.json"),
         metrics={
@@ -174,7 +174,7 @@ def test_normalize_metrics_rows_expands_successful_jobs():
             "input_label": "100k",
             "records": 100000,
             "environment": "local",
-            "cluster_size": "local",
+            "execution_setting": "local",
             "duration_seconds": 2.5,
             "output_rows": 42,
             "status": "success",
@@ -193,7 +193,7 @@ def test_normalize_metrics_rows_records_preflight_failure_without_jobs():
         technology="hive",
         benchmark_input=BenchmarkInput("100k", 100000, Path("data/generated/flights_100k.parquet")),
         environment="local",
-        cluster_size="local",
+        execution_setting="local",
         timestamp_utc="2026-05-20T12:00:00+00:00",
         metrics_path=Path("outputs/hive/runtime_metrics.json"),
         metrics={
@@ -220,7 +220,7 @@ def test_normalize_metrics_rows_rejects_mismatched_input_path():
         technology="spark_sql",
         benchmark_input=BenchmarkInput("500k", 500000, Path("data/generated/flights_500k.parquet")),
         environment="local",
-        cluster_size="local",
+        execution_setting="local",
         timestamp_utc="2026-05-20T12:00:00+00:00",
         metrics_path=Path("outputs/spark_sql/runtime_metrics.json"),
         metrics={
@@ -256,7 +256,7 @@ def test_stale_metrics_file_is_cleared_before_normalizing_failed_run(tmp_path):
         technology="spark_sql",
         benchmark_input=BenchmarkInput("500k", 500000, Path("data/generated/flights_500k.parquet")),
         environment="local",
-        cluster_size="local",
+        execution_setting="local",
         timestamp_utc="2026-05-20T12:00:00+00:00",
         metrics_path=metrics_path,
         metrics=metrics,
@@ -341,8 +341,8 @@ def test_build_command_uses_docker_spark_core_on_windows(tmp_path):
     ]
 
 
-def test_build_command_uses_spark_driver_for_cluster_spark_sql(tmp_path):
-    cluster_config = {
+def test_build_command_uses_spark_driver_for_docker_simulation_spark_sql(tmp_path):
+    docker_simulation_config = {
         "paths": {"outputs_dir": "outputs"},
         "benchmark": {
             "spark_driver_service": "spark-driver",
@@ -350,12 +350,12 @@ def test_build_command_uses_spark_driver_for_cluster_spark_sql(tmp_path):
         },
     }
     input_path = tmp_path / "data" / "generated" / "flights_100k.parquet"
-    config_path = tmp_path / "config" / "cluster.yaml"
+    config_path = tmp_path / "config" / "docker_simulation.yaml"
 
     spec = run_benchmarks.build_command(
         "spark_sql",
         input_path,
-        cluster_config,
+        docker_simulation_config,
         config_path=config_path,
         project_root=tmp_path,
         python_executable="python",
@@ -371,15 +371,15 @@ def test_build_command_uses_spark_driver_for_cluster_spark_sql(tmp_path):
         "python",
         "src/spark_sql/run_spark_sql.py",
         "--config",
-        "/workspace/config/cluster.yaml",
+        "/workspace/config/docker_simulation.yaml",
         "--input-path",
         "/workspace/data/generated/flights_100k.parquet",
     ]
     assert spec.metrics_path == tmp_path / "outputs" / "spark_sql" / "runtime_metrics.json"
 
 
-def test_build_command_keeps_hive_on_host_for_cluster_config(tmp_path):
-    cluster_config = {
+def test_build_command_keeps_hive_on_host_for_docker_simulation_config(tmp_path):
+    docker_simulation_config = {
         "paths": {"outputs_dir": "outputs"},
         "benchmark": {
             "spark_driver_service": "spark-driver",
@@ -387,12 +387,12 @@ def test_build_command_keeps_hive_on_host_for_cluster_config(tmp_path):
         },
     }
     input_path = tmp_path / "data" / "generated" / "flights_100k.parquet"
-    config_path = tmp_path / "config" / "cluster.yaml"
+    config_path = tmp_path / "config" / "docker_simulation.yaml"
 
     spec = run_benchmarks.build_command(
         "hive",
         input_path,
-        cluster_config,
+        docker_simulation_config,
         config_path=config_path,
         project_root=tmp_path,
         python_executable="python",
@@ -403,7 +403,7 @@ def test_build_command_keeps_hive_on_host_for_cluster_config(tmp_path):
         "python",
         "src/hive/run_hive.py",
         "--config",
-        "config/cluster.yaml",
+        "config/docker_simulation.yaml",
         "--input-path",
         "data/generated/flights_100k.parquet",
     ]
@@ -490,8 +490,8 @@ def test_normalize_metrics_rows_uses_configured_container_workspace():
         run_id="20260520T120000Z",
         technology="spark_sql",
         benchmark_input=BenchmarkInput("100k", 100000, Path("data/generated/flights_100k.parquet")),
-        environment="docker-cluster",
-        cluster_size="cluster",
+        environment="docker-simulation",
+        execution_setting="docker simulation",
         timestamp_utc="2026-05-20T12:00:00+00:00",
         metrics_path=Path("outputs/spark_sql/runtime_metrics.json"),
         metrics={
@@ -516,18 +516,18 @@ def test_normalize_metrics_rows_uses_configured_container_workspace():
     assert rows[0]["job_name"] == "delay_by_airport_month"
 
 
-def test_cluster_results_dir_is_respected(tmp_path):
-    config = {"paths": {"outputs_dir": "outputs", "results_dir": "experiments/results/cluster"}}
+def test_docker_simulation_results_dir_is_respected(tmp_path):
+    config = {"paths": {"outputs_dir": "outputs", "results_dir": "experiments/results/docker-simulation"}}
 
     results_dir = run_benchmarks.resolve_project_path(config["paths"]["results_dir"], project_root=tmp_path)
 
-    assert results_dir == tmp_path / "experiments" / "results" / "cluster"
+    assert results_dir == tmp_path / "experiments" / "results" / "docker-simulation"
 
 
-def test_cluster_config_lists_required_docker_simulation_inputs():
+def test_docker_simulation_config_lists_required_docker_simulation_inputs():
     import yaml
 
-    config = yaml.safe_load(Path("config/cluster.yaml").read_text(encoding="utf-8"))
+    config = yaml.safe_load(Path("config/docker_simulation.yaml").read_text(encoding="utf-8"))
 
     assert config["environment"] == "docker-simulation"
     assert [entry["label"] for entry in config["benchmark"]["input_sizes"]] == ["100k", "500k", "1m"]
@@ -537,4 +537,4 @@ def test_makefile_uses_docker_simulation_default_matrix():
     makefile = Path("Makefile").read_text(encoding="utf-8")
 
     assert "--environment docker-simulation" in makefile
-    assert "--input-label $(CLUSTER_INPUT_LABEL)" not in makefile
+    assert "--input-label $(DOCKER_SIMULATION_INPUT_LABEL)" not in makefile

@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-05-21T14:38:05.232370+00:00",
+  "generated_at_utc": "2026-05-21T16:06:24.832864+00:00",
   "records": [
     {
       "category": "campaign",
       "item": "summary_generated_at_utc",
       "source": "script timestamp",
-      "value": "2026-05-21T14:37:56.906167+00:00"
+      "value": "2026-05-21T16:06:20.530986+00:00"
     },
     {
       "category": "host",
@@ -59,7 +59,7 @@
       "category": "host",
       "item": "project_drive_free_bytes",
       "source": "psutil.disk_usage",
-      "value": "541298802688"
+      "value": "541335920640"
     },
     {
       "category": "host",
@@ -153,7 +153,7 @@
     },
     {
       "category": "spark_config",
-      "item": "local_cluster_size",
+      "item": "local_execution_setting",
       "source": "config yaml",
       "value": "local"
     },
@@ -161,7 +161,7 @@
       "category": "spark_config",
       "item": "docker-simulation_config_path",
       "source": "config yaml",
-      "value": "config/cluster.yaml"
+      "value": "config/docker_simulation.yaml"
     },
     {
       "category": "spark_config",
@@ -177,7 +177,7 @@
     },
     {
       "category": "spark_config",
-      "item": "docker-simulation_cluster_size",
+      "item": "docker-simulation_execution_setting",
       "source": "config yaml",
       "value": "docker-compose Spark standalone: 1 master + 2 workers; Hive single-node container"
     },

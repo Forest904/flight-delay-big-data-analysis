@@ -36,7 +36,7 @@ Streaming in local MapReduce mode against the repository bind mount at
 `/workspace`.
 
 This is a reproducible Docker-local Hadoop Streaming runtime, not YARN, HDFS,
-or a multi-node Hadoop cluster. It is useful for implementation comparison and
+or a remote Hadoop deployment. It is useful for implementation comparison and
 stretch evidence, while the main grade-critical technology set remains Spark
 SQL, Spark Core, and Hive.
 
