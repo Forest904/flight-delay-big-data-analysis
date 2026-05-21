@@ -175,19 +175,19 @@ Grading evidence:
 ### M4 - Report Rewrite And Evidence Appendix
 
 Priority: `P0 grade blocker` and `P1 evidence upgrade`  
-Status: draft report exists, rewrite needed after M1-M3.
+Status: completed.
 
 Goal: make the PDF read like a complete final submission rather than a compact draft.
 
 Required report updates:
 
-- [ ] Update Analysis 1 explanation and samples for top-three causes.
-- [ ] Show first 10 rows for each job and technology, or provide a compact appendix with paths, checksums, and validation status.
-- [ ] Add hardware and runtime-configuration table from M2.
-- [ ] Add benchmark summary, benchmark pivot, rows/sec, speedup, and normalized scalability tables.
-- [ ] Add upgraded charts from M3.
-- [ ] Add a short "What is Docker standalone simulation?" paragraph and avoid real-cluster overclaims.
-- [ ] Expand critical discussion of:
+- [x] Update Analysis 1 explanation and samples for top-three causes.
+- [x] Show first 10 rows for each job and technology, or provide a compact appendix with paths, checksums, and validation status.
+- [x] Add hardware and runtime-configuration table from M2.
+- [x] Add benchmark summary, benchmark pivot, rows/sec, speedup, and normalized scalability tables.
+- [x] Add upgraded charts from M3.
+- [x] Add a short "What is Docker standalone simulation?" paragraph and avoid real-cluster overclaims.
+- [x] Expand critical discussion of:
   - Spark SQL expressiveness and window functions.
   - Spark Core RDD verbosity and accumulator design.
   - Hive overhead and SQL-on-Hadoop tradeoffs.
@@ -197,14 +197,18 @@ Required report updates:
 
 Acceptance criteria:
 
-- [ ] Every item in the assignment final-report section is explicitly answered.
-- [ ] Claims are traceable to committed tables, figures, outputs, or documented commands.
-- [ ] Limitations are honest but do not substitute for missing required evidence.
-- [ ] The PDF renders cleanly and uses table layouts that fit the page.
+- [x] Every item in the assignment final-report section is explicitly answered.
+- [x] Claims are traceable to committed tables, figures, outputs, or documented commands.
+- [x] Limitations are honest but do not substitute for missing required evidence.
+- [x] The PDF renders cleanly and uses table layouts that fit the page.
 
 Grading evidence:
 
-- The report becomes the evaluator-facing proof that the project is complete, correct, and critically analyzed.
+- The report now reads as an evaluator-facing final submission rather than a compact draft.
+- Rewrote `report/draft_final_report.md` with explicit assignment coverage, data preparation, implementation choices, Docker standalone simulation scope, benchmark evidence, critical discussion, limitations, and conclusion.
+- Embedded a full first-10 evidence appendix for both jobs across Spark SQL, Spark Core, and Hive, with wide outputs split into readable tables.
+- Added report-visible M2/M3 evidence: hardware/runtime configuration, benchmark pivot, rows/sec, speedup, normalized scalability, and upgraded execution-time charts.
+- Verification completed: `.\.venv\Scripts\python.exe -m pytest -q` passed with 50 tests, `make charts` regenerated report artifacts, `make report` rebuilt a 16-page `report/draft_final_report.pdf`, stale-term searches found no `top_delay_or_cancellation_cause`, `docker-cluster`, or draft-title wording, and rendered PDF page checks confirmed the key benchmark and appendix tables fit cleanly.
 
 ### M5 - Repository Polish And Reproducibility Hardening
 
