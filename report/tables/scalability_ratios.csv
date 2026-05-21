@@ -27,11 +27,13 @@ local,500k,500000,airline_airport_ranking,Spark Core,1.039566577379594,5.0,4.809
 local,1m,1000000,airline_airport_ranking,Spark Core,0.9883604997735641,10.0,10.117765736581969
 local,3m,3000000,airline_airport_ranking,Spark Core,1.0794385797387387,30.0,27.79222510952039
 local,full,7079081,airline_airport_ranking,Spark Core,1.0232105431298688,70.79081,69.18498883275778
+local,14m,14000000,airline_airport_ranking,Spark Core,0.9898735821435216,140.0,141.43220157147442
 local,100k,100000,airline_airport_ranking,Spark SQL,1.0,1.0,1.0
 local,500k,500000,airline_airport_ranking,Spark SQL,1.04480115405804,5.0,4.785599614414519
 local,1m,1000000,airline_airport_ranking,Spark SQL,1.2403624984144954,10.0,8.06215925810607
 local,3m,3000000,airline_airport_ranking,Spark SQL,1.5707485285570677,30.0,19.09917434559612
 local,full,7079081,airline_airport_ranking,Spark SQL,2.2055079010190775,70.79081,32.09728242972532
+local,14m,14000000,airline_airport_ranking,Spark SQL,2.121044520969363,140.0,66.0052151738979
 local,100k,100000,delay_by_airport_month,Hive,1.0,1.0,1.0
 local,500k,500000,delay_by_airport_month,Hive,1.0637105010280632,5.0,4.7005270655573685
 local,1m,1000000,delay_by_airport_month,Hive,1.0629528837478188,10.0,9.40775471132967
@@ -42,8 +44,10 @@ local,500k,500000,delay_by_airport_month,Spark Core,0.953400362178441,5.0,5.2443
 local,1m,1000000,delay_by_airport_month,Spark Core,0.8864519283982609,10.0,11.280927571638435
 local,3m,3000000,delay_by_airport_month,Spark Core,1.0209764409364244,30.0,29.383635897106934
 local,full,7079081,delay_by_airport_month,Spark Core,1.0502454364752332,70.79081,67.40406341358036
+local,14m,14000000,delay_by_airport_month,Spark Core,0.9377780057917987,140.0,149.28906322748858
 local,100k,100000,delay_by_airport_month,Spark SQL,1.0,1.0,1.0
 local,500k,500000,delay_by_airport_month,Spark SQL,1.100748696324974,5.0,4.542362863288689
 local,1m,1000000,delay_by_airport_month,Spark SQL,1.1314367126775984,10.0,8.838320241822919
 local,3m,3000000,delay_by_airport_month,Spark SQL,1.277511018558733,30.0,23.483163404606486
 local,full,7079081,delay_by_airport_month,Spark SQL,1.465253261464622,70.79081,48.31301991386778
+local,14m,14000000,delay_by_airport_month,Spark SQL,1.4725707158012413,140.0,95.07183491953697

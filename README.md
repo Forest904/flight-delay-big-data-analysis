@@ -285,7 +285,12 @@ Replace existing generated inputs or opt into the larger replicated datasets:
 ```bash
 make generate-sizes FORCE=1
 make generate-sizes GENERATE_LARGE=1 FORCE=1
+make generate-sizes GENERATE_LARGE=1 LARGE_LABEL=14m FORCE=1
 ```
+
+`LARGE_LABEL` can be used to generate only selected optional large inputs. This
+is the recommended M3 command for producing the required `14m` dataset without
+also producing the optional `28m` stretch input.
 
 Generation writes `data/generated/input_size_manifest.json` with the validated
 row count, generation method, seed, source path, and reuse status for every

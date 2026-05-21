@@ -20,6 +20,9 @@ endif
 ifeq ($(GENERATE_LARGE),1)
 GENERATE_SIZE_FLAGS += --include-large
 endif
+ifneq ($(strip $(LARGE_LABEL)),)
+GENERATE_SIZE_FLAGS += $(foreach label,$(LARGE_LABEL),--large-label $(label))
+endif
 
 .PHONY: setup check-env aws-check aws-check-report inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive run-mapreduce stop-hive validate-spark-sql validate-spark-core validate-hive validate-mapreduce run-all-local benchmark-local benchmark-docker-simulation benchmark-mapreduce-local charts report clean
 

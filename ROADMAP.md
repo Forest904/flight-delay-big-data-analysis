@@ -138,17 +138,17 @@ material.
 
 **Goal:** improve scalability evidence beyond the original 7M-row dataset.
 
-- [ ] Generate and validate `14m` with the existing controlled replication
+- [x] Generate and validate `14m` with the existing controlled replication
       support.
-- [ ] Attempt `28m` only if local storage, runtime, and AWS budget remain
+- [x] Attempt `28m` only if local storage, runtime, and AWS budget remain
       reasonable.
-- [ ] Document the replication method:
+- [x] Document the replication method:
   - no synthetic schema changes
   - controlled full-dataset repetition
   - deterministic sampled remainder
   - same prepared schema as the canonical input
-- [ ] Include at least `14m` in the local benchmark matrix if feasible.
-- [ ] Use `28m` only as optional stretch evidence.
+- [x] Include at least `14m` in the local benchmark matrix if feasible.
+- [x] Use `28m` only as optional stretch evidence.
 
 **Acceptance criteria:**
 

@@ -28,11 +28,13 @@
 | local | 1m | 1000000 | airline_airport_ranking | Spark Core | 0.988 | 10 | 10.118 |
 | local | 3m | 3000000 | airline_airport_ranking | Spark Core | 1.079 | 30 | 27.792 |
 | local | full | 7079081 | airline_airport_ranking | Spark Core | 1.023 | 70.791 | 69.185 |
+| local | 14m | 14000000 | airline_airport_ranking | Spark Core | 0.99 | 140 | 141.432 |
 | local | 100k | 100000 | airline_airport_ranking | Spark SQL | 1 | 1 | 1 |
 | local | 500k | 500000 | airline_airport_ranking | Spark SQL | 1.045 | 5 | 4.786 |
 | local | 1m | 1000000 | airline_airport_ranking | Spark SQL | 1.24 | 10 | 8.062 |
 | local | 3m | 3000000 | airline_airport_ranking | Spark SQL | 1.571 | 30 | 19.099 |
 | local | full | 7079081 | airline_airport_ranking | Spark SQL | 2.206 | 70.791 | 32.097 |
+| local | 14m | 14000000 | airline_airport_ranking | Spark SQL | 2.121 | 140 | 66.005 |
 | local | 100k | 100000 | delay_by_airport_month | Hive | 1 | 1 | 1 |
 | local | 500k | 500000 | delay_by_airport_month | Hive | 1.064 | 5 | 4.701 |
 | local | 1m | 1000000 | delay_by_airport_month | Hive | 1.063 | 10 | 9.408 |
@@ -43,8 +45,10 @@
 | local | 1m | 1000000 | delay_by_airport_month | Spark Core | 0.886 | 10 | 11.281 |
 | local | 3m | 3000000 | delay_by_airport_month | Spark Core | 1.021 | 30 | 29.384 |
 | local | full | 7079081 | delay_by_airport_month | Spark Core | 1.05 | 70.791 | 67.404 |
+| local | 14m | 14000000 | delay_by_airport_month | Spark Core | 0.938 | 140 | 149.289 |
 | local | 100k | 100000 | delay_by_airport_month | Spark SQL | 1 | 1 | 1 |
 | local | 500k | 500000 | delay_by_airport_month | Spark SQL | 1.101 | 5 | 4.542 |
 | local | 1m | 1000000 | delay_by_airport_month | Spark SQL | 1.131 | 10 | 8.838 |
 | local | 3m | 3000000 | delay_by_airport_month | Spark SQL | 1.278 | 30 | 23.483 |
 | local | full | 7079081 | delay_by_airport_month | Spark SQL | 1.465 | 70.791 | 48.313 |
+| local | 14m | 14000000 | delay_by_airport_month | Spark SQL | 1.473 | 140 | 95.072 |

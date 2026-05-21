@@ -16,3 +16,5 @@
 | local | 3m | 3000000 | delay_by_airport_month | 6.662 | 0.935 | 13.797 |  |
 | local | full | 7079081 | airline_airport_ranking | 2.33 | 0.583 | 12.382 |  |
 | local | full | 7079081 | delay_by_airport_month | 7.641 | 0.962 | 19.2 |  |
+| local | 14m | 14000000 | airline_airport_ranking | 2.241 | 0.564 |  |  |
+| local | 14m | 14000000 | delay_by_airport_month | 7.68 | 0.859 |  |  |

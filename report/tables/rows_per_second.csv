@@ -49,3 +49,7 @@ local,full,7079081,airline_airport_ranking,Spark SQL,2.33,3038232.188841202
 local,full,7079081,delay_by_airport_month,Hive,19.199618,368709.47119885404
 local,full,7079081,delay_by_airport_month,Spark Core,0.962154,7357534.240880358
 local,full,7079081,delay_by_airport_month,Spark SQL,7.641391,926412.6125727633
+local,14m,14000000,airline_airport_ranking,Spark Core,0.563929,24825820.27170087
+local,14m,14000000,airline_airport_ranking,Spark SQL,2.240769,6247855.089034167
+local,14m,14000000,delay_by_airport_month,Spark Core,0.85912,16295744.48272651
+local,14m,14000000,delay_by_airport_month,Spark SQL,7.679552,1823023.0096755645

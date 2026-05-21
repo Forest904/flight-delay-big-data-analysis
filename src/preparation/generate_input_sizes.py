@@ -46,10 +46,19 @@ class ReplicationPlan:
     remainder_records: int
 
 
-def selected_size_specs(include_large: bool) -> list[SizeSpec]:
+def selected_size_specs(include_large: bool, large_labels: set[str] | None = None) -> list[SizeSpec]:
     specs = [SizeSpec(label, records) for label, records in DEFAULT_SIZE_SPECS]
     if include_large:
-        specs.extend(SizeSpec(label, records) for label, records in LARGE_SIZE_SPECS)
+        available_large = {label for label, _ in LARGE_SIZE_SPECS}
+        if large_labels:
+            unknown = sorted(large_labels - available_large)
+            if unknown:
+                raise ValueError(f"Unknown large input label(s): {', '.join(unknown)}")
+        specs.extend(
+            SizeSpec(label, records)
+            for label, records in LARGE_SIZE_SPECS
+            if not large_labels or label in large_labels
+        )
     return specs
 
 
@@ -370,7 +379,13 @@ def manifest_entry(
     return entry
 
 
-def generate_manifest(config_path: Path, seed: int, force: bool, include_large: bool) -> dict[str, Any]:
+def generate_manifest(
+    config_path: Path,
+    seed: int,
+    force: bool,
+    include_large: bool,
+    large_labels: set[str] | None = None,
+) -> dict[str, Any]:
     from src.common.prepared_data import read_prepared_parquet
     from src.common.runtime import ensure_java_17
 
@@ -416,7 +431,7 @@ def generate_manifest(config_path: Path, seed: int, force: bool, include_large: 
         validate_manifest_entry(full_entry)
         entries.append(full_entry)
 
-        for spec in selected_size_specs(include_large):
+        for spec in selected_size_specs(include_large, large_labels):
             output_path = generated_dir / f"flights_{spec.label}.parquet"
             if spec.records <= base_records:
                 method = "deterministic_hash_limit"
@@ -480,6 +495,7 @@ def generate_manifest(config_path: Path, seed: int, force: bool, include_large: 
         "source_path": display_path(prepared_path),
         "seed": seed,
         "include_large": include_large,
+        "large_labels": sorted(large_labels) if large_labels else [],
         "datasets": entries,
     }
 
@@ -498,6 +514,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Seed for deterministic hash-limited subsets.")
     parser.add_argument("--force", action="store_true", help="Replace existing generated datasets.")
     parser.add_argument("--include-large", action="store_true", help="Also generate optional 14M and 28M datasets.")
+    parser.add_argument(
+        "--large-label",
+        action="append",
+        help="Optional large input label to generate when --include-large is set. Repeat to select multiple labels.",
+    )
     return parser.parse_args(argv)
 
 
@@ -509,11 +530,16 @@ def main(argv: list[str] | None = None) -> int:
 
     local_config = load_yaml(config_path)
     generated_dir = resolve_project_path(str(local_config.get("paths", {}).get("generated_dir", "data/generated")))
+    large_labels = set(args.large_label or [])
+    if large_labels and not args.include_large:
+        print("# --large-label requires --include-large.", file=sys.stderr)
+        return 1
     manifest = generate_manifest(
         config_path=config_path,
         seed=args.seed,
         force=args.force,
         include_large=args.include_large,
+        large_labels=large_labels,
     )
     manifest_path = write_manifest(manifest, generated_dir)
 

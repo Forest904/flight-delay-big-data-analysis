@@ -217,6 +217,13 @@ Optional larger datasets are generated only when explicitly requested:
 make generate-sizes GENERATE_LARGE=1 FORCE=1
 ```
 
+To generate only the required M3 large input without also creating the optional
+`28m` stretch dataset, filter the optional set:
+
+```powershell
+make generate-sizes GENERATE_LARGE=1 LARGE_LABEL=14m FORCE=1
+```
+
 For targets larger than the prepared source, the generator uses controlled
 replication: it writes as many full source repetitions as fit in the target,
 then adds a deterministic sampled remainder. For the current `7,079,081`-row

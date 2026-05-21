@@ -50,3 +50,7 @@
 | local | full | 7079081 | delay_by_airport_month | Hive | 19.2 | 368709.471 |
 | local | full | 7079081 | delay_by_airport_month | Spark Core | 0.962 | 7357534.241 |
 | local | full | 7079081 | delay_by_airport_month | Spark SQL | 7.641 | 926412.613 |
+| local | 14m | 14000000 | airline_airport_ranking | Spark Core | 0.564 | 24825820.272 |
+| local | 14m | 14000000 | airline_airport_ranking | Spark SQL | 2.241 | 6247855.089 |
+| local | 14m | 14000000 | delay_by_airport_month | Spark Core | 0.859 | 16295744.483 |
+| local | 14m | 14000000 | delay_by_airport_month | Spark SQL | 7.68 | 1823023.01 |

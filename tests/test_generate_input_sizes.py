@@ -45,6 +45,23 @@ def test_selected_size_specs_includes_large_when_requested():
     ]
 
 
+def test_selected_size_specs_filters_large_labels_when_requested():
+    specs = selected_size_specs(include_large=True, large_labels={"14m"})
+
+    assert [(spec.label, spec.records) for spec in specs] == [
+        ("100k", 100_000),
+        ("500k", 500_000),
+        ("1m", 1_000_000),
+        ("3m", 3_000_000),
+        ("14m", 14_000_000),
+    ]
+
+
+def test_selected_size_specs_rejects_unknown_large_label():
+    with pytest.raises(ValueError, match="Unknown large input label"):
+        selected_size_specs(include_large=True, large_labels={"56m"})
+
+
 def test_replication_plan_for_optional_large_inputs():
     base_records = 7_079_081
 
@@ -248,3 +265,10 @@ spark:
 
     with pytest.raises(ValueError, match="Re-run with --force"):
         generate_manifest(config_path, DEFAULT_SEED + 1, force=False, include_large=False)
+
+
+def test_makefile_wires_large_label_filter():
+    makefile = generate_input_sizes.PROJECT_ROOT.joinpath("Makefile").read_text(encoding="utf-8")
+
+    assert "LARGE_LABEL" in makefile
+    assert "--large-label $(label)" in makefile
