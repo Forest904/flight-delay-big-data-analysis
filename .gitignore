@@ -220,6 +220,10 @@ __marimo__/
 # Project reference files
 Second_Project_EN-1.pdf
 
+# Local Hive/Derby scratch state
+metastore_db/
+derby.log
+
 # Project data and generated artifacts
 data/raw/*
 !data/raw/.gitkeep

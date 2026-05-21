@@ -30,8 +30,11 @@ TECHNOLOGY_LABELS = {
     "spark_sql": "Spark SQL",
     "spark_core": "Spark Core",
     "hive": "Hive",
+    "mapreduce": "MapReduce",
 }
 TECHNOLOGY_ORDER = tuple(TECHNOLOGY_LABELS)
+CORE_TECHNOLOGY_ORDER = ("spark_sql", "spark_core", "hive")
+OPTIONAL_OUTPUT_TECHNOLOGIES = {"mapreduce"}
 JOB_LABELS = {
     "delay_by_airport_month": "Delay by airport, month, and delay range",
     "airline_airport_ranking": "Airline-airport delay ranking",
@@ -399,7 +402,7 @@ def benchmark_status_records(rows: Iterable[dict[str, object]]) -> list[dict[str
     for environment, inputs in EXPECTED_INPUTS_BY_ENVIRONMENT.items():
         for input_label, records in inputs:
             for job_name in JOB_LABELS:
-                for technology in TECHNOLOGY_ORDER:
+                for technology in CORE_TECHNOLOGY_ORDER:
                     key = (environment, input_label, job_name, technology)
                     expected_keys.add(key)
                     row = latest_by_key.get(key)
@@ -539,13 +542,22 @@ def generate_execution_time_charts(rows: list[dict[str, object]], figures_dir: P
                 continue
             positions = [x_lookup[label] for label in tech_group["input_label"]]
             if chart_kind == "line":
-                plt.plot(
-                    positions,
-                    tech_group["duration_seconds"],
-                    marker="o",
-                    linewidth=1.8,
-                    label=technology_label,
-                )
+                if len(tech_group) >= 2:
+                    plt.plot(
+                        positions,
+                        tech_group["duration_seconds"],
+                        marker="o",
+                        linewidth=1.8,
+                        label=technology_label,
+                    )
+                else:
+                    plt.scatter(
+                        positions,
+                        tech_group["duration_seconds"],
+                        marker="o",
+                        s=38,
+                        label=technology_label,
+                    )
             else:
                 offset = (technology_index - (len(technology_labels) - 1) / 2) * bar_width
                 plt.bar(
@@ -589,6 +601,8 @@ def copy_first_10_tables(outputs_dir: Path, tables_dir: Path) -> tuple[list[Path
     for technology in TECHNOLOGY_ORDER:
         technology_dir = outputs_dir / technology
         if not technology_dir.exists():
+            if technology in OPTIONAL_OUTPUT_TECHNOLOGIES:
+                continue
             warnings.append(f"Missing output directory: {display_path(technology_dir)}")
             continue
         for job_dir in sorted(path for path in technology_dir.iterdir() if path.is_dir() and not path.name.startswith(".")):

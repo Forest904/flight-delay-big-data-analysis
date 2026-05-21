@@ -9,9 +9,9 @@ fontsize: 10pt
 
 This project analyzes the 2024 United States flight delay dataset with a
 reproducible big-data workflow. The repository prepares a canonical cleaned
-Parquet dataset, implements two analytical jobs with three big-data
-technologies, validates the outputs, records benchmark evidence, and produces
-the tables and figures included in this PDF.
+Parquet dataset, implements two analytical jobs with three required big-data
+technologies plus an optional MapReduce stretch, validates the outputs, records
+benchmark evidence, and produces the tables and figures included in this PDF.
 
 Repository: <https://github.com/Forest904/flight-delay-big-data-analysis.git>
 
@@ -21,12 +21,13 @@ The implemented analyses are:
   range.
 - **Analysis 2:** airline-airport ranking by average departure delay.
 
-The three selected technologies are Spark SQL, Spark Core RDDs, and Hive.
-Spark SQL is used as the correctness reference because its declarative
+The three selected required technologies are Spark SQL, Spark Core RDDs, and
+Hive. Spark SQL is used as the correctness reference because its declarative
 aggregations and window functions make the required output rules easiest to
 review. Spark Core reimplements the same logic with lower-level RDD
 transformations. Hive provides the required SQL-on-Hadoop comparison point.
-MapReduce is intentionally out of scope for this submission.
+M6 adds Hadoop Streaming MapReduce as a validated stretch extension, kept
+separate from the grade-critical default workflow.
 
 The main reproducibility commands are:
 
@@ -38,7 +39,9 @@ make generate-sizes
 make run-spark-sql
 make run-spark-core
 make run-hive
+make run-mapreduce
 make benchmark-local
+make benchmark-mapreduce-local
 make benchmark-cluster
 make charts
 make report
@@ -75,8 +78,9 @@ make prepare
 ```
 
 The prepared output is `data/prepared/flights_2024_clean.parquet`. This Parquet
-dataset is the canonical input for Spark SQL, Spark Core, and Hive. Using one
-prepared source for all technologies keeps the comparison fair: each
+dataset is the canonical input for Spark SQL, Spark Core, and Hive. MapReduce
+uses a canonical CSV export derived from the same prepared Parquet input, not
+the raw Kaggle CSV. Using one prepared source keeps the comparison fair: each
 implementation receives the same normalized schema, the same row-retention
 policy, and the same benchmark input files.
 
@@ -245,6 +249,30 @@ distributed Hive-on-YARN or HDFS deployment, so the Hive results should be read
 as controlled local/container evidence rather than as production distributed
 Hive performance.
 
+## MapReduce Stretch
+
+M6 adds Hadoop Streaming MapReduce as the flagship stretch. The implementation
+uses Python mappers and reducers under `src/mapreduce/`, runs through a
+Docker-based `mapreduce-runner` service, and writes the same output schemas
+under `outputs/mapreduce/`.
+
+MapReduce reads a canonical CSV export generated from prepared Parquet. The
+export is stored under `data/generated/mapreduce_csv/` with a manifest that
+records the source Parquet signature, row count, CSV size, CSV SHA-256, and
+export duration. This keeps the stretch comparison fair without reparsing the
+raw Kaggle CSV, while avoiding stale cached exports.
+
+The delay reducer computes the same grouped counts, averages, and top-three
+cause ordering as Spark SQL. The ranking reducer groups by airport, aggregates
+airline statistics, computes the airport average departure delay, and applies
+Spark SQL `RANK()` semantics with null averages last. Validation passed against
+Spark SQL for the `1m` benchmark input.
+
+The supported runtime is Docker-local Hadoop Streaming, not YARN/HDFS.
+Benchmark smoke runs use isolated output roots under
+`outputs/mapreduce/.benchmark_runs/`, leaving `outputs/mapreduce/` reserved for
+validated report-ready outputs.
+
 # Docker Standalone Simulation
 
 The Docker standalone simulation is the repository's controlled alternative
@@ -255,7 +283,7 @@ CPU, memory, and disk limits. Data is read from a bind-mounted project
 directory, not HDFS or object storage.
 
 Hive is included in the Docker benchmark CSV so the report contains rows for
-all three selected technologies, but Hive remains a single-node containerized
+all three required technologies, but Hive remains a single-node containerized
 Hive setup. Therefore the report uses the phrase "Docker standalone simulation"
 and avoids presenting these runs as real multi-machine cluster performance.
 
@@ -282,6 +310,7 @@ The complete artifact is stored at `report/tables/environment_summary.md`.
 | Java | Version | OpenJDK 17.0.19 |
 | PySpark | Version | 4.1.1 |
 | Hive | Base image | `apache/hive:4.0.1` |
+| MapReduce | Base image | `apache/hive:4.0.1` with Hadoop Streaming and Python 3 |
 | Docker | Version | 29.4.3 |
 | Docker Compose | Version | v5.1.3 |
 | Docker Desktop | Limits | 16 CPUs, 16,391,536,640 memory bytes |
@@ -297,18 +326,26 @@ execution-setting label, duration, output rows, status, timestamp, input path,
 and metrics path. The report-ready artifacts are generated under
 `report/tables/` and `report/figures/`.
 
-The latest M2 benchmark campaign completed all expected rows:
+The latest M2 core benchmark campaign completed all expected rows. M6 adds an
+opt-in MapReduce benchmark smoke so the stretch can be included without slowing
+the required default benchmark matrix:
 
 | Environment | Inputs | Technologies | Jobs | Status |
 | --- | --- | --- | --- | --- |
 | Local | `100k`, `500k`, `1m`, `3m`, `full` | Spark SQL, Spark Core, Hive | both jobs | 30/30 successful |
 | Docker standalone simulation | `100k`, `500k`, `1m` | Spark SQL, Spark Core, Hive | both jobs | 18/18 successful |
+| Local stretch | `100k` | Hadoop Streaming MapReduce | both jobs | 2/2 successful |
 
 The local run ID is `20260520T161558752230Z`. The Docker standalone simulation
-run ID is `20260520T162530812695Z`. The full status matrix is stored in
+run ID is `20260520T162530812695Z`. The MapReduce smoke run ID is
+`20260521T143350526019Z`. The full status matrix is stored in
 `report/tables/benchmark_status.md`.
 
 ## Benchmark Pivot
+
+For compactness, the printed pivot below focuses on the three required
+technologies. The regenerated `report/tables/benchmark_pivot.*` artifacts also
+include the optional MapReduce smoke columns when present.
 
 | environment | input_label | records | job_name | Spark SQL s | Spark Core s | Hive s |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -477,6 +514,14 @@ Hive remains useful as a third technology and as a contrast with Spark, but the
 current local container setup does not demonstrate the strengths of a large
 distributed Hive deployment.
 
+MapReduce is the most manual implementation. Hadoop Streaming makes the map
+and reduce boundaries explicit, and the Python reducers show the accumulator
+state required for averages, ranks, and top-three causes. The tradeoff is extra
+orchestration: prepared Parquet must be exported to canonical CSV, jobs must be
+run through Hadoop Streaming, and reducer output must be normalized back into
+the common CSV contract. This makes MapReduce valuable as a stretch comparison,
+but less ergonomic than Spark SQL for these analyses.
+
 The delay-by-airport-month job is generally more expensive than the
 airline-airport ranking. It derives delay ranges, maps cancellation or delay
 causes, counts causes inside each airport-month-range group, and ranks causes
@@ -510,10 +555,11 @@ Correctness validation is available through:
 .\.venv\Scripts\python.exe scripts\validate_spark_sql_outputs.py
 .\.venv\Scripts\python.exe scripts\validate_spark_core_outputs.py
 .\.venv\Scripts\python.exe scripts\validate_hive_outputs.py
+.\.venv\Scripts\python.exe scripts\validate_mapreduce_outputs.py
 ```
 
-Spark Core and Hive validators compare their outputs against Spark SQL,
-including output columns, row counts, key sets, numeric values within
+Spark Core, Hive, and MapReduce validators compare their outputs against Spark
+SQL, including output columns, row counts, key sets, numeric values within
 tolerance, top-three cause labels and counts, ranking order, and first-10
 sample files.
 
@@ -523,7 +569,8 @@ sample files.
   because they are large.
 - The raw dataset does not include airline names, so analyses use
   `airline_code`.
-- MapReduce is out of scope.
+- MapReduce depends on Docker-based Hadoop Streaming and is kept outside the
+  default `make run-all-local` and `make benchmark-local` paths.
 - The Docker Spark setup is a standalone simulation on one physical machine,
   not true multi-machine cluster performance.
 - Hive is containerized locally and is not running on a distributed Hadoop/YARN
@@ -545,14 +592,18 @@ execution-time charts, and a critical discussion of expressiveness,
 implementation effort, efficiency, scalability, shuffle, aggregation, and data
 preparation effects. Spark SQL provides the clearest reference logic, Spark
 Core demonstrates lower-level distributed transformation control, and Hive
-provides the required SQL-on-Hadoop comparison point.
+provides the required SQL-on-Hadoop comparison point. The completed MapReduce
+stretch adds a fourth validated implementation and shows the extra mechanics
+needed when using Hadoop Streaming directly.
 
 # Evidence Appendix: First 10 Result Rows
 
 The tables below embed the first 10 rows generated for both analytical jobs and
-all three selected technologies. Wide outputs are split into paired narrow
+the three required technologies. Wide outputs are split into paired narrow
 tables so the PDF remains readable. The source artifacts are stored under
-`report/tables/` and are regenerated by `make charts`.
+`report/tables/` and are regenerated by `make charts`. MapReduce stretch sample
+artifacts are generated with the same naming convention and summarized after
+the required-technology samples.
 
 ## Spark SQL Samples
 
@@ -618,6 +669,26 @@ tables so the PDF remains readable. The source artifacts are stored under
 | ABQ | UA | 8.792 | -4.208 | 3 |
 | ABQ | MQ | 8.792 | -1.659 | 4 |
 | ABQ | AS | 8.792 | -1.27 | 5 |
+
+# MapReduce Stretch Appendix
+
+The M6 stretch implements both selected analyses with Hadoop Streaming
+MapReduce. The validated full prepared-data run produced 11,902 delay rows and
+1,738 ranking rows, matching the Spark SQL reference on keys, numeric fields,
+rank values, and top-three cause labels/counts.
+
+| Artifact | Path |
+| --- | --- |
+| Runtime metrics | `outputs/mapreduce/runtime_metrics.json` |
+| Delay sample | `report/tables/first_10_mapreduce_delay_by_airport_month.md` |
+| Ranking sample | `report/tables/first_10_mapreduce_airline_airport_ranking.md` |
+| Validator | `scripts/validate_mapreduce_outputs.py` |
+| Runtime documentation | `docs/mapreduce_analyses.md` |
+
+The MapReduce benchmark smoke run on `100k` input completed both jobs
+successfully using isolated benchmark outputs. The benchmark rows are included
+in generated report tables when present, but missing MapReduce cells are not
+added to the required Spark/Hive/Spark Core benchmark status matrix.
 
 ## Spark Core Samples
 

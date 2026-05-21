@@ -333,6 +333,41 @@ def test_execution_time_chart_uses_lines_for_three_or_more_inputs(tmp_path, monk
     assert calls["bar"] == 0
 
 
+def test_execution_time_chart_uses_marker_for_single_optional_technology_point(tmp_path, monkeypatch):
+    calls = {"plot": 0, "scatter": 0}
+    original_plot = generate_charts.plt.plot
+    original_scatter = generate_charts.plt.scatter
+
+    def fake_plot(*args, **kwargs):
+        calls["plot"] += 1
+        return original_plot(*args, **kwargs)
+
+    def fake_scatter(*args, **kwargs):
+        calls["scatter"] += 1
+        return original_scatter(*args, **kwargs)
+
+    rows = chart_rows([("100k", 100000), ("500k", 500000), ("1m", 1000000)])
+    rows.append(
+        benchmark_row(
+            run_id="run",
+            timestamp_utc=datetime(2026, 5, 20, tzinfo=timezone.utc).isoformat(),
+            duration_seconds=11.0,
+            technology="mapreduce",
+            input_label="100k",
+            records=100000,
+        )
+    )
+
+    monkeypatch.setattr(generate_charts.plt, "plot", fake_plot)
+    monkeypatch.setattr(generate_charts.plt, "scatter", fake_scatter)
+    monkeypatch.setattr(generate_charts.plt, "savefig", lambda path, **kwargs: Path(path).touch())
+
+    generate_charts.generate_execution_time_charts(rows, tmp_path)
+
+    assert calls["plot"] > 0
+    assert calls["scatter"] == 1
+
+
 def test_legacy_docker_cluster_rows_generate_docker_simulation_figure_name(tmp_path):
     csv_path = tmp_path / "benchmark_20260520T120000000000Z.csv"
     write_benchmark_csv(

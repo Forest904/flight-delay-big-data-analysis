@@ -12,6 +12,18 @@ services:
       PYTHONUNBUFFERED: "1"
     command: python src/spark_core/run_spark_core.py
 
+  mapreduce-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.mapreduce
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    environment:
+      PYTHONUNBUFFERED: "1"
+      HADOOP_USER_NAME: root
+    command: hadoop version
+
   spark-master:
     build:
       context: .

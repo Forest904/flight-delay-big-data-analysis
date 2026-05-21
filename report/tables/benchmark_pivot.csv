@@ -1,17 +1,17 @@
-environment,input_label,records,job_name,Spark SQL duration_seconds,Spark Core duration_seconds,Hive duration_seconds
-docker-simulation,100k,100000,airline_airport_ranking,5.135894,2.147726,9.189178
-docker-simulation,100k,100000,delay_by_airport_month,9.64192,2.385975,12.266985
-docker-simulation,500k,500000,airline_airport_ranking,5.163781,2.190881,8.985628
-docker-simulation,500k,500000,delay_by_airport_month,9.392624,2.504927,12.046476
-docker-simulation,1m,1000000,airline_airport_ranking,3.902354,2.112307,8.889166
-docker-simulation,1m,1000000,delay_by_airport_month,8.7654,2.638343,13.029665
-local,100k,100000,airline_airport_ranking,1.290581,0.551534,8.992568
-local,100k,100000,delay_by_airport_month,6.666143,0.712915,12.075119
-local,500k,500000,airline_airport_ranking,1.490642,0.566505,9.102372
-local,500k,500000,delay_by_airport_month,7.163606,0.762642,12.926175
-local,1m,1000000,airline_airport_ranking,1.693032,0.624467,8.971943
-local,1m,1000000,delay_by_airport_month,8.38805,0.857375,13.009151
-local,3m,3000000,airline_airport_ranking,2.200931,0.606612,12.140842
-local,3m,3000000,delay_by_airport_month,9.200204,0.956566,14.727743
-local,full,7079081,airline_airport_ranking,2.204073,0.592448,12.698612
-local,full,7079081,delay_by_airport_month,9.066132,0.898011,19.878362
+environment,input_label,records,job_name,Spark SQL duration_seconds,Spark Core duration_seconds,Hive duration_seconds,MapReduce duration_seconds
+docker-simulation,100k,100000,airline_airport_ranking,5.135894,2.147726,9.189178,
+docker-simulation,100k,100000,delay_by_airport_month,9.64192,2.385975,12.266985,
+docker-simulation,500k,500000,airline_airport_ranking,5.163781,2.190881,8.985628,
+docker-simulation,500k,500000,delay_by_airport_month,9.392624,2.504927,12.046476,
+docker-simulation,1m,1000000,airline_airport_ranking,3.902354,2.112307,8.889166,
+docker-simulation,1m,1000000,delay_by_airport_month,8.7654,2.638343,13.029665,
+local,100k,100000,airline_airport_ranking,1.290581,0.551534,8.992568,11.591949
+local,100k,100000,delay_by_airport_month,6.666143,0.712915,12.075119,13.19384
+local,500k,500000,airline_airport_ranking,1.490642,0.566505,9.102372,
+local,500k,500000,delay_by_airport_month,7.163606,0.762642,12.926175,
+local,1m,1000000,airline_airport_ranking,1.693032,0.624467,8.971943,
+local,1m,1000000,delay_by_airport_month,8.38805,0.857375,13.009151,
+local,3m,3000000,airline_airport_ranking,2.200931,0.606612,12.140842,
+local,3m,3000000,delay_by_airport_month,9.200204,0.956566,14.727743,
+local,full,7079081,airline_airport_ranking,2.204073,0.592448,12.698612,
+local,full,7079081,delay_by_airport_month,9.066132,0.898011,19.878362,

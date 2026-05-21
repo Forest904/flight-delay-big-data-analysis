@@ -1,0 +1,21 @@
+# syntax=docker/dockerfile:1.6
+FROM apache/hive:4.0.1
+
+USER root
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; \
+    streaming_jar="$(find /opt /usr -name 'hadoop-streaming*.jar' | head -n 1)"; \
+    test -n "$streaming_jar"; \
+    ln -sf "$streaming_jar" /opt/hadoop-streaming.jar
+
+WORKDIR /workspace
+
+ENTRYPOINT []
+CMD ["hadoop", "version"]

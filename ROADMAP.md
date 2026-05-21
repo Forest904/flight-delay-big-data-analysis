@@ -252,38 +252,43 @@ Grading evidence:
 ### M6 - MapReduce Flagship Stretch
 
 Priority: `P3 stretch`  
-Status: planned stretch after M1-M5.
+Status: completed.
 
 Goal: add MapReduce as the flagship expansion only after the required submission path is strong.
 
 Scope:
 
-- [ ] Use Hadoop Streaming with Python mappers and reducers.
-- [ ] Use a canonical CSV export derived from prepared Parquet instead of reparsing raw CSV.
-- [ ] Reuse existing job names where practical:
+- [x] Use Hadoop Streaming with Python mappers and reducers.
+- [x] Use a canonical CSV export derived from prepared Parquet instead of reparsing raw CSV.
+- [x] Reuse existing job names where practical:
   - `delay_by_airport_month`
   - `airline_airport_ranking`
-- [ ] Minimum credible stretch: Analysis 1 with the top-three cause schema and benchmark integration.
-- [ ] Preferred stretch: both selected analyses implemented and validated.
+- [x] Minimum credible stretch: Analysis 1 with the top-three cause schema and benchmark integration.
+- [x] Preferred stretch: both selected analyses implemented and validated.
 
 Artifacts:
 
-- [ ] Source files under `src/mapreduce/`.
-- [ ] Outputs under `outputs/mapreduce/`.
-- [ ] Runtime metrics following the existing benchmark metadata conventions.
-- [ ] Validator comparing MapReduce outputs against Spark SQL.
-- [ ] Optional Docker service or documented local Hadoop/Hadoop Streaming setup.
-- [ ] Report appendix section if MapReduce is complete enough to discuss.
+- [x] Source files under `src/mapreduce/`.
+- [x] Outputs under `outputs/mapreduce/`.
+- [x] Runtime metrics following the existing benchmark metadata conventions.
+- [x] Validator comparing MapReduce outputs against Spark SQL.
+- [x] Optional Docker service or documented local Hadoop/Hadoop Streaming setup.
+- [x] Report appendix section if MapReduce is complete enough to discuss.
 
 Acceptance criteria:
 
-- [ ] MapReduce outputs match Spark SQL on keys, numeric fields, ranks if implemented, and top-three causes.
-- [ ] Benchmark rows can be included without breaking existing chart/table generation.
-- [ ] If incomplete, MapReduce is clearly marked as future work and is not used for grade-critical claims.
+- [x] MapReduce outputs match Spark SQL on keys, numeric fields, ranks if implemented, and top-three causes.
+- [x] Benchmark rows can be included without breaking existing chart/table generation.
+- [x] If incomplete, MapReduce is clearly marked as future work and is not used for grade-critical claims.
 
 Grading evidence:
 
 - A complete MapReduce stretch can raise the project beyond the minimum three-technology requirement and show deeper understanding of distributed-processing tradeoffs.
+- Implemented Docker-based Hadoop Streaming through `Dockerfile.mapreduce` and the `mapreduce-runner` Compose service.
+- Implemented both selected analyses with Python mappers/reducers and a runner that exports canonical CSV from prepared Parquet, writes validated report-ready outputs to `outputs/mapreduce/`, and records runtime metrics.
+- Hardened the runner with localized Hadoop Streaming files, repository-scoped file URIs, configurable reducer count, checksum-verified CSV export reuse, and isolated benchmark output roots under `outputs/mapreduce/.benchmark_runs/`.
+- Added `make run-mapreduce`, `make validate-mapreduce`, and `make benchmark-mapreduce-local`.
+- Verification completed: `scripts/validate_mapreduce_outputs.py` passed against Spark SQL for the full prepared dataset, `make benchmark-mapreduce-local BENCHMARK_FLAGS="--input-label 100k"` passed with 2/2 successful isolated MapReduce benchmark rows, and focused MapReduce/benchmark/chart tests passed.
 
 ### M7 - Final Submission Gate
 

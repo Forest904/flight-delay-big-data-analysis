@@ -135,6 +135,13 @@ def collect_runtime_records(records: list[dict[str, str]]) -> None:
         "docker info",
     )
     add_record(records, "runtime", "hive_base_image", dockerfile_base_image(PROJECT_ROOT / "Dockerfile.hive"), "Dockerfile.hive")
+    add_record(
+        records,
+        "runtime",
+        "mapreduce_base_image",
+        dockerfile_base_image(PROJECT_ROOT / "Dockerfile.mapreduce"),
+        "Dockerfile.mapreduce",
+    )
 
     try:
         import pandas

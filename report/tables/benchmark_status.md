@@ -19,9 +19,11 @@
 | docker-simulation | 1m | 1000000 | delay_by_airport_month | Spark Core | success | 2.638343 | 10206 |  | 20260520T162530812695Z | 2026-05-20T16:25:30.812695+00:00 | benchmark_20260520T162530812695Z.csv |
 | docker-simulation | 1m | 1000000 | delay_by_airport_month | Spark SQL | success | 8.7654 | 10206 |  | 20260520T162530812695Z | 2026-05-20T16:25:30.812695+00:00 | benchmark_20260520T162530812695Z.csv |
 | local | 100k | 100000 | airline_airport_ranking | Hive | success | 8.992568 | 1641 |  | 20260520T161558752230Z | 2026-05-20T16:15:58.752230+00:00 | benchmark_20260520T161558752230Z.csv |
+| local | 100k | 100000 | airline_airport_ranking | MapReduce | success | 11.591949 | 1641 |  | 20260521T143350526019Z | 2026-05-21T14:33:50.526019+00:00 | benchmark_20260521T143350526019Z.csv |
 | local | 100k | 100000 | airline_airport_ranking | Spark Core | success | 0.551534 | 1641 |  | 20260520T161558752230Z | 2026-05-20T16:15:58.752230+00:00 | benchmark_20260520T161558752230Z.csv |
 | local | 100k | 100000 | airline_airport_ranking | Spark SQL | success | 1.290581 | 1641 |  | 20260520T161558752230Z | 2026-05-20T16:15:58.752230+00:00 | benchmark_20260520T161558752230Z.csv |
 | local | 100k | 100000 | delay_by_airport_month | Hive | success | 12.075119 | 6367 |  | 20260520T161558752230Z | 2026-05-20T16:15:58.752230+00:00 | benchmark_20260520T161558752230Z.csv |
+| local | 100k | 100000 | delay_by_airport_month | MapReduce | success | 13.19384 | 6367 |  | 20260521T143350526019Z | 2026-05-21T14:33:50.526019+00:00 | benchmark_20260521T143350526019Z.csv |
 | local | 100k | 100000 | delay_by_airport_month | Spark Core | success | 0.712915 | 6367 |  | 20260520T161558752230Z | 2026-05-20T16:15:58.752230+00:00 | benchmark_20260520T161558752230Z.csv |
 | local | 100k | 100000 | delay_by_airport_month | Spark SQL | success | 6.666143 | 6367 |  | 20260520T161558752230Z | 2026-05-20T16:15:58.752230+00:00 | benchmark_20260520T161558752230Z.csv |
 | local | 500k | 500000 | airline_airport_ranking | Hive | success | 9.102372 | 1707 |  | 20260520T161558752230Z | 2026-05-20T16:15:58.752230+00:00 | benchmark_20260520T161558752230Z.csv |

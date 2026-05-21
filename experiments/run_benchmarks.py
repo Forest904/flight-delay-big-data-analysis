@@ -21,6 +21,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = PROJECT_ROOT / "config" / "local.yaml"
 DEFAULT_TECHNOLOGIES = ("spark_sql", "spark_core", "hive")
+SUPPORTED_TECHNOLOGIES = (*DEFAULT_TECHNOLOGIES, "mapreduce")
 BENCHMARK_COLUMNS = [
     "run_id",
     "technology",
@@ -193,6 +194,16 @@ def output_root_for_technology(local_config: dict[str, Any], technology: str, pr
     return outputs_dir / technology
 
 
+def mapreduce_benchmark_output_root(
+    local_config: dict[str, Any],
+    *,
+    run_id: str,
+    input_label: str,
+    project_root: Path = PROJECT_ROOT,
+) -> Path:
+    return output_root_for_technology(local_config, "mapreduce", project_root=project_root) / ".benchmark_runs" / run_id / input_label
+
+
 def build_command(
     technology: str,
     input_path: Path,
@@ -203,6 +214,8 @@ def build_command(
     python_executable: str = sys.executable,
     os_name: str = os.name,
     docker_bin: str | None = None,
+    run_id: str | None = None,
+    input_label: str | None = None,
 ) -> CommandSpec:
     input_arg = display_path(input_path, project_root=project_root)
     metrics_path = output_root_for_technology(local_config, technology, project_root=project_root) / "runtime_metrics.json"
@@ -275,6 +288,28 @@ def build_command(
             "--input-path",
             input_arg,
         ]
+    elif technology == "mapreduce":
+        if run_id is not None and input_label is not None:
+            output_root = mapreduce_benchmark_output_root(
+                local_config,
+                run_id=run_id,
+                input_label=input_label,
+                project_root=project_root,
+            )
+            metrics_path = output_root / "runtime_metrics.json"
+            output_root_arg = display_path(output_root, project_root=project_root)
+        else:
+            output_root_arg = None
+        command = [
+            python_executable,
+            "src/mapreduce/run_mapreduce.py",
+            "--config",
+            config_arg,
+            "--input-path",
+            input_arg,
+        ]
+        if output_root_arg is not None:
+            command.extend(["--output-root", output_root_arg])
     else:
         raise ValueError(f"Unsupported technology: {technology}")
 
@@ -462,7 +497,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--technology",
         action="append",
-        choices=DEFAULT_TECHNOLOGIES,
+        choices=SUPPORTED_TECHNOLOGIES,
         help="Technology to benchmark. Repeat to select multiple. Defaults to all local technologies.",
     )
     parser.add_argument("--input-label", action="append", help="Benchmark input label to include. Repeatable.")
@@ -520,6 +555,8 @@ def main(argv: list[str] | None = None) -> int:
                 benchmark_input.path,
                 local_config,
                 config_path=config_path,
+                run_id=run_id,
+                input_label=benchmark_input.label,
             )
             print(f"# Running {technology} on {benchmark_input.label}")
             clear_metrics_file(spec.metrics_path)

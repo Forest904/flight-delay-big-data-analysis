@@ -21,7 +21,7 @@ ifeq ($(GENERATE_LARGE),1)
 GENERATE_SIZE_FLAGS += --include-large
 endif
 
-.PHONY: setup check-env inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive stop-hive validate-spark-sql validate-spark-core validate-hive run-all-local benchmark-local benchmark-cluster charts report clean
+.PHONY: setup check-env inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive run-mapreduce stop-hive validate-spark-sql validate-spark-core validate-hive validate-mapreduce run-all-local benchmark-local benchmark-cluster benchmark-mapreduce-local charts report clean
 
 setup:
 	$(PYTHON_LAUNCHER) -m venv .venv
@@ -65,6 +65,9 @@ run-spark-core-docker:
 run-hive:
 	$(VENV_PYTHON) src/hive/run_hive.py
 
+run-mapreduce:
+	$(VENV_PYTHON) src/mapreduce/run_mapreduce.py
+
 stop-hive:
 	$(DOCKER_COMPOSE) stop hiveserver2 hive-metastore hive-postgres
 
@@ -77,6 +80,9 @@ validate-spark-core:
 validate-hive:
 	$(VENV_PYTHON) scripts/validate_hive_outputs.py
 
+validate-mapreduce:
+	$(VENV_PYTHON) scripts/validate_mapreduce_outputs.py
+
 charts:
 	$(VENV_PYTHON) scripts/generate_environment_summary.py
 	$(VENV_PYTHON) scripts/generate_charts.py
@@ -85,6 +91,9 @@ report:
 	$(VENV_PYTHON) scripts/build_report.py
 
 run-all-local: run-spark-sql run-spark-core run-hive validate-spark-sql validate-spark-core validate-hive
+
+benchmark-mapreduce-local:
+	$(VENV_PYTHON) experiments/run_benchmarks.py --environment local --technology mapreduce $(BENCHMARK_FLAGS)
 
 clean:
 	$(VENV_PYTHON) scripts/clean_generated_artifacts.py

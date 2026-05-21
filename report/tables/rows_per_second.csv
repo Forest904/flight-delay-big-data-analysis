@@ -20,9 +20,11 @@ docker-simulation,1m,1000000,delay_by_airport_month,Hive,13.029665,76747.9440185
 local,100k,100000,airline_airport_ranking,Spark SQL,1.290581,77484.48179540843
 local,100k,100000,airline_airport_ranking,Spark Core,0.551534,181312.4848150794
 local,100k,100000,airline_airport_ranking,Hive,8.992568,11120.294002780962
+local,100k,100000,airline_airport_ranking,MapReduce,11.591949,8626.677015228415
 local,100k,100000,delay_by_airport_month,Spark SQL,6.666143,15001.178342558807
 local,100k,100000,delay_by_airport_month,Spark Core,0.712915,140269.17654979907
 local,100k,100000,delay_by_airport_month,Hive,12.075119,8281.491884262176
+local,100k,100000,delay_by_airport_month,MapReduce,13.19384,7579.29457989486
 local,500k,500000,airline_airport_ranking,Spark SQL,1.490642,335425.94398923416
 local,500k,500000,airline_airport_ranking,Spark Core,0.566505,882604.7431178895
 local,500k,500000,airline_airport_ranking,Hive,9.102372,54930.73673543555

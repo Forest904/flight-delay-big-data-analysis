@@ -1,4 +1,4 @@
-"""Validate Hive outputs against the Spark SQL reference outputs."""
+"""Validate MapReduce outputs against the Spark SQL reference outputs."""
 
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ from scripts.validation_common import (
     assert_first_10,
     assert_metrics_success,
     assert_output_row_count,
+    assert_same_input_path,
     load_yaml,
     metric_rows,
     read_csv_dir,
@@ -34,35 +35,36 @@ LOCAL_CONFIG = VALIDATION_ROOT / "config" / "local.yaml"
 def output_roots(local_config: dict[str, Any]) -> tuple[Path, Path]:
     paths = local_config.get("paths", {})
     outputs_dir = resolve_project_path(str(paths.get("outputs_dir", "outputs")))
-    return outputs_dir / "spark_sql", outputs_dir / "hive"
+    return outputs_dir / "spark_sql", outputs_dir / "mapreduce"
 
 
 def main() -> int:
     local_config = load_yaml(LOCAL_CONFIG)
-    sql_root, hive_root = output_roots(local_config)
+    sql_root, mapreduce_root = output_roots(local_config)
 
     sql_metrics = assert_metrics_success(sql_root, "spark_sql")
-    hive_metrics = assert_metrics_success(hive_root, "hive")
+    mapreduce_metrics = assert_metrics_success(mapreduce_root, "mapreduce")
+    assert_same_input_path(sql_metrics, mapreduce_metrics, "MapReduce")
     sql_metric_rows = metric_rows(sql_metrics)
-    hive_metric_rows = metric_rows(hive_metrics)
+    mapreduce_metric_rows = metric_rows(mapreduce_metrics)
 
     sql_delay = read_csv_dir(sql_root / "delay_by_airport_month" / "full")
-    hive_delay = read_csv_dir(hive_root / "delay_by_airport_month" / "full")
+    mapreduce_delay = read_csv_dir(mapreduce_root / "delay_by_airport_month" / "full")
     sql_ranking = read_csv_dir(sql_root / "airline_airport_ranking" / "full")
-    hive_ranking = read_csv_dir(hive_root / "airline_airport_ranking" / "full")
+    mapreduce_ranking = read_csv_dir(mapreduce_root / "airline_airport_ranking" / "full")
 
-    assert_output_row_count(hive_delay, hive_metric_rows, "delay_by_airport_month", "Hive")
-    assert_output_row_count(hive_ranking, hive_metric_rows, "airline_airport_ranking", "Hive")
+    assert_output_row_count(mapreduce_delay, mapreduce_metric_rows, "delay_by_airport_month", "MapReduce")
+    assert_output_row_count(mapreduce_ranking, mapreduce_metric_rows, "airline_airport_ranking", "MapReduce")
     assert_output_row_count(sql_delay, sql_metric_rows, "delay_by_airport_month", "Spark SQL")
     assert_output_row_count(sql_ranking, sql_metric_rows, "airline_airport_ranking", "Spark SQL")
 
-    assert_first_10(hive_root, "delay_by_airport_month", DELAY_COLUMNS, "hive")
-    assert_first_10(hive_root, "airline_airport_ranking", RANKING_COLUMNS, "hive")
-    validate_delay(sql_delay, hive_delay, technology="hive", candidate_label="Hive")
-    validate_ranking(sql_ranking, hive_ranking, technology="hive", candidate_label="Hive")
+    assert_first_10(mapreduce_root, "delay_by_airport_month", DELAY_COLUMNS, "mapreduce")
+    assert_first_10(mapreduce_root, "airline_airport_ranking", RANKING_COLUMNS, "mapreduce")
+    validate_delay(sql_delay, mapreduce_delay, technology="mapreduce", candidate_label="MapReduce")
+    validate_ranking(sql_ranking, mapreduce_ranking, technology="mapreduce", candidate_label="MapReduce")
 
-    print("Hive output validation passed")
-    print(f"delay rows: {len(hive_delay)}; ranking rows: {len(hive_ranking)}")
+    print("MapReduce output validation passed")
+    print(f"delay rows: {len(mapreduce_delay)}; ranking rows: {len(mapreduce_ranking)}")
     print(f"numeric tolerance: {TOLERANCE}")
     return 0
 

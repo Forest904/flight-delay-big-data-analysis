@@ -42,6 +42,7 @@ The main technologies used in this project are:
 | Distributed processing | Apache Spark |
 | Spark APIs | Spark SQL, Spark Core |
 | SQL-on-Hadoop | Apache Hive |
+| Hadoop batch processing | Hadoop Streaming MapReduce |
 | Storage format | CSV, Parquet |
 | Local orchestration | Docker Compose |
 | Scripts | Bash |
@@ -51,9 +52,8 @@ The main technologies used in this project are:
 | Documentation | Markdown |
 | Version control | Git + GitHub |
 
-Optional extension:
-
-- Hadoop MapReduce
+MapReduce is implemented as a stretch extension. It is opt-in and validated
+against Spark SQL before being used for report claims.
 
 ---
 
@@ -95,6 +95,7 @@ flight-delay-big-data-analysis/
 |-- README.md
 |-- Makefile
 |-- docker-compose.yml
+|-- Dockerfile.mapreduce
 |-- requirements.txt
 |-- .gitignore
 |
@@ -135,7 +136,12 @@ flight-delay-big-data-analysis/
 |   |   `-- run_hive.py
 |   |
 |   `-- mapreduce/
-|       `-- optional/
+|       |-- mapreduce_logic.py
+|       |-- mapper_delay.py
+|       |-- reducer_delay.py
+|       |-- mapper_ranking.py
+|       |-- reducer_ranking.py
+|       `-- run_mapreduce.py
 |
 |-- scripts/
 |   |-- build_report.py
@@ -145,6 +151,7 @@ flight-delay-big-data-analysis/
 |   |-- generate_charts.py
 |   |-- inspect_raw_dataset.py
 |   |-- validate_hive_outputs.py
+|   |-- validate_mapreduce_outputs.py
 |   |-- validate_spark_core_outputs.py
 |   `-- validate_spark_sql_outputs.py
 |
@@ -173,6 +180,7 @@ flight-delay-big-data-analysis/
     |-- cluster_simulation.md
     |-- data_preparation.md
     |-- hive_analyses.md
+    |-- mapreduce_analyses.md
     |-- spark_core_analyses.md
     `-- spark_sql_analyses.md
 ```
@@ -417,6 +425,34 @@ Validate the Hive outputs against the Spark SQL reference with:
 make validate-hive
 ```
 
+### Run MapReduce stretch jobs
+
+```bash
+make run-mapreduce
+```
+
+MapReduce is the optional M6 stretch implementation. It uses Docker-based
+Hadoop Streaming with Python mappers and reducers. The runner first exports the
+selected prepared Parquet input to a canonical CSV under
+`data/generated/mapreduce_csv/`, then runs both analyses and writes outputs
+under `outputs/mapreduce/`.
+
+`outputs/mapreduce/` is reserved for validated report-ready outputs. The
+runner supports `--output-root` for isolated runs, and benchmark smoke runs use
+that option automatically so they do not overwrite the validated MapReduce
+artifacts.
+
+Validate MapReduce against the current Spark SQL reference outputs with:
+
+```powershell
+make validate-mapreduce
+```
+
+The validator fails if Spark SQL and MapReduce runtime metrics do not record
+the same input path. Benchmarking MapReduce is opt-in through the separate
+target documented below; `make run-all-local` intentionally remains limited to
+the three required technologies.
+
 ### Run all local jobs
 
 ```bash
@@ -461,6 +497,19 @@ Run a smaller smoke benchmark:
 ```bash
 make benchmark-local BENCHMARK_FLAGS="--input-label 100k"
 ```
+
+Run the opt-in MapReduce benchmark smoke:
+
+```bash
+make benchmark-mapreduce-local BENCHMARK_FLAGS="--input-label 100k"
+```
+
+This writes regular benchmark rows with `technology=mapreduce`. The default
+`make benchmark-local` matrix remains Spark SQL, Spark Core, and Hive so the
+required submission path is not slowed down by the stretch runtime. MapReduce
+benchmark outputs are written under
+`outputs/mapreduce/.benchmark_runs/<run_id>/<input_label>/`; the main
+`outputs/mapreduce/` validation artifacts are left untouched.
 
 Run Docker standalone simulation benchmarks:
 
@@ -517,6 +566,23 @@ outputs/mapreduce/
 ```
 
 Each technology should produce comparable outputs for the same analytical job.
+MapReduce follows the same output contract:
+
+```text
+outputs/mapreduce/
+|-- delay_by_airport_month/
+|   |-- full/
+|   |   `-- part-00000.csv
+|   `-- first_10.csv
+|-- airline_airport_ranking/
+|   |-- full/
+|   |   `-- part-00000.csv
+|   `-- first_10.csv
+`-- runtime_metrics.json
+```
+
+MapReduce benchmark smoke outputs are intentionally excluded from that
+report-ready layout and are written below `outputs/mapreduce/.benchmark_runs/`.
 
 ---
 
@@ -584,7 +650,9 @@ Regeneration map:
 | Prepared Parquet data | `make prepare` |
 | Input-size datasets | `make generate-sizes` |
 | Spark SQL, Spark Core, and Hive outputs | `make run-all-local` |
+| MapReduce stretch outputs | `make run-mapreduce` |
 | Local benchmark CSVs and logs | `make benchmark-local` |
+| MapReduce local benchmark CSVs and logs | `make benchmark-mapreduce-local` |
 | Docker standalone simulation benchmark CSVs and logs | `make benchmark-cluster` |
 | Charts and report tables | `make charts` |
 | Final PDF | `make report` |
@@ -606,6 +674,7 @@ If Hive or cluster execution requires additional setup, see:
 ```text
 docs/hive_analyses.md
 docs/cluster_simulation.md
+docs/mapreduce_analyses.md
 ```
 
 ---
@@ -623,13 +692,16 @@ generate-sizes
 run-spark-sql
 run-spark-core
 run-hive
+run-mapreduce
 stop-hive
 validate-spark-sql
 validate-spark-core
 validate-hive
+validate-mapreduce
 run-all-local
 benchmark-local
 benchmark-cluster
+benchmark-mapreduce-local
 charts
 report
 clean
@@ -655,7 +727,9 @@ Dry-run the cleanup helper directly with:
 - [ ] Prepared Parquet data has been regenerated with `make prepare`.
 - [ ] Input-size datasets and manifest have been regenerated with `make generate-sizes`.
 - [ ] Spark SQL, Spark Core, and Hive outputs plus validations pass with `make run-all-local`.
+- [ ] MapReduce stretch outputs pass with `make run-mapreduce` and `make validate-mapreduce`, if claiming M6.
 - [ ] Local benchmarks have been regenerated with `make benchmark-local`.
+- [ ] MapReduce benchmark smoke has been regenerated with `make benchmark-mapreduce-local BENCHMARK_FLAGS="--input-label 100k"`, if claiming M6.
 - [ ] Docker standalone simulation benchmarks have been regenerated with `make benchmark-cluster`, if Docker is available.
 - [ ] Report charts and tables have been regenerated with `make charts`.
 - [ ] Final PDF has been rebuilt with `make report`.
@@ -749,7 +823,9 @@ Current expected limitations:
   be described as production-cluster performance.
 - Larger-than-original datasets are generated through controlled replication, so they are intended for scalability testing rather than new statistical insight.
 - Hive execution may require additional local or Docker-based configuration.
-- MapReduce is treated as an optional extension unless explicitly implemented.
+- MapReduce is implemented as an optional stretch and depends on Docker-based
+  Hadoop Streaming. It is not part of `make run-all-local` or the default local
+  benchmark matrix.
 
 ---
 

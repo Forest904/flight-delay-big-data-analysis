@@ -72,6 +72,16 @@ def spark_sql_output_root(local_config: dict[str, Any]) -> Path:
     return outputs_dir / "spark_sql"
 
 
+def validation_input_path(metrics: dict[str, Any], local_config: dict[str, Any], metrics_file: Path) -> Path:
+    paths = local_config.get("paths", {})
+    input_path_value = metrics.get("input_path") or paths.get("prepared_file")
+    if not input_path_value:
+        raise ValueError(
+            f"{metrics_file} does not define input_path and {LOCAL_CONFIG} does not define paths.prepared_file"
+        )
+    return resolve_project_path(str(input_path_value))
+
+
 def read_csv_dir(path: Path) -> pd.DataFrame:
     parts = sorted(path.glob("part*.csv"))
     if not parts:
@@ -99,18 +109,13 @@ def assert_ranking_order(ranking: pd.DataFrame) -> None:
 
 def main() -> int:
     local_config = load_yaml(LOCAL_CONFIG)
-    paths = local_config.get("paths", {})
-    prepared_file_value = paths.get("prepared_file")
-    if not prepared_file_value:
-        raise ValueError(f"{LOCAL_CONFIG} does not define paths.prepared_file")
-
-    prepared_file = resolve_project_path(str(prepared_file_value))
     output_root = spark_sql_output_root(local_config)
     metrics_file = output_root / "runtime_metrics.json"
 
     metrics = json.loads(metrics_file.read_text(encoding="utf-8"))
     if metrics.get("status") != "success":
         raise AssertionError(f"Spark SQL metrics status is not success: {metrics.get('status')}")
+    prepared_file = validation_input_path(metrics, local_config, metrics_file)
     metric_rows = {job["job_name"]: job["output_rows"] for job in metrics["jobs"]}
 
     delay = read_csv_dir(output_root / "delay_by_airport_month" / "full")

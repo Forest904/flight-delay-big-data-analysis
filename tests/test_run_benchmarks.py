@@ -409,6 +409,61 @@ def test_build_command_keeps_hive_on_host_for_cluster_config(tmp_path):
     ]
 
 
+def test_build_command_supports_opt_in_mapreduce(tmp_path):
+    local_config = {"paths": {"outputs_dir": "outputs"}}
+    input_path = tmp_path / "data" / "generated" / "flights_100k.parquet"
+    config_path = tmp_path / "config" / "local.yaml"
+
+    spec = run_benchmarks.build_command(
+        "mapreduce",
+        input_path,
+        local_config,
+        config_path=config_path,
+        project_root=tmp_path,
+        python_executable="python",
+    )
+
+    assert spec.command == [
+        "python",
+        "src/mapreduce/run_mapreduce.py",
+        "--config",
+        "config/local.yaml",
+        "--input-path",
+        "data/generated/flights_100k.parquet",
+    ]
+    assert spec.metrics_path == tmp_path / "outputs" / "mapreduce" / "runtime_metrics.json"
+
+
+def test_build_command_isolates_mapreduce_benchmark_outputs(tmp_path):
+    local_config = {"paths": {"outputs_dir": "outputs"}}
+    input_path = tmp_path / "data" / "generated" / "flights_100k.parquet"
+    config_path = tmp_path / "config" / "local.yaml"
+
+    spec = run_benchmarks.build_command(
+        "mapreduce",
+        input_path,
+        local_config,
+        config_path=config_path,
+        project_root=tmp_path,
+        python_executable="python",
+        run_id="20260521T120000000000Z",
+        input_label="100k",
+    )
+
+    isolated_root = "outputs/mapreduce/.benchmark_runs/20260521T120000000000Z/100k"
+    assert spec.command == [
+        "python",
+        "src/mapreduce/run_mapreduce.py",
+        "--config",
+        "config/local.yaml",
+        "--input-path",
+        "data/generated/flights_100k.parquet",
+        "--output-root",
+        isolated_root,
+    ]
+    assert spec.metrics_path == tmp_path / isolated_root / "runtime_metrics.json"
+
+
 def test_metrics_input_match_accepts_container_workspace_path():
     metrics = {"input_path": "/workspace/data/generated/flights_100k.parquet"}
     benchmark_input = BenchmarkInput("100k", 100000, Path("data/generated/flights_100k.parquet"))
