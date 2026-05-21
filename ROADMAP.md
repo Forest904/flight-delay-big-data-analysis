@@ -24,41 +24,59 @@ standalone simulation, and real AWS EMR cluster experiments.
 **Goal:** confirm that the AWS Learner Lab can safely support the EMR
 experiment before running any expensive workloads.
 
-- [ ] Verify AWS Academy Learner Lab access.
-- [ ] Confirm remaining budget is close to the expected 50 USD allowance.
-- [ ] Confirm the active AWS region; use `us-east-1` unless the lab restricts
+- [x] Verify AWS Academy Learner Lab access.
+      Result: STS identity succeeded for account `380623119505`.
+- [x] Confirm remaining budget is close to the expected 50 USD allowance.
+      Result: Learner Lab budget recorded as `50.00 USD`.
+- [x] Confirm the active AWS region; use `us-east-1` unless the lab restricts
       otherwise.
-- [ ] Verify service availability for:
-  - [ ] S3
-  - [ ] EMR
-  - [ ] EC2
-  - [ ] IAM roles
-  - [ ] CloudWatch logs or EMR/S3 logs
-- [ ] Confirm which EMR-supported EC2 instance types are available in the lab.
-- [ ] Use this fallback instance order:
+      Result: active region is `us-east-1`.
+- [x] Verify service availability for:
+  - [x] S3
+        Result: `ListBuckets` succeeded.
+  - [x] EMR
+        Result: `ListClusters` succeeded.
+  - [x] EC2
+        Result: `m5.large` and `m5.xlarge` are offered in-region.
+  - [x] IAM roles
+        Result: `EMR_DefaultRole` and `EMR_EC2_DefaultRole` are readable.
+  - [x] CloudWatch logs or EMR/S3 logs
+        Result: S3 logs are reachable and CloudWatch Logs `DescribeLogGroups`
+        succeeded.
+- [x] Confirm which EMR-supported EC2 instance types are available in the lab.
+      Result: EMR `emr-7.13.0` returned 200 supported instance types.
+- [x] Use this fallback instance order:
   1. `m5.xlarge`
   2. `m5.large`
   3. largest EMR-supported instance type allowed by Learner Lab
-- [ ] Define the default EMR cluster profile:
-  - [ ] 1 primary node
-  - [ ] 2 core nodes
-  - [ ] Spark installed
-  - [ ] logs written to S3
-- [ ] Add a hard stop rule: every EMR cluster must be terminated immediately
+      Result: selected default instance type is `m5.xlarge`.
+- [x] Define the default EMR cluster profile:
+  - [x] 1 primary node
+  - [x] 2 core nodes
+  - [x] Spark installed
+        Result: target EMR release is `emr-7.13.0` with Spark.
+  - [x] logs written to S3
+- [x] Add a hard stop rule: every EMR cluster must be terminated immediately
       after benchmark steps finish.
-- [ ] Create a budget/cost log table for the report with:
-  - [ ] cluster profile
-  - [ ] start time
-  - [ ] end time
-  - [ ] estimated AWS cost
-  - [ ] tested inputs
-  - [ ] notes and failures
+- [x] Create a budget/cost log table for the report with:
+  - [x] cluster profile
+  - [x] start time
+  - [x] end time
+  - [x] estimated AWS cost
+  - [x] tested inputs
+  - [x] notes and failures
+      Result: M0 scaffolding writes `report/tables/aws_feasibility.{json,csv,md}`;
+      per-run cost logging remains part of the M4/M6 benchmark workflow.
+- [ ] Create or select the project S3 bucket for later EMR logs/results.
+      Current status: `AWS_FLIGHT_DELAY_BUCKET` is not set yet.
 
 **Acceptance criteria:**
 
 - AWS service availability is known.
 - A safe default cluster profile is selected.
 - A cleanup rule exists before the first EMR run.
+- Remaining setup before first EMR run: create/select the project S3 bucket and
+  set `AWS_FLIGHT_DELAY_BUCKET`.
 
 ### M1 - Report Fixes From Professor-Style Review
 

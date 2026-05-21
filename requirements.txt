@@ -6,3 +6,4 @@ matplotlib>=3.10
 kaggle>=2.1
 pytest>=9.0
 psutil>=7.0
+boto3>=1.40

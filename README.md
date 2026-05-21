@@ -102,6 +102,7 @@ flight-delay-big-data-analysis/
 |-- config/
 |   |-- local.yaml
 |   |-- docker_simulation.yaml
+|   |-- aws_emr.yaml
 |   `-- columns.yaml
 |
 |-- data/
@@ -145,6 +146,7 @@ flight-delay-big-data-analysis/
 |
 |-- scripts/
 |   |-- build_report.py
+|   |-- check_aws_feasibility.py
 |   |-- check_env.py
 |   |-- clean_generated_artifacts.py
 |   |-- download_dataset.md
@@ -686,6 +688,8 @@ The project exposes the following supported commands:
 ```text
 setup
 check-env
+aws-check
+aws-check-report
 inspect-raw
 prepare
 generate-sizes
@@ -706,6 +710,38 @@ charts
 report
 clean
 ```
+
+## AWS Learner Lab Feasibility Check
+
+Milestone 0 uses a read-only AWS check before any EMR cluster is created. Copy
+`.env.example` to `.env`, then paste the temporary AWS Academy Learner Lab
+credentials from the lab's AWS Details panel:
+
+```text
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+AWS_SESSION_TOKEN=...
+AWS_DEFAULT_REGION=us-east-1
+AWS_LEARNER_LAB_BUDGET_REMAINING_USD=50
+```
+
+Run:
+
+```powershell
+make aws-check
+```
+
+The check validates credentials, region, manually recorded Learner Lab budget,
+S3, EMR, EC2, IAM role readability, EMR-supported instance types, and logging
+availability. It does not create clusters, buckets, roles, or other resources.
+
+To write report-ready feasibility evidence:
+
+```powershell
+make aws-check-report
+```
+
+This creates `report/tables/aws_feasibility.{json,csv,md}`.
 
 `make clean` is intentionally conservative. It removes generated data,
 technology outputs, and benchmark runtime results while preserving raw Kaggle

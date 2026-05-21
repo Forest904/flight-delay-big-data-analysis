@@ -21,7 +21,7 @@ ifeq ($(GENERATE_LARGE),1)
 GENERATE_SIZE_FLAGS += --include-large
 endif
 
-.PHONY: setup check-env inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive run-mapreduce stop-hive validate-spark-sql validate-spark-core validate-hive validate-mapreduce run-all-local benchmark-local benchmark-docker-simulation benchmark-mapreduce-local charts report clean
+.PHONY: setup check-env aws-check aws-check-report inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive run-mapreduce stop-hive validate-spark-sql validate-spark-core validate-hive validate-mapreduce run-all-local benchmark-local benchmark-docker-simulation benchmark-mapreduce-local charts report clean
 
 setup:
 	$(PYTHON_LAUNCHER) -m venv .venv
@@ -30,6 +30,12 @@ setup:
 
 check-env:
 	$(VENV_PYTHON) scripts/check_env.py
+
+aws-check:
+	$(VENV_PYTHON) scripts/check_aws_feasibility.py $(AWS_CHECK_FLAGS)
+
+aws-check-report:
+	$(VENV_PYTHON) scripts/check_aws_feasibility.py --write-report
 
 inspect-raw:
 	$(VENV_PYTHON) scripts/inspect_raw_dataset.py

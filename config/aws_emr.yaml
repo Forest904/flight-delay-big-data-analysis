@@ -1,0 +1,50 @@
+environment: aws-emr
+
+aws:
+  region: us-east-1
+  learner_lab: true
+  budget:
+    expected_allowance_usd: 50
+    minimum_remaining_usd: 45
+    remaining_budget_env: AWS_LEARNER_LAB_BUDGET_REMAINING_USD
+
+s3:
+  bucket_env: AWS_FLIGHT_DELAY_BUCKET
+  prefix: flight-delay
+  layout:
+    data: flight-delay/data/
+    code: flight-delay/code/
+    results: flight-delay/results/
+    logs: flight-delay/logs/
+
+emr:
+  release_label: auto
+  release_label_fallback: emr-7.10.0
+  applications:
+    - Spark
+  instance_type_fallback_order:
+    - m5.xlarge
+    - m5.large
+  cluster_profile:
+    primary_nodes: 1
+    core_nodes: 2
+    terminate_after_benchmark: true
+    log_destination: s3
+  iam_role_candidates:
+    service_role:
+      - EMR_DefaultRole
+      - LabRole
+    ec2_instance_profile:
+      - EMR_EC2_DefaultRole
+      - LabInstanceProfile
+
+checks:
+  required_services:
+    - sts
+    - s3
+    - emr
+    - ec2
+    - iam
+  logging:
+    require_s3_logs: true
+    cloudwatch_optional: true
