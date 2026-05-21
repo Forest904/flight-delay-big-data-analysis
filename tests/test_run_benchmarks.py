@@ -12,6 +12,7 @@ from experiments.run_benchmarks import BenchmarkInput
 def test_benchmark_csv_schema_is_stable(tmp_path):
     row = {
         "run_id": "20260520T120000Z",
+        "repetition": 1,
         "technology": "spark_sql",
         "job_name": "delay_by_airport_month",
         "input_label": "100k",
@@ -73,6 +74,12 @@ def test_selected_benchmark_inputs_skip_optional_by_default(tmp_path):
     selected = run_benchmarks.selected_benchmark_inputs(local_config, manifest, project_root=tmp_path)
 
     assert [item.label for item in selected] == ["100k"]
+
+
+def test_parse_args_defaults_to_three_repetitions():
+    args = run_benchmarks.parse_args([])
+
+    assert args.repetitions == 3
 
 
 def test_selected_benchmark_inputs_fail_when_required_manifest_entry_is_missing(tmp_path):
@@ -143,6 +150,7 @@ def test_selected_benchmark_inputs_include_optional_when_requested(tmp_path):
 def test_normalize_metrics_rows_expands_successful_jobs():
     rows = run_benchmarks.normalize_metrics_rows(
         run_id="20260520T120000Z",
+        repetition=1,
         technology="spark_sql",
         benchmark_input=BenchmarkInput("100k", 100000, Path("data/generated/flights_100k.parquet")),
         environment="local",
@@ -169,6 +177,7 @@ def test_normalize_metrics_rows_expands_successful_jobs():
     assert rows == [
         {
             "run_id": "20260520T120000Z",
+            "repetition": 1,
             "technology": "spark_sql",
             "job_name": "delay_by_airport_month",
             "input_label": "100k",
@@ -190,6 +199,7 @@ def test_normalize_metrics_rows_expands_successful_jobs():
 def test_normalize_metrics_rows_records_preflight_failure_without_jobs():
     rows = run_benchmarks.normalize_metrics_rows(
         run_id="20260520T120000Z",
+        repetition=1,
         technology="hive",
         benchmark_input=BenchmarkInput("100k", 100000, Path("data/generated/flights_100k.parquet")),
         environment="local",
@@ -217,6 +227,7 @@ def test_normalize_metrics_rows_records_preflight_failure_without_jobs():
 def test_normalize_metrics_rows_rejects_mismatched_input_path():
     rows = run_benchmarks.normalize_metrics_rows(
         run_id="20260520T120000123456Z",
+        repetition=1,
         technology="spark_sql",
         benchmark_input=BenchmarkInput("500k", 500000, Path("data/generated/flights_500k.parquet")),
         environment="local",
@@ -253,6 +264,7 @@ def test_stale_metrics_file_is_cleared_before_normalizing_failed_run(tmp_path):
     metrics = run_benchmarks.read_metrics(metrics_path)
     rows = run_benchmarks.normalize_metrics_rows(
         run_id="20260520T120000123456Z",
+        repetition=1,
         technology="spark_sql",
         benchmark_input=BenchmarkInput("500k", 500000, Path("data/generated/flights_500k.parquet")),
         environment="local",
@@ -270,6 +282,30 @@ def test_stale_metrics_file_is_cleared_before_normalizing_failed_run(tmp_path):
     assert rows[0]["status"] == "failed"
     assert rows[0]["stage"] == "metrics_missing"
     assert rows[0]["error"] == "startup failed"
+
+
+def test_invocation_logs_include_repetition_to_preserve_raw_evidence(tmp_path):
+    result = run_benchmarks.subprocess.CompletedProcess(["python"], 0, stdout="ok\n", stderr="")
+
+    run_benchmarks.write_invocation_logs(
+        tmp_path,
+        input_label="100k",
+        technology="spark_sql",
+        repetition=1,
+        command=["python", "job.py"],
+        result=result,
+    )
+    run_benchmarks.write_invocation_logs(
+        tmp_path,
+        input_label="100k",
+        technology="spark_sql",
+        repetition=2,
+        command=["python", "job.py"],
+        result=result,
+    )
+
+    assert (tmp_path / "100k_spark_sql_rep1.stdout.log").exists()
+    assert (tmp_path / "100k_spark_sql_rep2.stdout.log").exists()
 
 
 def test_microsecond_run_id_and_unique_result_path(tmp_path):
@@ -488,6 +524,7 @@ def test_metrics_input_match_accepts_configured_file_container_workspace_path():
 def test_normalize_metrics_rows_uses_configured_container_workspace():
     rows = run_benchmarks.normalize_metrics_rows(
         run_id="20260520T120000Z",
+        repetition=2,
         technology="spark_sql",
         benchmark_input=BenchmarkInput("100k", 100000, Path("data/generated/flights_100k.parquet")),
         environment="docker-simulation",
@@ -513,6 +550,7 @@ def test_normalize_metrics_rows_uses_configured_container_workspace():
     )
 
     assert rows[0]["status"] == "success"
+    assert rows[0]["repetition"] == 2
     assert rows[0]["job_name"] == "delay_by_airport_month"
 
 

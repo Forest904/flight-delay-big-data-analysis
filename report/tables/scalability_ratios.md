@@ -1,4 +1,4 @@
-| environment | input_label | records | job_name | technology | duration_vs_100k | records_vs_100k | throughput_vs_100k |
+| environment | input_label | records | job_name | technology | median_duration_vs_100k | records_vs_100k | throughput_vs_100k |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | docker-simulation | 100k | 100000 | airline_airport_ranking | Hive | 1 | 1 | 1 |
 | docker-simulation | 500k | 500000 | airline_airport_ranking | Hive | 0.999 | 5 | 5.006 |

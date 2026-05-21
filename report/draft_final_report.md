@@ -384,13 +384,18 @@ The complete artifact is stored at `report/tables/environment_summary.md`.
 # Benchmark Evidence
 
 The benchmark runner records technology, job name, input size, environment,
-execution-setting label, duration, output rows, status, timestamp, input path,
-and metrics path. The report-ready artifacts are generated under
-`report/tables/` and `report/figures/`.
+execution-setting label, repetition number, raw duration, output rows, status,
+timestamp, input path, and metrics path. By default, each selected
+input/technology configuration is run three times. Timestamped benchmark CSVs
+remain raw audit evidence, while the report-ready artifacts under
+`report/tables/` and `report/figures/` aggregate successful repetitions.
 
-The latest M2 core benchmark campaign completed all expected rows. M6 adds an
-opt-in MapReduce benchmark smoke so the stretch can be included without slowing
-the required default benchmark matrix:
+The M2 reporting pipeline computes median, mean, minimum, maximum, and standard
+deviation of duration for each environment/input/job/technology group. Existing
+single-run CSVs are still readable as `runs=1`, and fresh benchmark campaigns
+can be forced to one run for smoke checks with `BENCHMARK_FLAGS="--repetitions
+1"`. M6 adds an opt-in MapReduce benchmark smoke so the stretch can be included
+without slowing the required default benchmark matrix:
 
 | Environment | Inputs | Technologies | Jobs | Status |
 | --- | --- | --- | --- | --- |
@@ -400,16 +405,18 @@ the required default benchmark matrix:
 
 The local run ID is `20260521T153035251181Z`. The Docker standalone simulation
 run ID is `20260521T160042313560Z`. The MapReduce smoke run ID is
-`20260521T153912538439Z`. The full status matrix is stored in
+`20260521T153912538439Z`. These legacy campaigns are represented as one-run
+aggregate rows until the benchmark matrix is regenerated with the M2 default
+repetition count. The full status matrix is stored in
 `report/tables/benchmark_status.md`.
 
 ## Benchmark Pivot
 
-For compactness, the printed pivot below focuses on the three required
-technologies. The regenerated `report/tables/benchmark_pivot.*` artifacts also
-include the optional MapReduce smoke columns when present.
+For compactness, the printed pivot below focuses on median duration for the
+three required technologies. The regenerated `report/tables/benchmark_pivot.*`
+artifacts also include the optional MapReduce smoke columns when present.
 
-| environment | input_label | records | job_name | Spark SQL s | Spark Core s | Hive s |
+| environment | input_label | records | job_name | Spark SQL median s | Spark Core median s | Hive median s |
 | --- | --- | --- | --- | --- | --- | --- |
 | docker-simulation | 100k | 100000 | airline_airport_ranking | 4.01 | 2.325 | 8.983 |
 | docker-simulation | 100k | 100000 | delay_by_airport_month | 9.385 | 2.543 | 12.025 |
@@ -430,9 +437,9 @@ include the optional MapReduce smoke columns when present.
 
 ## Rows Per Second
 
-Rows-per-second values are computed as input records divided by elapsed
+Rows-per-second values are computed as input records divided by median elapsed
 seconds. They show that fixed startup and planning costs dominate small inputs:
-throughput often increases sharply even when elapsed seconds change only
+throughput often increases sharply even when median elapsed seconds change only
 slightly.
 
 | environment | input | job | Spark SQL rows/s | Spark Core rows/s | Hive rows/s |
@@ -456,8 +463,8 @@ slightly.
 
 ## Speedup Ratios
 
-Each value is a duration ratio. A value above `1` means the numerator took
-longer than the denominator in that run.
+Each value is a median-duration ratio. A value above `1` means the numerator
+took longer than the denominator for the aggregate row.
 
 | environment | input | job | SQL/Core | Hive/SQL | Hive/Core |
 | --- | --- | --- | --- | --- | --- |
@@ -480,11 +487,11 @@ longer than the denominator in that run.
 
 ## Normalized Scalability
 
-The following table normalizes duration, record count, and throughput against
-the `100k` baseline for each environment, job, and technology. For example, a
-`records_vs_100k` value of `10` means the input has ten times as many records as
-the baseline. The compact columns `dur`, `rec`, and `thr` mean
-`duration_vs_100k`, `records_vs_100k`, and `throughput_vs_100k`.
+The following table normalizes median duration, record count, and throughput
+against the `100k` baseline for each environment, job, and technology. For
+example, a `records_vs_100k` value of `10` means the input has ten times as many
+records as the baseline. The compact columns `dur`, `rec`, and `thr` mean
+`median_duration_vs_100k`, `records_vs_100k`, and `throughput_vs_100k`.
 
 | env | input | job | tech | dur | rec | thr |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -540,8 +547,10 @@ the baseline. The compact columns `dur`, `rec`, and `thr` mean
 ## Benchmark Charts
 
 Execution-time charts are generated separately for local execution and Docker
-standalone simulation. Charts use line plots only when at least three input
-sizes are available for a job and environment.
+standalone simulation. Charts plot median duration and include min/max
+variability indicators when repeated successful measurements are available.
+Line plots are used only when at least three input sizes are available for a job
+and environment.
 
 ![Local execution time for delay by airport/month](figures/execution_time_local_delay_by_airport_month.png)
 
@@ -604,10 +613,9 @@ query planning are fixed costs. Reads from prepared Parquet can also benefit
 from compact columnar layout and operating-system cache effects, while both
 analyses emit relatively small aggregate outputs compared with the input size.
 At `100k`, these effects can dominate elapsed time; at larger sizes, throughput
-may improve even when raw seconds are flat or non-monotonic. Because the current
-benchmark tables are single-run evidence, these patterns are interpreted as
-controlled observations rather than statistically stable scalability claims;
-M2 adds repeated runs and aggregate timing statistics.
+may improve even when raw seconds are flat or non-monotonic. The M2 workflow
+therefore reports median duration and aggregate timing statistics when repeated
+runs are available, while preserving raw per-repetition CSV rows for audit.
 
 # Reproducibility And Validation
 

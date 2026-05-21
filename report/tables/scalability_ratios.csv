@@ -1,4 +1,4 @@
-environment,input_label,records,job_name,technology,duration_vs_100k,records_vs_100k,throughput_vs_100k
+environment,input_label,records,job_name,technology,median_duration_vs_100k,records_vs_100k,throughput_vs_100k
 docker-simulation,100k,100000,airline_airport_ranking,Hive,1.0,1.0,1.0
 docker-simulation,500k,500000,airline_airport_ranking,Hive,0.9987474453819063,5.0,5.006270627393769
 docker-simulation,1m,1000000,airline_airport_ranking,Hive,0.9907938571390882,10.0,10.092916834259494

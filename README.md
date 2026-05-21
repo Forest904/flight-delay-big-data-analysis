@@ -482,6 +482,7 @@ input_label
 records
 environment
 execution_setting
+repetition
 duration_seconds
 output_rows
 status
@@ -494,16 +495,20 @@ Run local benchmarks:
 make benchmark-local
 ```
 
+By default this runs each selected input and technology three times. Generated
+report tables aggregate successful repetitions with median, mean, minimum,
+maximum, and standard deviation of duration while keeping the raw rows.
+
 Run a smaller smoke benchmark:
 
 ```bash
-make benchmark-local BENCHMARK_FLAGS="--input-label 100k"
+make benchmark-local BENCHMARK_FLAGS="--input-label 100k --repetitions 1"
 ```
 
 Run the opt-in MapReduce benchmark smoke:
 
 ```bash
-make benchmark-mapreduce-local BENCHMARK_FLAGS="--input-label 100k"
+make benchmark-mapreduce-local BENCHMARK_FLAGS="--input-label 100k --repetitions 1"
 ```
 
 This writes regular benchmark rows with `technology=mapreduce`. The default
@@ -523,12 +528,13 @@ In this repository, `make benchmark-docker-simulation` starts a Docker Compose S
 standalone simulation with one master, two workers, and a driver container. It
 uses `config/docker_simulation.yaml`, writes results under `experiments/results/docker-simulation/`,
 and labels rows with `environment=docker-simulation`. The default M2 matrix runs
-`100k`, `500k`, and `1m` for Spark SQL, Spark Core, and Hive.
+`100k`, `500k`, and `1m` for Spark SQL, Spark Core, and Hive, with three
+repetitions per selected configuration unless `BENCHMARK_FLAGS` overrides it.
 
 Run a narrower simulation slice with benchmark flags:
 
 ```bash
-make benchmark-docker-simulation BENCHMARK_FLAGS="--input-label 1m --technology spark_sql"
+make benchmark-docker-simulation BENCHMARK_FLAGS="--input-label 1m --technology spark_sql --repetitions 1"
 ```
 
 Hive is included in the Docker simulation benchmark CSV, but it remains the existing
@@ -551,8 +557,10 @@ experiments/results/local/benchmark_latest.csv
 experiments/results/local/logs/<run_id>/
 ```
 
-The timestamped CSV is immutable run evidence. `benchmark_latest.csv` is a
-convenience copy for report tables and charts.
+The timestamped CSV is immutable raw per-repetition evidence.
+`benchmark_latest.csv` is a convenience copy of the latest raw benchmark
+campaign. Report tables and charts are generated from aggregate statistics over
+the latest successful repetitions for each configuration.
 
 ---
 

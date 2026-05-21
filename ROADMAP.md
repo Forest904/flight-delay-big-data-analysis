@@ -114,18 +114,18 @@ material.
 
 **Goal:** make the benchmark evidence more statistically credible.
 
-- [ ] Add repeated-run support to the benchmark workflow.
-- [ ] Default benchmark repetitions to `3`.
-- [ ] Keep raw per-run benchmark CSVs as evidence.
-- [ ] Generate aggregate benchmark tables with:
-  - [ ] median
-  - [ ] mean
-  - [ ] min
-  - [ ] max
-  - [ ] standard deviation
-- [ ] Update charts to use median duration.
-- [ ] Add variability indicators where feasible.
-- [ ] Update the report text so it no longer relies on a single timing per
+- [x] Add repeated-run support to the benchmark workflow.
+- [x] Default benchmark repetitions to `3`.
+- [x] Keep raw per-run benchmark CSVs as evidence.
+- [x] Generate aggregate benchmark tables with:
+  - [x] median
+  - [x] mean
+  - [x] min
+  - [x] max
+  - [x] standard deviation
+- [x] Update charts to use median duration.
+- [x] Add variability indicators where feasible.
+- [x] Update the report text so it no longer relies on a single timing per
       configuration.
 
 **Acceptance criteria:**

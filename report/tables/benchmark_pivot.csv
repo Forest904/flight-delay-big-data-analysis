@@ -1,4 +1,4 @@
-environment,input_label,records,job_name,Spark SQL duration_seconds,Spark Core duration_seconds,Hive duration_seconds,MapReduce duration_seconds
+environment,input_label,records,job_name,Spark SQL median_duration_seconds,Spark Core median_duration_seconds,Hive median_duration_seconds,MapReduce median_duration_seconds
 docker-simulation,100k,100000,airline_airport_ranking,4.009541,2.325111,8.983241,
 docker-simulation,100k,100000,delay_by_airport_month,9.385332,2.542541,12.025335,
 docker-simulation,500k,500000,airline_airport_ranking,5.61692,2.434149,8.971989,

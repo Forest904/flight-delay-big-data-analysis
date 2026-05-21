@@ -115,6 +115,8 @@ def read_benchmark_rows(csv_paths: Iterable[Path]) -> list[dict[str, object]]:
         with csv_path.open(newline="", encoding="utf-8") as file:
             reader = csv.DictReader(file)
             for row in reader:
+                if not row.get("repetition"):
+                    row["repetition"] = "1"
                 row["environment"] = canonical_environment(row.get("environment", ""))
                 row["_source_file"] = csv_path.name
                 row["_timestamp"] = parse_timestamp(row.get("timestamp_utc"))
@@ -131,7 +133,7 @@ def read_successful_benchmark_rows(csv_paths: Iterable[Path]) -> list[dict[str, 
 
 
 def latest_successful_rows(rows: Iterable[dict[str, object]]) -> list[dict[str, object]]:
-    latest_by_key: dict[tuple[str, str, str, str], dict[str, object]] = {}
+    latest_timestamp_by_key: dict[tuple[str, str, str, str], datetime] = {}
     for row in rows:
         key = (
             str(row.get("environment", "")),
@@ -139,11 +141,25 @@ def latest_successful_rows(rows: Iterable[dict[str, object]]) -> list[dict[str, 
             str(row.get("job_name", "")),
             str(row.get("technology", "")),
         )
-        current = latest_by_key.get(key)
-        if current is None or row["_timestamp"] > current["_timestamp"]:
-            latest_by_key[key] = row
+        current = latest_timestamp_by_key.get(key)
+        timestamp = row["_timestamp"]
+        if current is None or timestamp > current:
+            latest_timestamp_by_key[key] = timestamp
+    latest_rows = [
+        row
+        for row in rows
+        if latest_timestamp_by_key.get(
+            (
+                str(row.get("environment", "")),
+                str(row.get("input_label", "")),
+                str(row.get("job_name", "")),
+                str(row.get("technology", "")),
+            )
+        )
+        == row["_timestamp"]
+    ]
     return sorted(
-        latest_by_key.values(),
+        latest_rows,
         key=lambda row: (
             str(row.get("environment", "")),
             int(float(row.get("records") or 0)),
@@ -152,6 +168,7 @@ def latest_successful_rows(rows: Iterable[dict[str, object]]) -> list[dict[str, 
             TECHNOLOGY_ORDER.index(str(row.get("technology")))
             if str(row.get("technology")) in TECHNOLOGY_ORDER
             else len(TECHNOLOGY_ORDER),
+            int(float(row.get("repetition") or 1)),
         ),
     )
 
@@ -166,7 +183,13 @@ def latest_benchmark_rows(rows: Iterable[dict[str, object]]) -> list[dict[str, o
             str(row.get("technology", "")),
         )
         current = latest_by_key.get(key)
-        if current is None or row["_timestamp"] > current["_timestamp"]:
+        if current is None or (
+            row["_timestamp"],
+            int(float(row.get("repetition") or 1)),
+        ) > (
+            current["_timestamp"],
+            int(float(current.get("repetition") or 1)),
+        ):
             latest_by_key[key] = row
     return sorted(
         latest_by_key.values(),
@@ -213,22 +236,62 @@ def divide_or_blank(numerator: object, denominator: object) -> float | str:
 
 
 def benchmark_summary_records(rows: Iterable[dict[str, object]]) -> list[dict[str, object]]:
-    records: list[dict[str, object]] = []
+    normalized_rows: list[dict[str, object]] = []
     for row in rows:
-        records.append(
+        duration = positive_float(row.get("duration_seconds"))
+        if duration is None:
+            continue
+        normalized_rows.append(
             {
                 "environment": row.get("environment", ""),
                 "input_label": row.get("input_label", ""),
                 "records": int(float(row.get("records") or 0)),
                 "job_name": row.get("job_name", ""),
-                "technology": TECHNOLOGY_LABELS.get(str(row.get("technology", "")), row.get("technology", "")),
-                "duration_seconds": float(row.get("duration_seconds") or 0),
+                "technology": str(row.get("technology", "")),
+                "duration_seconds": duration,
                 "output_rows": int(float(row.get("output_rows") or 0)),
                 "run_id": row.get("run_id", ""),
                 "timestamp_utc": row.get("timestamp_utc", ""),
             }
         )
-    return records
+    if not normalized_rows:
+        return []
+
+    frame = pd.DataFrame(normalized_rows)
+    records: list[dict[str, object]] = []
+    group_columns = ["environment", "input_label", "records", "job_name", "technology"]
+    for key, group in frame.groupby(group_columns, sort=True):
+        environment, input_label, records_value, job_name, technology = key
+        durations = group["duration_seconds"]
+        stddev = durations.std(ddof=1) if len(durations) > 1 else None
+        records.append(
+            {
+                "environment": environment,
+                "input_label": input_label,
+                "records": int(records_value),
+                "job_name": job_name,
+                "technology": TECHNOLOGY_LABELS.get(str(technology), str(technology)),
+                "runs": int(len(durations)),
+                "median_duration_seconds": float(durations.median()),
+                "mean_duration_seconds": float(durations.mean()),
+                "min_duration_seconds": float(durations.min()),
+                "max_duration_seconds": float(durations.max()),
+                "stddev_duration_seconds": "" if stddev is None or pd.isna(stddev) else float(stddev),
+                "output_rows": int(group["output_rows"].iloc[0]),
+                "run_id": group["run_id"].iloc[0],
+                "timestamp_utc": group["timestamp_utc"].iloc[0],
+            }
+        )
+    return sorted(
+        records,
+        key=lambda row: (
+            str(row.get("environment", "")),
+            int(float(row.get("records") or 0)),
+            str(row.get("input_label", "")),
+            str(row.get("job_name", "")),
+            str(row.get("technology", "")),
+        ),
+    )
 
 
 def benchmark_pivot_records(summary: list[dict[str, object]]) -> list[dict[str, object]]:
@@ -240,7 +303,7 @@ def benchmark_pivot_records(summary: list[dict[str, object]]) -> list[dict[str, 
         frame.pivot_table(
             index=["environment", "input_label", "records", "job_name"],
             columns="technology",
-            values="duration_seconds",
+            values="median_duration_seconds",
             aggfunc="first",
         )
         .reset_index()
@@ -251,14 +314,14 @@ def benchmark_pivot_records(summary: list[dict[str, object]]) -> list[dict[str, 
     ordered_columns.extend(label for label in TECHNOLOGY_LABELS.values() if label in pivot.columns)
     ordered_columns.extend(column for column in pivot.columns if column not in ordered_columns)
     pivot = pivot[ordered_columns]
-    pivot = pivot.rename(columns={label: f"{label} duration_seconds" for label in TECHNOLOGY_LABELS.values()})
+    pivot = pivot.rename(columns={label: f"{label} median_duration_seconds" for label in TECHNOLOGY_LABELS.values()})
     return pivot.where(pd.notna(pivot), "").to_dict(orient="records")
 
 
 def rows_per_second_records(summary: list[dict[str, object]]) -> list[dict[str, object]]:
     records: list[dict[str, object]] = []
     for row in summary:
-        duration_seconds = positive_float(row.get("duration_seconds"))
+        duration_seconds = positive_float(row.get("median_duration_seconds"))
         rows_per_second = ""
         if duration_seconds is not None:
             rows_per_second = int(float(row.get("records") or 0)) / duration_seconds
@@ -269,7 +332,7 @@ def rows_per_second_records(summary: list[dict[str, object]]) -> list[dict[str, 
                 "records": row.get("records", ""),
                 "job_name": row.get("job_name", ""),
                 "technology": row.get("technology", ""),
-                "duration_seconds": row.get("duration_seconds", ""),
+                "median_duration_seconds": row.get("median_duration_seconds", ""),
                 "rows_per_second": rows_per_second,
             }
         )
@@ -279,9 +342,9 @@ def rows_per_second_records(summary: list[dict[str, object]]) -> list[dict[str, 
 def speedup_records(pivot: list[dict[str, object]]) -> list[dict[str, object]]:
     records: list[dict[str, object]] = []
     for row in pivot:
-        spark_sql = row.get("Spark SQL duration_seconds", "")
-        spark_core = row.get("Spark Core duration_seconds", "")
-        hive = row.get("Hive duration_seconds", "")
+        spark_sql = row.get("Spark SQL median_duration_seconds", "")
+        spark_core = row.get("Spark Core median_duration_seconds", "")
+        hive = row.get("Hive median_duration_seconds", "")
         records.append(
             {
                 "environment": row.get("environment", ""),
@@ -311,7 +374,7 @@ def scalability_ratio_records(summary: list[dict[str, object]]) -> list[dict[str
         if baseline_group.empty:
             continue
         baseline = baseline_group.iloc[0]
-        baseline_duration = positive_float(baseline.get("duration_seconds"))
+        baseline_duration = positive_float(baseline.get("median_duration_seconds"))
         baseline_records = positive_float(baseline.get("records"))
         if baseline_duration is None or baseline_records is None:
             continue
@@ -319,7 +382,7 @@ def scalability_ratio_records(summary: list[dict[str, object]]) -> list[dict[str
 
         for _, row in group.iterrows():
             records_value = positive_float(row.get("records"))
-            duration_value = positive_float(row.get("duration_seconds"))
+            duration_value = positive_float(row.get("median_duration_seconds"))
             throughput = ""
             if records_value is not None and duration_value is not None:
                 throughput = records_value / duration_value
@@ -330,7 +393,7 @@ def scalability_ratio_records(summary: list[dict[str, object]]) -> list[dict[str
                     "records": int(row.get("records", 0)),
                     "job_name": job_name,
                     "technology": technology,
-                    "duration_vs_100k": divide_or_blank(duration_value, baseline_duration),
+                    "median_duration_vs_100k": divide_or_blank(duration_value, baseline_duration),
                     "records_vs_100k": divide_or_blank(records_value, baseline_records),
                     "throughput_vs_100k": divide_or_blank(throughput, baseline_throughput),
                 }
@@ -535,28 +598,34 @@ def generate_execution_time_charts(rows: list[dict[str, object]], figures_dir: P
             if tech_group.empty:
                 continue
             positions = [x_lookup[label] for label in tech_group["input_label"]]
+            medians = list(tech_group["median_duration_seconds"])
+            lower_errors = [
+                max(0.0, float(row["median_duration_seconds"]) - float(row["min_duration_seconds"]))
+                for _, row in tech_group.iterrows()
+            ]
+            upper_errors = [
+                max(0.0, float(row["max_duration_seconds"]) - float(row["median_duration_seconds"]))
+                for _, row in tech_group.iterrows()
+            ]
+            yerr = [lower_errors, upper_errors]
             if chart_kind == "line":
-                if len(tech_group) >= 2:
-                    plt.plot(
-                        positions,
-                        tech_group["duration_seconds"],
-                        marker="o",
-                        linewidth=1.8,
-                        label=technology_label,
-                    )
-                else:
-                    plt.scatter(
-                        positions,
-                        tech_group["duration_seconds"],
-                        marker="o",
-                        s=38,
-                        label=technology_label,
-                    )
+                plt.errorbar(
+                    positions,
+                    medians,
+                    yerr=yerr,
+                    marker="o",
+                    linewidth=1.8 if len(tech_group) >= 2 else 0,
+                    linestyle="-" if len(tech_group) >= 2 else "",
+                    capsize=3,
+                    label=technology_label,
+                )
             else:
                 offset = (technology_index - (len(technology_labels) - 1) / 2) * bar_width
                 plt.bar(
                     [position + offset for position in positions],
-                    tech_group["duration_seconds"],
+                    medians,
+                    yerr=yerr,
+                    capsize=3,
                     width=bar_width,
                     label=technology_label,
                 )
@@ -564,7 +633,7 @@ def generate_execution_time_charts(rows: list[dict[str, object]], figures_dir: P
         environment_label = ENVIRONMENT_LABELS.get(str(environment), str(environment))
         plt.title(f"{JOB_LABELS.get(str(job_name), job_name)} - {environment_label}")
         plt.xlabel("Input size (record count)")
-        plt.ylabel("Execution time (seconds)")
+        plt.ylabel("Median execution time (seconds)")
         plt.xticks(
             x_positions,
             [input_tick_label(item["input_label"], item["records"]) for item in input_order],

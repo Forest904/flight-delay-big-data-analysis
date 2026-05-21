@@ -24,6 +24,7 @@ DEFAULT_TECHNOLOGIES = ("spark_sql", "spark_core", "hive")
 SUPPORTED_TECHNOLOGIES = (*DEFAULT_TECHNOLOGIES, "mapreduce")
 BENCHMARK_COLUMNS = [
     "run_id",
+    "repetition",
     "technology",
     "job_name",
     "input_label",
@@ -327,11 +328,12 @@ def write_invocation_logs(
     *,
     input_label: str,
     technology: str,
+    repetition: int,
     command: list[str],
     result: subprocess.CompletedProcess[str],
 ) -> None:
     logs_dir.mkdir(parents=True, exist_ok=True)
-    stem = f"{input_label}_{technology}"
+    stem = f"{input_label}_{technology}_rep{repetition}"
     (logs_dir / f"{stem}.stdout.log").write_text(result.stdout, encoding="utf-8")
     (logs_dir / f"{stem}.stderr.log").write_text(result.stderr, encoding="utf-8")
     (logs_dir / f"{stem}.command.txt").write_text(" ".join(command) + "\n", encoding="utf-8")
@@ -397,6 +399,7 @@ def unique_result_path(results_dir: Path, run_id: str) -> tuple[str, Path]:
 def normalize_metrics_rows(
     *,
     run_id: str,
+    repetition: int,
     technology: str,
     benchmark_input: BenchmarkInput,
     environment: str,
@@ -411,6 +414,7 @@ def normalize_metrics_rows(
 ) -> list[dict[str, Any]]:
     common = {
         "run_id": run_id,
+        "repetition": repetition,
         "technology": technology,
         "input_label": benchmark_input.label,
         "records": benchmark_input.records,
@@ -503,11 +507,21 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--input-label", action="append", help="Benchmark input label to include. Repeatable.")
     parser.add_argument("--include-optional", action="store_true", help="Include validated optional input sizes.")
     parser.add_argument("--results-dir", type=Path, help="Directory for benchmark CSVs and logs.")
+    parser.add_argument(
+        "--repetitions",
+        type=int,
+        default=3,
+        help="Number of times to run each selected input and technology. Defaults to 3.",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    if args.repetitions < 1:
+        print("# --repetitions must be at least 1.", file=sys.stderr)
+        return 1
+
     config_path = resolve_project_path(args.config)
     local_config = load_yaml(config_path)
     results_dir = (
@@ -547,45 +561,49 @@ def main(argv: list[str] | None = None) -> int:
     print(f"# Benchmark run {run_id}")
     print(f"# Inputs: {', '.join(item.label for item in inputs)}")
     print(f"# Technologies: {', '.join(technologies)}")
+    print(f"# Repetitions: {args.repetitions}")
 
     for benchmark_input in inputs:
         for technology in technologies:
-            spec = build_command(
-                technology,
-                benchmark_input.path,
-                local_config,
-                config_path=config_path,
-                run_id=run_id,
-                input_label=benchmark_input.label,
-            )
-            print(f"# Running {technology} on {benchmark_input.label}")
-            clear_metrics_file(spec.metrics_path)
-            result, process_duration_seconds = run_command(spec.command)
-            write_invocation_logs(
-                logs_dir,
-                input_label=benchmark_input.label,
-                technology=technology,
-                command=spec.command,
-                result=result,
-            )
-            metrics = read_metrics(spec.metrics_path)
-            normalized = normalize_metrics_rows(
-                run_id=run_id,
-                technology=technology,
-                benchmark_input=benchmark_input,
-                environment=args.environment,
-                execution_setting=execution_setting,
-                timestamp_utc=timestamp_utc,
-                metrics_path=spec.metrics_path,
-                metrics=metrics,
-                returncode=result.returncode,
-                process_duration_seconds=process_duration_seconds,
-                stderr=result.stderr,
-                container_workspace=container_workspace,
-            )
-            rows.extend(normalized)
-            if result.returncode != 0 or any(row["status"] != "success" for row in normalized):
-                any_failed = True
+            for repetition in range(1, args.repetitions + 1):
+                spec = build_command(
+                    technology,
+                    benchmark_input.path,
+                    local_config,
+                    config_path=config_path,
+                    run_id=run_id,
+                    input_label=benchmark_input.label,
+                )
+                print(f"# Running {technology} on {benchmark_input.label} (repetition {repetition}/{args.repetitions})")
+                clear_metrics_file(spec.metrics_path)
+                result, process_duration_seconds = run_command(spec.command)
+                write_invocation_logs(
+                    logs_dir,
+                    input_label=benchmark_input.label,
+                    technology=technology,
+                    repetition=repetition,
+                    command=spec.command,
+                    result=result,
+                )
+                metrics = read_metrics(spec.metrics_path)
+                normalized = normalize_metrics_rows(
+                    run_id=run_id,
+                    repetition=repetition,
+                    technology=technology,
+                    benchmark_input=benchmark_input,
+                    environment=args.environment,
+                    execution_setting=execution_setting,
+                    timestamp_utc=timestamp_utc,
+                    metrics_path=spec.metrics_path,
+                    metrics=metrics,
+                    returncode=result.returncode,
+                    process_duration_seconds=process_duration_seconds,
+                    stderr=result.stderr,
+                    container_workspace=container_workspace,
+                )
+                rows.extend(normalized)
+                if result.returncode != 0 or any(row["status"] != "success" for row in normalized):
+                    any_failed = True
 
     latest_path = results_dir / "benchmark_latest.csv"
     write_benchmark_csv(result_path, rows)
