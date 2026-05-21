@@ -83,24 +83,24 @@ experiment before running any expensive workloads.
 **Goal:** address the known report-quality deductions before adding new AWS
 material.
 
-- [ ] Fix appendix structure so required samples are clearly separated:
-  - [ ] Spark SQL samples
-  - [ ] Spark Core samples
-  - [ ] Hive samples
-  - [ ] MapReduce stretch samples
-- [ ] Add a compact requirement-to-output mapping table for both analyses.
-- [ ] Expand implementation descriptions with short execution plans for:
-  - [ ] Spark SQL
-  - [ ] Spark Core
-  - [ ] Hive
-  - [ ] MapReduce stretch
-- [ ] Add a paragraph explaining flat or non-monotonic benchmark timings:
-  - startup overhead
-  - JVM/container setup
-  - cached/prepared Parquet reads
-  - small output cardinality
-  - single-run measurement limitations
-- [ ] Reword Docker evidence consistently as "Docker standalone simulation,"
+- [x] Fix appendix structure so required samples are clearly separated:
+  - [x] Spark SQL samples
+  - [x] Spark Core samples
+  - [x] Hive samples
+  - [x] MapReduce stretch samples
+- [x] Add a compact requirement-to-output mapping table for both analyses.
+- [x] Expand implementation descriptions with short execution plans for:
+  - [x] Spark SQL
+  - [x] Spark Core
+  - [x] Hive
+  - [x] MapReduce stretch
+- [x] Add a paragraph explaining flat or non-monotonic benchmark timings:
+  - [x] startup overhead
+  - [x] JVM/container setup
+  - [x] cached/prepared Parquet reads
+  - [x] small output cardinality
+  - [x] single-run measurement limitations
+- [x] Reword Docker evidence consistently as "Docker standalone simulation,"
       not a true cluster.
 
 **Acceptance criteria:**
