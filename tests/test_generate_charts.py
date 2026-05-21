@@ -168,6 +168,192 @@ def test_benchmark_pivot_contains_available_technology_duration_columns():
     assert pivot[0]["Spark Core duration_seconds"] == 2.25
 
 
+def test_rows_per_second_records_compute_records_divided_by_duration():
+    summary = [
+        {
+            "environment": "local",
+            "input_label": "100k",
+            "records": 100000,
+            "job_name": "delay_by_airport_month",
+            "technology": "Spark SQL",
+            "duration_seconds": 4.0,
+        }
+    ]
+
+    rows_per_second = generate_charts.rows_per_second_records(summary)
+
+    assert rows_per_second[0]["rows_per_second"] == 25000.0
+
+
+def test_speedup_records_compute_requested_duration_ratios():
+    pivot = [
+        {
+            "environment": "local",
+            "input_label": "100k",
+            "records": 100000,
+            "job_name": "delay_by_airport_month",
+            "Spark SQL duration_seconds": 6.0,
+            "Spark Core duration_seconds": 2.0,
+            "Hive duration_seconds": 12.0,
+        }
+    ]
+
+    speedups = generate_charts.speedup_records(pivot)
+
+    assert speedups[0]["spark_sql_div_spark_core"] == 3.0
+    assert speedups[0]["hive_div_spark_sql"] == 2.0
+    assert speedups[0]["hive_div_spark_core"] == 6.0
+
+
+def test_scalability_ratio_records_require_three_inputs_and_100k_baseline():
+    summary = [
+        {
+            "environment": "local",
+            "input_label": "100k",
+            "records": 100000,
+            "job_name": "delay_by_airport_month",
+            "technology": "Spark SQL",
+            "duration_seconds": 2.0,
+        },
+        {
+            "environment": "local",
+            "input_label": "500k",
+            "records": 500000,
+            "job_name": "delay_by_airport_month",
+            "technology": "Spark SQL",
+            "duration_seconds": 4.0,
+        },
+        {
+            "environment": "local",
+            "input_label": "1m",
+            "records": 1000000,
+            "job_name": "delay_by_airport_month",
+            "technology": "Spark SQL",
+            "duration_seconds": 5.0,
+        },
+        {
+            "environment": "local",
+            "input_label": "100k",
+            "records": 100000,
+            "job_name": "airline_airport_ranking",
+            "technology": "Spark SQL",
+            "duration_seconds": 2.0,
+        },
+        {
+            "environment": "local",
+            "input_label": "500k",
+            "records": 500000,
+            "job_name": "airline_airport_ranking",
+            "technology": "Spark SQL",
+            "duration_seconds": 4.0,
+        },
+    ]
+
+    scalability = generate_charts.scalability_ratio_records(summary)
+
+    assert len(scalability) == 3
+    one_million = next(row for row in scalability if row["input_label"] == "1m")
+    assert one_million["duration_vs_100k"] == 2.5
+    assert one_million["records_vs_100k"] == 10.0
+    assert one_million["throughput_vs_100k"] == 4.0
+
+
+def chart_rows(input_sizes: list[tuple[str, int]]) -> list[dict[str, object]]:
+    rows: list[dict[str, object]] = []
+    timestamp = datetime(2026, 5, 20, tzinfo=timezone.utc).isoformat()
+    for input_label, records in input_sizes:
+        for technology, duration in (
+            ("spark_sql", 6.0),
+            ("spark_core", 2.0),
+            ("hive", 12.0),
+        ):
+            rows.append(
+                benchmark_row(
+                    run_id="run",
+                    timestamp_utc=timestamp,
+                    duration_seconds=duration,
+                    technology=technology,
+                    input_label=input_label,
+                    records=records,
+                )
+            )
+    return rows
+
+
+def test_execution_time_chart_uses_grouped_bars_for_one_or_two_inputs(tmp_path, monkeypatch):
+    calls = {"bar": 0, "plot": 0}
+    original_bar = generate_charts.plt.bar
+    original_plot = generate_charts.plt.plot
+
+    def fake_bar(*args, **kwargs):
+        calls["bar"] += 1
+        return original_bar(*args, **kwargs)
+
+    def fake_plot(*args, **kwargs):
+        calls["plot"] += 1
+        return original_plot(*args, **kwargs)
+
+    monkeypatch.setattr(generate_charts.plt, "bar", fake_bar)
+    monkeypatch.setattr(generate_charts.plt, "plot", fake_plot)
+    monkeypatch.setattr(generate_charts.plt, "savefig", lambda path, **kwargs: Path(path).touch())
+
+    figures = generate_charts.generate_execution_time_charts(
+        chart_rows([("100k", 100000), ("500k", 500000)]),
+        tmp_path,
+    )
+
+    assert calls["bar"] > 0
+    assert calls["plot"] == 0
+    assert figures == [tmp_path / "execution_time_local_delay_by_airport_month.png"]
+
+
+def test_execution_time_chart_uses_lines_for_three_or_more_inputs(tmp_path, monkeypatch):
+    calls = {"bar": 0, "plot": 0}
+    original_bar = generate_charts.plt.bar
+    original_plot = generate_charts.plt.plot
+
+    def fake_bar(*args, **kwargs):
+        calls["bar"] += 1
+        return original_bar(*args, **kwargs)
+
+    def fake_plot(*args, **kwargs):
+        calls["plot"] += 1
+        return original_plot(*args, **kwargs)
+
+    monkeypatch.setattr(generate_charts.plt, "bar", fake_bar)
+    monkeypatch.setattr(generate_charts.plt, "plot", fake_plot)
+    monkeypatch.setattr(generate_charts.plt, "savefig", lambda path, **kwargs: Path(path).touch())
+
+    generate_charts.generate_execution_time_charts(
+        chart_rows([("100k", 100000), ("500k", 500000), ("1m", 1000000)]),
+        tmp_path,
+    )
+
+    assert calls["plot"] > 0
+    assert calls["bar"] == 0
+
+
+def test_legacy_docker_cluster_rows_generate_docker_simulation_figure_name(tmp_path):
+    csv_path = tmp_path / "benchmark_20260520T120000000000Z.csv"
+    write_benchmark_csv(
+        csv_path,
+        [
+            benchmark_row(
+                run_id="run",
+                timestamp_utc="2026-05-20T12:00:00+00:00",
+                duration_seconds=8.5,
+                environment="docker-cluster",
+            )
+        ],
+    )
+    rows = generate_charts.read_successful_benchmark_rows([csv_path])
+    latest = generate_charts.latest_successful_rows(rows)
+
+    figures = generate_charts.generate_execution_time_charts(latest, tmp_path)
+
+    assert figures == [tmp_path / "execution_time_docker-simulation_delay_by_airport_month.png"]
+
+
 def test_benchmark_status_records_include_success_failure_and_not_run():
     success = benchmark_row(
         run_id="success",

@@ -11,6 +11,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -194,6 +197,24 @@ def formatted_number(value: object, digits: int = 3) -> str:
     return f"{number:.{digits}f}".rstrip("0").rstrip(".")
 
 
+def positive_float(value: object) -> float | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number <= 0:
+        return None
+    return number
+
+
+def divide_or_blank(numerator: object, denominator: object) -> float | str:
+    numerator_value = positive_float(numerator)
+    denominator_value = positive_float(denominator)
+    if numerator_value is None or denominator_value is None:
+        return ""
+    return numerator_value / denominator_value
+
+
 def benchmark_summary_records(rows: Iterable[dict[str, object]]) -> list[dict[str, object]]:
     records: list[dict[str, object]] = []
     for row in rows:
@@ -235,6 +256,89 @@ def benchmark_pivot_records(summary: list[dict[str, object]]) -> list[dict[str, 
     pivot = pivot[ordered_columns]
     pivot = pivot.rename(columns={label: f"{label} duration_seconds" for label in TECHNOLOGY_LABELS.values()})
     return pivot.where(pd.notna(pivot), "").to_dict(orient="records")
+
+
+def rows_per_second_records(summary: list[dict[str, object]]) -> list[dict[str, object]]:
+    records: list[dict[str, object]] = []
+    for row in summary:
+        duration_seconds = positive_float(row.get("duration_seconds"))
+        rows_per_second = ""
+        if duration_seconds is not None:
+            rows_per_second = int(float(row.get("records") or 0)) / duration_seconds
+        records.append(
+            {
+                "environment": row.get("environment", ""),
+                "input_label": row.get("input_label", ""),
+                "records": row.get("records", ""),
+                "job_name": row.get("job_name", ""),
+                "technology": row.get("technology", ""),
+                "duration_seconds": row.get("duration_seconds", ""),
+                "rows_per_second": rows_per_second,
+            }
+        )
+    return records
+
+
+def speedup_records(pivot: list[dict[str, object]]) -> list[dict[str, object]]:
+    records: list[dict[str, object]] = []
+    for row in pivot:
+        spark_sql = row.get("Spark SQL duration_seconds", "")
+        spark_core = row.get("Spark Core duration_seconds", "")
+        hive = row.get("Hive duration_seconds", "")
+        records.append(
+            {
+                "environment": row.get("environment", ""),
+                "input_label": row.get("input_label", ""),
+                "records": row.get("records", ""),
+                "job_name": row.get("job_name", ""),
+                "spark_sql_div_spark_core": divide_or_blank(spark_sql, spark_core),
+                "hive_div_spark_sql": divide_or_blank(hive, spark_sql),
+                "hive_div_spark_core": divide_or_blank(hive, spark_core),
+            }
+        )
+    return records
+
+
+def scalability_ratio_records(summary: list[dict[str, object]]) -> list[dict[str, object]]:
+    records: list[dict[str, object]] = []
+    if not summary:
+        return records
+
+    frame = pd.DataFrame(summary).sort_values(["environment", "job_name", "technology", "records", "input_label"])
+    for (environment, job_name, technology), group in frame.groupby(["environment", "job_name", "technology"], sort=True):
+        group = group.drop_duplicates(subset=["input_label"], keep="first")
+        if len(group) < 3:
+            continue
+
+        baseline_group = group[group["input_label"] == "100k"]
+        if baseline_group.empty:
+            continue
+        baseline = baseline_group.iloc[0]
+        baseline_duration = positive_float(baseline.get("duration_seconds"))
+        baseline_records = positive_float(baseline.get("records"))
+        if baseline_duration is None or baseline_records is None:
+            continue
+        baseline_throughput = baseline_records / baseline_duration
+
+        for _, row in group.iterrows():
+            records_value = positive_float(row.get("records"))
+            duration_value = positive_float(row.get("duration_seconds"))
+            throughput = ""
+            if records_value is not None and duration_value is not None:
+                throughput = records_value / duration_value
+            records.append(
+                {
+                    "environment": environment,
+                    "input_label": row.get("input_label", ""),
+                    "records": int(row.get("records", 0)),
+                    "job_name": job_name,
+                    "technology": technology,
+                    "duration_vs_100k": divide_or_blank(duration_value, baseline_duration),
+                    "records_vs_100k": divide_or_blank(records_value, baseline_records),
+                    "throughput_vs_100k": divide_or_blank(throughput, baseline_throughput),
+                }
+            )
+    return records
 
 
 def row_reason(row: dict[str, object]) -> str:
@@ -397,6 +501,10 @@ def input_tick_label(label: object, records: object) -> str:
     return f"{label}\n({formatted_number(records, digits=0)} rows)"
 
 
+def execution_time_chart_kind(input_count: int) -> str:
+    return "line" if input_count >= 3 else "bar"
+
+
 def generate_execution_time_charts(rows: list[dict[str, object]], figures_dir: Path) -> list[Path]:
     if not rows:
         return []
@@ -415,19 +523,37 @@ def generate_execution_time_charts(rows: list[dict[str, object]], figures_dir: P
         )
         x_positions = list(range(len(input_order)))
         x_lookup = {item["input_label"]: index for index, item in enumerate(input_order)}
+        chart_kind = execution_time_chart_kind(len(input_order))
 
         plt.figure(figsize=(7.0, 4.2), dpi=140)
-        for technology_key, technology_label in TECHNOLOGY_LABELS.items():
+        technology_labels = [
+            label
+            for label in TECHNOLOGY_LABELS.values()
+            if not group[group["technology"] == label].empty
+        ]
+        bar_width = 0.8 / max(len(technology_labels), 1)
+
+        for technology_index, technology_label in enumerate(technology_labels):
             tech_group = group[group["technology"] == technology_label].sort_values(["records", "input_label"])
             if tech_group.empty:
                 continue
-            plt.plot(
-                [x_lookup[label] for label in tech_group["input_label"]],
-                tech_group["duration_seconds"],
-                marker="o",
-                linewidth=1.8,
-                label=technology_label,
-            )
+            positions = [x_lookup[label] for label in tech_group["input_label"]]
+            if chart_kind == "line":
+                plt.plot(
+                    positions,
+                    tech_group["duration_seconds"],
+                    marker="o",
+                    linewidth=1.8,
+                    label=technology_label,
+                )
+            else:
+                offset = (technology_index - (len(technology_labels) - 1) / 2) * bar_width
+                plt.bar(
+                    [position + offset for position in positions],
+                    tech_group["duration_seconds"],
+                    width=bar_width,
+                    label=technology_label,
+                )
 
         environment_label = ENVIRONMENT_LABELS.get(str(environment), str(environment))
         plt.title(f"{JOB_LABELS.get(str(job_name), job_name)} - {environment_label}")
@@ -497,11 +623,17 @@ def generate_artifacts(
     summary = benchmark_summary_records(latest_rows)
     pivot = benchmark_pivot_records(summary)
     status = benchmark_status_records(all_rows)
+    rows_per_second = rows_per_second_records(summary)
+    speedups = speedup_records(pivot)
+    scalability = scalability_ratio_records(summary)
 
     tables: list[Path] = []
     tables.extend(write_table_pair(tables_dir, "benchmark_summary", summary))
     tables.extend(write_table_pair(tables_dir, "benchmark_pivot", pivot))
     tables.extend(write_table_pair(tables_dir, "benchmark_status", status))
+    tables.extend(write_table_pair(tables_dir, "rows_per_second", rows_per_second))
+    tables.extend(write_table_pair(tables_dir, "speedup", speedups))
+    tables.extend(write_table_pair(tables_dir, "scalability_ratios", scalability))
 
     first_10_tables, first_10_warnings = copy_first_10_tables(outputs_dir, tables_dir)
     tables.extend(first_10_tables)

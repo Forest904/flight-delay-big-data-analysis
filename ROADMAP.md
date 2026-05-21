@@ -136,36 +136,41 @@ Grading evidence:
 ### M3 - Upgrade Charts And Derived Metrics
 
 Priority: `P1 evidence upgrade`  
-Status: not started.
+Status: completed.
 
 Goal: make the final visualizations convincing, readable, and aligned with the amount of data available.
 
 Chart changes:
 
-- [ ] Use grouped bar charts when a job/environment has only one or two input sizes.
-- [ ] Use line charts only when a job/environment has at least three input sizes.
-- [ ] Keep separate charts for local and Docker standalone simulation unless combining them improves readability.
-- [ ] Rename chart titles and filenames away from overclaiming "cluster" language where needed.
+- [x] Use grouped bar charts when a job/environment has only one or two input sizes.
+- [x] Use line charts only when a job/environment has at least three input sizes.
+- [x] Keep separate charts for local and Docker standalone simulation unless combining them improves readability.
+- [x] Rename chart titles and filenames away from overclaiming "cluster" language where needed.
 
 Derived metrics:
 
-- [ ] Add rows-per-second tables per technology, job, environment, and input size.
-- [ ] Add speedup tables:
+- [x] Add rows-per-second tables per technology, job, environment, and input size.
+- [x] Add speedup tables:
   - Spark SQL duration divided by Spark Core duration.
   - Hive duration divided by Spark SQL duration.
   - Hive duration divided by Spark Core duration.
-- [ ] Add normalized scalability ratios from the `100k` baseline where at least three input sizes exist.
-- [ ] Include notes explaining startup overhead and why tiny inputs may not show monotonic scaling.
+- [x] Add normalized scalability ratios from the `100k` baseline where at least three input sizes exist.
+- [x] Include notes explaining startup overhead and why tiny inputs may not show monotonic scaling.
 
 Acceptance criteria:
 
-- [ ] No local chart shows a one-point line as if it were a trend.
-- [ ] Every chart has clear units, input sizes, technology labels, and environment labels.
-- [ ] Visual claims in the report are directly supported by the plotted data.
+- [x] No local chart shows a one-point line as if it were a trend.
+- [x] Every chart has clear units, input sizes, technology labels, and environment labels.
+- [x] Visual claims in the report are directly supported by the plotted data.
 
 Grading evidence:
 
 - The final report becomes stronger on efficiency, scalability, and technology comparison.
+- Implemented adaptive execution-time charts: grouped bars for one or two input sizes and line charts only for three or more input sizes.
+- Generated report-ready derived metric artifacts: `report/tables/rows_per_second.*`, `report/tables/speedup.*`, and `report/tables/scalability_ratios.*`.
+- Kept local and Docker standalone simulation charts separate and preserved normalized `docker-simulation` figure filenames.
+- Updated the draft final report with derived-metric references and notes about startup overhead and non-monotonic tiny-input behavior.
+- Verification completed: `.\.venv\Scripts\python.exe -m pytest -q` passed with 50 tests, `make charts` regenerated report tables and figures, and `make report` rebuilt `report/draft_final_report.pdf`.
 
 ### M4 - Report Rewrite And Evidence Appendix
 

@@ -278,7 +278,30 @@ in this run.
 | local | full | 7079081 | airline_airport_ranking | 2.204 | 0.592 | 12.699 |
 | local | full | 7079081 | delay_by_airport_month | 9.066 | 0.898 | 19.878 |
 
+## Derived Benchmark Metrics
+
+The report artifacts include three derived metric tables generated from the
+same latest successful benchmark rows:
+
+- `report/tables/rows_per_second.md` computes processed rows per second for
+  each technology, job, environment, and input size.
+- `report/tables/speedup.md` records direct duration ratios:
+  Spark SQL / Spark Core, Hive / Spark SQL, and Hive / Spark Core. A value above
+  1 means the numerator took longer than the denominator in that run.
+- `report/tables/scalability_ratios.md` normalizes duration, record count, and
+  throughput against the `100k` baseline where at least three input sizes exist.
+
+These tables support the efficiency and scalability discussion without relying
+only on raw seconds. They also make the startup-overhead effect visible:
+larger inputs often process many more rows per second even when elapsed time is
+flat or only slightly higher.
+
 ## Benchmark Charts
+
+Execution-time charts are generated separately for local execution and Docker
+standalone simulation. Charts use line plots only when at least three input
+sizes are available for the job/environment; smaller evidence sets use grouped
+bars so a single point is not shown as a trend.
 
 ![Local execution time for delay by airport/month](figures/execution_time_local_delay_by_airport_month.png)
 
@@ -332,6 +355,13 @@ distributed Hive cluster.
 The benchmark status table explicitly marks failed or skipped cells with a
 reason, so the report can discuss input-size trends without hiding limits such
 as an impractical Hive full-size run.
+
+Small benchmark inputs are strongly affected by startup overhead, JVM warmup,
+Docker service overhead, and fixed query-planning costs. For that reason the
+execution-time trend is not expected to be perfectly monotonic at `100k`,
+`500k`, and `1m`. Rows-per-second and normalized scalability ratios are used as
+supporting evidence, while the written claims stay tied to the observed local
+and Docker standalone simulation data.
 
 # Reproducibility And Validation
 
