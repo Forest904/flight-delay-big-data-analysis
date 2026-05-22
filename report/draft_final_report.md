@@ -8,21 +8,22 @@ fontsize: 10pt
 # Executive Summary
 
 This project analyzes the 2024 United States flight delay dataset with a
-reproducible big-data workflow. The repository prepares a canonical cleaned
-Parquet dataset, implements two analytical jobs with three required big-data
-technologies plus an optional MapReduce stretch, validates the outputs, records
-benchmark evidence, and produces the tables and figures included in this PDF.
-The evidence set includes real Amazon EMR cluster execution in addition to
-local execution and Docker standalone simulation, directly addressing the main
-scalability-evidence risk.
+reproducible big-data workflow. The submitted artifacts show a canonical
+cleaned Parquet dataset, two analytical jobs implemented with three required
+big-data technologies plus an optional MapReduce stretch, validated outputs,
+benchmark evidence, and the tables and figures included in this PDF. The
+evidence set includes real Amazon EMR cluster execution in addition to local
+execution and Docker standalone simulation, reducing the earlier
+scalability-evidence risk while leaving the benchmark limits stated explicitly.
 
 Repository: <https://github.com/Forest904/flight-delay-big-data-analysis.git>
 
-The implemented analyses are:
+The implemented analyses map directly to the assignment sections:
 
-- **Analysis 1:** delay report by departure airport, month, and departure-delay
-  range.
-- **Analysis 2:** airline-airport ranking by average departure delay.
+- **Assignment Analysis 3.2 - Delay Report by Airport and Time Period:**
+  delay report by departure airport, month, and departure-delay range.
+- **Assignment Analysis 3.3 - Ranking of Airline-Airport Pairs:**
+  airline-airport ranking by average departure delay.
 
 The three selected required technologies are Spark SQL, Spark Core RDDs, and
 Hive. Spark SQL is used as the correctness reference because its declarative
@@ -77,7 +78,7 @@ The two selected analyses use stable output schemas so every assignment
 requirement can be traced to concrete columns in the generated CSV files and
 first-10 report samples.
 
-| Analysis 1 requirement | Output column(s) |
+| Assignment Analysis 3.2 requirement | Output column(s) |
 | --- | --- |
 | Departure airport | `origin_airport` |
 | Month | `month` |
@@ -87,7 +88,7 @@ first-10 report samples.
 | Average arrival delay | `avg_arrival_delay` |
 | Three most frequent delay or cancellation causes | `top_1_cause`, `top_1_count`, `top_2_cause`, `top_2_count`, `top_3_cause`, `top_3_count` |
 
-| Analysis 2 requirement | Output column(s) |
+| Assignment Analysis 3.3 requirement | Output column(s) |
 | --- | --- |
 | Departure airport | `origin_airport` |
 | Airline | `airline` |
@@ -151,10 +152,22 @@ types but are not imputed. This matters because Spark and Hive averages ignore
 null values, while cancellation-rate calculations still need cancelled flights
 in the denominator.
 
-The raw data inspection found 92,970 null departure-delay rows and 113,814 null
-arrival-delay rows. These rows are retained unless they fail a structural rule.
-Negative delay values are preserved because they represent early departures or
-arrivals, not data errors.
+The raw data inspection command
+`.\.venv\Scripts\python.exe scripts\inspect_raw_dataset.py` found 92,970 null
+departure-delay rows and 113,814 null arrival-delay rows. A read-only
+cross-count over the same raw CSV found that all 92,970 null departure-delay
+rows are cancelled rows with a cancellation code. These rows are retained in
+the prepared dataset unless they fail a structural rule. Negative delay values
+are preserved because they represent early departures or arrivals, not data
+errors.
+
+| Raw audit measure | Rows |
+| --- | --- |
+| Total raw rows | 7,079,081 |
+| Rows with null `departure_delay` / raw `dep_delay` | 92,970 |
+| Cancelled rows | 96,315 |
+| Cancelled rows with null `departure_delay` | 92,970 |
+| Cancelled rows with null `departure_delay` and a cancellation code | 92,970 |
 
 ## Generated Input Sizes
 
@@ -178,19 +191,20 @@ canonical prepared dataset plus a deterministic sampled remainder of
 deterministic sampled remainder of `6,762,757` rows. Both outputs keep the same
 prepared schema, and no synthetic columns or schema changes are retained.
 
-These replicated larger inputs are valid scalability stress evidence because
+These replicated larger inputs are used as scalability stress evidence because
 they increase data volume while preserving the canonical row shape, column
 types, null behavior, and analysis semantics used by the original prepared
-dataset. They are not treated as new statistical evidence about flight
-behavior. In particular, `28m` is used only to test how the implementations
-respond to larger input volume under the controlled benchmark setup.
+dataset. They are not treated as new statistical observations about flight
+behavior. In particular, `14m` and `28m` test how the implementations respond
+to larger input volume under the controlled benchmark setup.
 
 # Analyses And Implementations
 
-## Analysis 1: Delay By Airport, Month, And Delay Range
+## Assignment Analysis 3.2 - Delay Report by Airport and Time Period
 
-This job satisfies the assignment requirement to report delay behavior for
-each departure airport and month. It groups rows by:
+This job implements the assignment requirement to report delay behavior for
+each departure airport and time period. In this submission the time period is
+the flight month. It groups rows by:
 
 - `origin_airport`
 - `month`
@@ -203,9 +217,14 @@ The delay ranges are:
 - `high`: `departure_delay > 60`
 
 Rows with null departure delay are excluded from this job because they cannot
-be assigned to one of the required ranges. For each group, the output reports
-flight count, average departure delay, average arrival delay, and the three
-most frequent delay or cancellation causes.
+be assigned to one of the required ranges. In the raw audit above, that means
+92,970 cancelled rows are outside Assignment Analysis 3.2. Their cancellation
+codes therefore cannot contribute to the delay-range top-cause counts. The
+cause counts in this analysis should be read as causes among flights with a
+known departure delay, not as complete cancellation-cause totals for the raw
+dataset. For each remaining group, the output reports flight count, average
+departure delay, average arrival delay, and the three most frequent delay or
+cancellation causes.
 
 The stable output schema includes:
 
@@ -234,16 +253,17 @@ emit the first three causes and pad missing slots with count 0
 order output deterministically
 ```
 
-## Analysis 2: Airline-Airport Ranking
+## Assignment Analysis 3.3 - Ranking of Airline-Airport Pairs
 
-This job satisfies the assignment requirement to compare each airline at each
-departure airport against the airport average. For each `(origin_airport,
-airline_code)` pair it computes:
+This job implements the assignment requirement to compare each airline-airport
+pair against the airport average. For each `(origin_airport, airline_code)` pair
+it computes:
 
 - flight count;
 - average departure delay;
 - average arrival delay;
-- cancellation rate;
+- cancellation rate, using all flights in the pair as the denominator,
+  including cancelled flights;
 - airport average departure delay;
 - difference from the airport average;
 - rank at the airport, from lowest average departure delay to highest.
@@ -414,168 +434,95 @@ remain raw audit evidence, while the report-ready artifacts under
 
 The reporting pipeline computes median, mean, minimum, maximum, and standard
 deviation of duration for each environment/input/job/technology group.
-Single-run CSVs are still readable as `runs=1`, and fresh benchmark campaigns
-can be forced to one run for smoke checks with `BENCHMARK_FLAGS="--repetitions
-1"`. The opt-in MapReduce stretch benchmark is reported separately from the
-required default benchmark matrix:
+`report/tables/benchmark_summary.md` is the detailed execution-time table: it
+shows `runs`, median, mean, min, max, standard deviation, output rows, run ID,
+and timestamp. Single-run CSVs are still readable as `runs=1`, and fresh
+benchmark campaigns can be forced to one run for smoke checks with
+`BENCHMARK_FLAGS="--repetitions 1"`. A `runs=1` row is not treated as
+statistically equivalent to a repeated campaign; `report/tables/benchmark_notes.csv`
+marks those cells as `smoke`, `budget_limited`, or `resource_limited`.
+
+The benchmark duration column is the per-analysis job duration reported by the
+technology runner after the input has been prepared. It covers the analysis
+execution and output materialization, but it does not include the one-time data
+preparation pipeline. Some fixed costs still shape interpretation: Spark/JVM
+startup, Docker container and service startup, Hive service startup, query
+planning, local file listing, S3 I/O, and EMR step scheduling can dominate the
+shorter runs or appear in surrounding step/command timing artifacts rather than
+inside the per-job aggregate alone. Local and Docker runs read prepared Parquet
+from a warm local filesystem or bind mount, so OS cache and columnar Parquet
+reads affect the observed throughput. EMR runs read and write through S3 and
+are scheduled as managed Spark steps, so object-store and scheduler overhead
+are part of the managed execution path.
+
+The opt-in MapReduce stretch benchmark is reported separately from the required
+default benchmark matrix:
 
 | Environment | Inputs | Technologies | Jobs | Status |
 | --- | --- | --- | --- | --- |
-| Local | `100k`, `500k`, `1m`, `3m`, `full` | Spark SQL, Spark Core, Hive | both jobs | 30/30 successful |
-| Local large input | `14m` | Spark SQL, Spark Core | both jobs | 12/12 successful |
+| Local | `100k`, `500k`, `1m`, `3m`, `full`, `14m`, `28m` | Spark SQL, Spark Core, Hive | both jobs | 42/42 successful, 3 repetitions each |
 | Docker standalone simulation | `100k`, `500k`, `1m` | Spark SQL, Spark Core, Hive | both jobs | 18/18 successful |
 | AWS EMR baseline cluster | `100k`, `500k`, `1m`, `3m`, `full`, `14m` | Spark SQL, Spark Core | both jobs | 24/24 successful |
 | AWS EMR larger cluster | `1m`, `full` | Spark SQL, Spark Core | both jobs | 8/8 successful |
 | Local stretch | `100k`, `500k`, `1m`, `3m`, `full` | Hadoop Streaming MapReduce | both jobs | 10/10 successful, 3 repetitions each |
 
-The local run ID is `20260521T153035251181Z`. The Docker standalone simulation
-run ID is `20260521T160042313560Z`. The MapReduce stretch benchmark run ID is
-`20260522T182250129354Z`. The local `14m` run ID is
-`20260521T220744784794Z`. The canonical AWS EMR baseline run ID is
-`m4-emr-final-2`, and the limited larger-cluster comparison run ID is
-`m5-emr-3core-1m-full`. Some local and Docker campaigns are represented as
-one-run aggregate rows; AWS uses three repetitions for `1m` and `full`, one run
-for `500k`, `3m`, and `14m`, and a separate hardened smoke record for the
-`100k` audit path. The full status matrix is stored in
-`report/tables/benchmark_status.md`.
+The local required-technology run IDs are `20260522T133525179005Z`,
+`20260522T142052973274Z`, and `20260522T144129099690Z`. The Docker standalone
+simulation run ID is `20260522T161751426398Z`. The MapReduce stretch benchmark
+run ID is `20260522T182250129354Z`. The canonical AWS EMR baseline run ID is
+`m4-emr-final-2`, the AWS 100k hardened path is marked as smoke evidence under
+`m4-hardened-smoke-3`, and the limited larger-cluster comparison run ID is
+`m5-emr-3core-1m-full`. AWS uses three repetitions for `1m` and `full`, one
+budget-limited run for `500k`, `3m`, and `14m`, and a separate smoke record for
+the `100k` audit path. The full status matrix is stored in
+`report/tables/benchmark_status.md`; cells that were not run remain explicit
+`N/A` or `not_run` entries rather than inferred values.
+
+The table below is a compact excerpt from `report/tables/benchmark_summary.md`.
+The full generated table contains the same statistics for every successful
+environment/input/job/technology group.
+
+| Evidence row | runs | median s | mean s | min s | max s | stddev s | note |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Local `28m` delay, Spark SQL | 3 | 11.924 | 11.896 | 11.790 | 11.973 | 0.095 | Replicated stress input |
+| Local `28m` delay, Spark Core | 3 | 1.333 | 1.403 | 1.252 | 1.625 | 0.196 | Replicated stress input |
+| Local `28m` delay, Hive | 3 | 101.265 | 101.785 | 100.484 | 103.605 | 1.624 | Replicated stress input |
+| Docker `1m` delay, Spark SQL | 3 | 14.541 | 14.559 | 14.242 | 14.895 | 0.327 | Docker standalone simulation |
+| AWS EMR `14m` delay, Spark SQL | 1 | 18.147 | 18.147 | 18.147 | 18.147 | N/A | Budget-limited single run |
+| AWS EMR `100k` delay, Spark SQL | 1 | 15.832 | 15.832 | 15.832 | 15.832 | N/A | Smoke evidence |
 
 ## Benchmark Pivot
 
-For compactness, the printed pivot below focuses on median duration for the
-three required technologies. The regenerated `report/tables/benchmark_pivot.*`
-artifacts also include the optional MapReduce stretch columns when present.
-
-| environment | input_label | records | job_name | Spark SQL median s | Spark Core median s | Hive median s |
-| --- | --- | --- | --- | --- | --- | --- |
-| docker-simulation | 100k | 100000 | airline_airport_ranking | 4.01 | 2.325 | 8.983 |
-| docker-simulation | 100k | 100000 | delay_by_airport_month | 9.385 | 2.543 | 12.025 |
-| docker-simulation | 500k | 500000 | airline_airport_ranking | 5.617 | 2.434 | 8.972 |
-| docker-simulation | 500k | 500000 | delay_by_airport_month | 9.978 | 2.623 | 12.619 |
-| docker-simulation | 1m | 1000000 | airline_airport_ranking | 4.444 | 2.334 | 8.901 |
-| docker-simulation | 1m | 1000000 | delay_by_airport_month | 10.921 | 2.619 | 12.584 |
-| local | 100k | 100000 | airline_airport_ranking | 1.056 | 0.57 | 8.924 |
-| local | 100k | 100000 | delay_by_airport_month | 5.215 | 0.916 | 11.932 |
-| local | 500k | 500000 | airline_airport_ranking | 1.104 | 0.592 | 8.813 |
-| local | 500k | 500000 | delay_by_airport_month | 5.74 | 0.873 | 12.692 |
-| local | 1m | 1000000 | airline_airport_ranking | 1.31 | 0.563 | 8.861 |
-| local | 1m | 1000000 | delay_by_airport_month | 5.901 | 0.812 | 12.683 |
-| local | 3m | 3000000 | airline_airport_ranking | 1.659 | 0.615 | 8.861 |
-| local | 3m | 3000000 | delay_by_airport_month | 6.662 | 0.935 | 13.797 |
-| local | full | 7079081 | airline_airport_ranking | 2.33 | 0.583 | 12.382 |
-| local | full | 7079081 | delay_by_airport_month | 7.641 | 0.962 | 19.2 |
-| local | 14m | 14000000 | airline_airport_ranking | 2.241 | 0.564 |  |
-| local | 14m | 14000000 | delay_by_airport_month | 7.68 | 0.859 |  |
+For compactness, `report/tables/benchmark_pivot.md` focuses on median duration
+by technology. It is useful for scanning, but the benchmark-summary table above
+is the statistical source because it carries run counts, variability, and
+single-run context. The pivot intentionally leaves unavailable technology/input
+combinations blank or `N/A` rather than extrapolating them.
 
 ## Rows Per Second
 
-Rows-per-second values are computed as input records divided by median elapsed
-seconds. They show that fixed startup and planning costs dominate small inputs:
-throughput often increases sharply even when median elapsed seconds change only
-slightly.
-
-| environment | input | job | Spark SQL rows/s | Spark Core rows/s | Hive rows/s |
-| --- | --- | --- | --- | --- | --- |
-| docker-simulation | 100k | airline_airport_ranking | 24940.511 | 43008.699 | 11131.84 |
-| docker-simulation | 100k | delay_by_airport_month | 10654.924 | 39330.733 | 8315.777 |
-| docker-simulation | 500k | airline_airport_ranking | 89016.757 | 205410.597 | 55729.003 |
-| docker-simulation | 500k | delay_by_airport_month | 50111.307 | 190653.625 | 39622.019 |
-| docker-simulation | 1m | airline_airport_ranking | 225042.606 | 428401.292 | 112352.734 |
-| docker-simulation | 1m | delay_by_airport_month | 91570.396 | 381793.636 | 79463.103 |
-| local | 100k | airline_airport_ranking | 94656.991 | 175531.597 | 11206.355 |
-| local | 100k | delay_by_airport_month | 19175.216 | 109155.648 | 8380.722 |
-| local | 500k | airline_airport_ranking | 452990.462 | 844253.756 | 56732.374 |
-| local | 500k | delay_by_airport_month | 87100.791 | 572454.41 | 39393.811 |
-| local | 1m | airline_airport_ranking | 763139.74 | 1775987.582 | 112859.06 |
-| local | 1m | delay_by_airport_month | 169476.703 | 1231376.963 | 78843.778 |
-| local | 3m | airline_airport_ranking | 1807870.383 | 4878413.67 | 338549.593 |
-| local | 3m | delay_by_airport_month | 450294.74 | 3207389.826 | 217435.311 |
-| local | full | airline_airport_ranking | 3038232.189 | 12144151.609 | 571725.628 |
-| local | full | delay_by_airport_month | 926412.613 | 7357534.241 | 368709.471 |
-| local | 14m | airline_airport_ranking | 6247855.089 | 24825820.272 |  |
-| local | 14m | delay_by_airport_month | 1823023.01 | 16295744.483 |  |
+Rows-per-second values in `report/tables/rows_per_second.md` are computed as
+input records divided by median elapsed seconds. Throughput appears higher
+under several larger-input local and Docker cells, but fixed costs, caching,
+prepared Parquet columnar reads, and small aggregate output cardinality affect
+interpretation. The replicated `14m` and `28m` rows are therefore stress tests
+of the execution setup, not new flight-behavior observations.
 
 ## Speedup Ratios
 
-Each value is a median-duration ratio. A value above `1` means the numerator
-took longer than the denominator for the aggregate row.
-
-| environment | input | job | SQL/Core | Hive/SQL | Hive/Core |
-| --- | --- | --- | --- | --- | --- |
-| docker-simulation | 100k | airline_airport_ranking | 1.724 | 2.24 | 3.864 |
-| docker-simulation | 100k | delay_by_airport_month | 3.691 | 1.281 | 4.73 |
-| docker-simulation | 500k | airline_airport_ranking | 2.308 | 1.597 | 3.686 |
-| docker-simulation | 500k | delay_by_airport_month | 3.805 | 1.265 | 4.812 |
-| docker-simulation | 1m | airline_airport_ranking | 1.904 | 2.003 | 3.813 |
-| docker-simulation | 1m | delay_by_airport_month | 4.169 | 1.152 | 4.805 |
-| local | 100k | airline_airport_ranking | 1.854 | 8.447 | 15.664 |
-| local | 100k | delay_by_airport_month | 5.693 | 2.288 | 13.025 |
-| local | 500k | airline_airport_ranking | 1.864 | 7.985 | 14.881 |
-| local | 500k | delay_by_airport_month | 6.572 | 2.211 | 14.532 |
-| local | 1m | airline_airport_ranking | 2.327 | 6.762 | 15.736 |
-| local | 1m | delay_by_airport_month | 7.266 | 2.15 | 15.618 |
-| local | 3m | airline_airport_ranking | 2.698 | 5.34 | 14.41 |
-| local | 3m | delay_by_airport_month | 7.123 | 2.071 | 14.751 |
-| local | full | airline_airport_ranking | 3.997 | 5.314 | 21.241 |
-| local | full | delay_by_airport_month | 7.942 | 2.513 | 19.955 |
+Each value in `report/tables/speedup.md` is a median-duration ratio. A value
+above `1` means the numerator took longer than the denominator for the
+aggregate row. These ratios are descriptive for the measured setup and are not
+portable performance constants.
 
 ## Normalized Scalability
 
-The following table normalizes median duration, record count, and throughput
-against the `100k` baseline for each environment, job, and technology. For
-example, a `records_vs_100k` value of `10` means the input has ten times as many
-records as the baseline. The compact columns `dur`, `rec`, and `thr` mean
-`median_duration_vs_100k`, `records_vs_100k`, and `throughput_vs_100k`.
-
-| env | input | job | tech | dur | rec | thr |
-| --- | --- | --- | --- | --- | --- | --- |
-| docker | 100k | ranking | Hive | 1 | 1 | 1 |
-| docker | 500k | ranking | Hive | 0.999 | 5 | 5.006 |
-| docker | 1m | ranking | Hive | 0.991 | 10 | 10.093 |
-| docker | 100k | ranking | Core | 1 | 1 | 1 |
-| docker | 500k | ranking | Core | 1.047 | 5 | 4.776 |
-| docker | 1m | ranking | Core | 1.004 | 10 | 9.961 |
-| docker | 100k | ranking | SQL | 1 | 1 | 1 |
-| docker | 500k | ranking | SQL | 1.401 | 5 | 3.569 |
-| docker | 1m | ranking | SQL | 1.108 | 10 | 9.023 |
-| docker | 100k | delay | Hive | 1 | 1 | 1 |
-| docker | 500k | delay | Hive | 1.049 | 5 | 4.765 |
-| docker | 1m | delay | Hive | 1.046 | 10 | 9.556 |
-| docker | 100k | delay | Core | 1 | 1 | 1 |
-| docker | 500k | delay | Core | 1.031 | 5 | 4.847 |
-| docker | 1m | delay | Core | 1.03 | 10 | 9.707 |
-| docker | 100k | delay | SQL | 1 | 1 | 1 |
-| docker | 500k | delay | SQL | 1.063 | 5 | 4.703 |
-| docker | 1m | delay | SQL | 1.164 | 10 | 8.594 |
-| local | 100k | ranking | Hive | 1 | 1 | 1 |
-| local | 500k | ranking | Hive | 0.988 | 5 | 5.063 |
-| local | 1m | ranking | Hive | 0.993 | 10 | 10.071 |
-| local | 3m | ranking | Hive | 0.993 | 30 | 30.21 |
-| local | full | ranking | Hive | 1.388 | 70.791 | 51.018 |
-| local | 100k | ranking | Core | 1 | 1 | 1 |
-| local | 500k | ranking | Core | 1.04 | 5 | 4.81 |
-| local | 1m | ranking | Core | 0.988 | 10 | 10.118 |
-| local | 3m | ranking | Core | 1.079 | 30 | 27.792 |
-| local | full | ranking | Core | 1.023 | 70.791 | 69.185 |
-| local | 100k | ranking | SQL | 1 | 1 | 1 |
-| local | 500k | ranking | SQL | 1.045 | 5 | 4.786 |
-| local | 1m | ranking | SQL | 1.24 | 10 | 8.062 |
-| local | 3m | ranking | SQL | 1.571 | 30 | 19.099 |
-| local | full | ranking | SQL | 2.206 | 70.791 | 32.097 |
-| local | 100k | delay | Hive | 1 | 1 | 1 |
-| local | 500k | delay | Hive | 1.064 | 5 | 4.701 |
-| local | 1m | delay | Hive | 1.063 | 10 | 9.408 |
-| local | 3m | delay | Hive | 1.156 | 30 | 25.945 |
-| local | full | delay | Hive | 1.609 | 70.791 | 43.995 |
-| local | 100k | delay | Core | 1 | 1 | 1 |
-| local | 500k | delay | Core | 0.953 | 5 | 5.244 |
-| local | 1m | delay | Core | 0.886 | 10 | 11.281 |
-| local | 3m | delay | Core | 1.021 | 30 | 29.384 |
-| local | full | delay | Core | 1.05 | 70.791 | 67.404 |
-| local | 100k | delay | SQL | 1 | 1 | 1 |
-| local | 500k | delay | SQL | 1.101 | 5 | 4.542 |
-| local | 1m | delay | SQL | 1.131 | 10 | 8.838 |
-| local | 3m | delay | SQL | 1.278 | 30 | 23.483 |
-| local | full | delay | SQL | 1.465 | 70.791 | 48.313 |
+`report/tables/scalability_ratios.md` normalizes median duration, record count,
+and throughput against the `100k` baseline for each environment, job, and
+technology. The ratios help describe where throughput appears higher under the
+measured setup, but fixed startup costs, cache behavior, shuffle and aggregation
+pressure, and the small result cardinality limit what can be inferred from
+them.
 
 ## Benchmark Charts
 
@@ -585,21 +532,21 @@ plot median duration and include min/max variability indicators when repeated
 successful measurements are available. Line plots are used only when at least
 three input sizes are available for a job and environment.
 
-![Local execution time for delay by airport/month](figures/execution_time_local_delay_by_airport_month.png)
+![Local execution time for Assignment Analysis 3.2](figures/execution_time_local_delay_by_airport_month.png)
 
-![Local execution time for airline-airport ranking](figures/execution_time_local_airline_airport_ranking.png)
+![Local execution time for Assignment Analysis 3.3](figures/execution_time_local_airline_airport_ranking.png)
 
-![Docker standalone simulation execution time for delay by airport/month](figures/execution_time_docker-simulation_delay_by_airport_month.png)
+![Docker standalone simulation execution time for Assignment Analysis 3.2](figures/execution_time_docker-simulation_delay_by_airport_month.png)
 
-![Docker standalone simulation execution time for airline-airport ranking](figures/execution_time_docker-simulation_airline_airport_ranking.png)
+![Docker standalone simulation execution time for Assignment Analysis 3.3](figures/execution_time_docker-simulation_airline_airport_ranking.png)
 
-![AWS EMR baseline execution time for delay by airport/month](figures/execution_time_aws-emr_delay_by_airport_month.png)
+![AWS EMR baseline execution time for Assignment Analysis 3.2](figures/execution_time_aws-emr_delay_by_airport_month.png)
 
-![AWS EMR baseline execution time for airline-airport ranking](figures/execution_time_aws-emr_airline_airport_ranking.png)
+![AWS EMR baseline execution time for Assignment Analysis 3.3](figures/execution_time_aws-emr_airline_airport_ranking.png)
 
-![AWS EMR larger-cluster execution time for delay by airport/month](figures/execution_time_aws-emr-larger_delay_by_airport_month.png)
+![AWS EMR larger-cluster execution time for Assignment Analysis 3.2](figures/execution_time_aws-emr-larger_delay_by_airport_month.png)
 
-![AWS EMR larger-cluster execution time for airline-airport ranking](figures/execution_time_aws-emr-larger_airline_airport_ranking.png)
+![AWS EMR larger-cluster execution time for Assignment Analysis 3.3](figures/execution_time_aws-emr-larger_airline_airport_ranking.png)
 
 # AWS EMR Cluster Experiment
 
@@ -670,17 +617,17 @@ are marked `N/A` instead of being overclaimed.
 
 The generated cluster-size comparison table is stored in
 `report/tables/cluster_size_comparison.md`. Compared with the baseline EMR
-profile, the larger profile improved Spark Core medians in all four comparable
-cells, with speedups from `1.146x` to `1.221x`. Spark SQL was mixed: it improved
-slightly for the `1m` delay job (`1.052x`) but was slightly slower for `1m`
-ranking, `full` delay, and `full` ranking (`0.951x` to `0.991x`). This is still
-useful scalability evidence because it shows that adding a core node does not
-uniformly accelerate these short analytical jobs; fixed Spark startup, S3 file
-listing and reads, shuffle planning, and small output cardinality remain large
-parts of the measured runtime. These results should be interpreted as limited
-scalability evidence because clusters are short-lived, S3 I/O is part of the
-managed execution path, repetitions are constrained by budget, and Learner Lab
-service limits prevent wider cluster-size sweeps.
+profile, the larger profile had lower Spark Core medians in all four comparable
+cells, with measured speedup ratios from `1.146x` to `1.221x`. Spark SQL was
+mixed: it had a lower median for the `1m` delay job (`1.052x`) but higher
+medians for `1m` ranking, `full` delay, and `full` ranking (`0.951x` to
+`0.991x`). This is limited scalability evidence rather than a general speedup
+claim: adding one core node did not uniformly accelerate these short analytical
+jobs, and fixed Spark startup, S3 file listing and reads, shuffle planning, and
+small output cardinality remain large parts of the measured runtime. The
+interpretation is further limited because clusters are short-lived, S3 I/O is
+part of the managed execution path, repetitions are constrained by budget, and
+Learner Lab service limits prevent wider cluster-size sweeps.
 
 # Critical Discussion
 
@@ -722,10 +669,11 @@ to emit three positions. These steps increase shuffle and aggregation pressure.
 The ranking job also performs grouped aggregation and per-airport ranking, but
 after the first aggregation it works with compact airport-airline summaries.
 
-Data preparation affects both correctness and benchmark fairness. Correctness
-improves because each technology reads the same typed Parquet schema instead of
-reimplementing raw CSV parsing. Benchmark fairness improves because all
-technologies operate on the same generated inputs. The limitation is that
+Data preparation affects both correctness and benchmark fairness. Correctness is
+easier to audit because each technology reads the same typed Parquet schema
+instead of reimplementing raw CSV parsing. Benchmark fairness is stronger
+because all technologies operate on the same generated inputs. The limitation is
+that
 preparation cost is not included in the per-job execution-time tables; it is a
 separate mandatory pipeline stage documented in this report.
 
@@ -743,17 +691,17 @@ The local, Docker, and EMR environments answer different questions. Local
 execution is the fastest in many cells because it avoids S3 reads, EMR step
 queueing, YARN container startup, and remote cluster coordination; it also runs
 near a warm local filesystem on a single tuned development machine. Docker
-standalone simulation adds service and container overhead and proves a
+standalone simulation adds service and container overhead and demonstrates a
 repeatable Spark standalone topology, but all workers still share one physical
 host. EMR is slower for several short jobs, especially Spark SQL delay
-aggregation, but it proves the missing distributed-system claim: the same
-analyses ran as managed Spark steps on real EC2-backed EMR clusters, read and
-wrote through S3, emitted logs and metrics to S3, and produced comparable
-outputs and benchmark rows. The larger EMR profile is intentionally treated as
-limited scalability evidence, not a universal speedup claim: adding one core
-node helped Spark Core consistently in the matched `1m` and `full` cells, while
-Spark SQL was mixed because fixed Spark, S3, and scheduling costs remained a
-large share of these short analytical workloads.
+aggregation, but it shows that the same analyses ran as managed Spark steps on
+real EC2-backed EMR clusters, read and wrote through S3, emitted logs and
+metrics to S3, and produced comparable outputs and benchmark rows. The larger
+EMR profile is intentionally treated as limited scalability evidence, not a
+universal speedup claim: adding one core node had lower Spark Core medians in
+the matched `1m` and `full` cells, while Spark SQL was mixed because fixed
+Spark, S3, and scheduling costs remained a large share of these short
+analytical workloads.
 
 # Reproducibility And Validation
 
@@ -811,34 +759,33 @@ sample files.
 
 # Conclusion
 
-The project satisfies the main assignment requirements with a reproducible data
-preparation pipeline, two completed analyses, three technology implementations,
-first-10 result samples for each job and technology, benchmark tables,
-execution-time charts, and a critical discussion of expressiveness,
+The submitted artifacts show the main assignment work: a reproducible data
+preparation pipeline, Assignment Analyses 3.2 and 3.3, three technology
+implementations, first-10 result samples for each job and technology, benchmark
+tables, execution-time charts, and a critical discussion of expressiveness,
 implementation effort, efficiency, scalability, shuffle, aggregation, and data
-preparation effects. Spark SQL provides the clearest reference logic, Spark
-Core demonstrates lower-level distributed transformation control, and Hive
-provides the required SQL-on-Hadoop comparison point. The completed MapReduce
-stretch adds a fourth validated implementation and shows the extra mechanics
-needed when using Hadoop Streaming directly.
+preparation effects. Spark SQL provides the clearest reference logic, Spark Core
+demonstrates lower-level distributed transformation control, and Hive provides
+the required SQL-on-Hadoop comparison point. The completed MapReduce stretch
+adds a fourth validated implementation and shows the extra mechanics needed
+when using Hadoop Streaming directly.
 
 The final submission also includes real cluster evidence: Spark SQL and Spark
 Core ran on Amazon EMR `emr-7.13.0` clusters in `us-east-1`, with S3 inputs,
 logs, metrics, fetched outputs, run manifests, step timing, and cost logs. This
-resolves the earlier weakness that the project only had local and Docker
-standalone simulation evidence. The remaining scalability limits are stated
-explicitly: AWS Learner Lab budget and service constraints limited the number
-of repetitions, input sizes for the larger cluster, and breadth of
-cluster-size variation.
+reduces the earlier weakness that the project only had local and Docker
+standalone simulation evidence, with the following limits: AWS Learner Lab
+budget and service constraints limited the number of repetitions, input sizes
+for the larger cluster, and breadth of cluster-size variation.
 
 # Evidence Appendix: First 10 Result Rows
 
-The tables below embed the first 10 rows generated for both analytical jobs and
-the three required technologies. Wide outputs are split into paired narrow
-tables so the PDF remains readable. The source artifacts are stored under
-`report/tables/` and are regenerated by `make charts`. MapReduce stretch sample
-artifacts are generated with the same naming convention and summarized after
-the required-technology samples.
+The tables below embed the first 10 rows generated for Assignment Analysis 3.2
+and Assignment Analysis 3.3 across the three required technologies. Wide
+outputs are split into paired narrow tables so the PDF remains readable. The
+source artifacts are stored under `report/tables/` and are regenerated by
+`make charts`. MapReduce stretch sample artifacts are generated with the same
+naming convention and summarized after the required-technology samples.
 
 ## Spark SQL Samples
 
