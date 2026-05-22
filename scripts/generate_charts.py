@@ -27,6 +27,7 @@ DEFAULT_RESULTS_DIRS = (
     PROJECT_ROOT / "experiments" / "results" / "local",
     PROJECT_ROOT / "experiments" / "results" / "docker-simulation",
     PROJECT_ROOT / "experiments" / "results" / "aws-emr",
+    PROJECT_ROOT / "experiments" / "results" / "aws-emr-larger",
 )
 DEFAULT_OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 DEFAULT_FIGURES_DIR = PROJECT_ROOT / "report" / "figures"
@@ -48,6 +49,7 @@ ENVIRONMENT_LABELS = {
     "local": "Local",
     "docker-simulation": "Docker standalone simulation",
     "aws-emr": "AWS EMR",
+    "aws-emr-larger": "AWS EMR larger cluster",
 }
 BENCHMARK_FILE_RE = re.compile(r"^benchmark_(?!latest\.csv$)(?!notes\.csv$)[A-Za-z0-9][A-Za-z0-9_.-]*\.csv$")
 EXPECTED_INPUTS_BY_ENVIRONMENT = {
@@ -71,10 +73,20 @@ EXPECTED_INPUTS_BY_ENVIRONMENT = {
         ("full", 7_079_081),
         ("14m", 14_000_000),
     ),
+    "aws-emr-larger": (
+        ("1m", 1_000_000),
+        ("full", 7_079_081),
+    ),
 }
 EXPECTED_TECHNOLOGIES_BY_ENVIRONMENT = {
     "aws-emr": ("spark_sql", "spark_core"),
+    "aws-emr-larger": ("spark_sql", "spark_core"),
 }
+CLUSTER_COMPARISON_INPUTS = (
+    ("1m", 1_000_000),
+    ("full", 7_079_081),
+)
+CLUSTER_COMPARISON_TECHNOLOGIES = ("Spark SQL", "Spark Core")
 AWS_AUDIT_MANIFEST_COLUMNS = [
     "run_id",
     "run_kind",
@@ -135,7 +147,7 @@ def discover_benchmark_csvs(results_dirs: Iterable[Path]) -> list[Path]:
 
 def benchmark_csv_schema_errors(path: Path) -> list[str]:
     try:
-        with path.open(newline="", encoding="utf-8") as file:
+        with path.open(newline="", encoding="utf-8-sig") as file:
             fieldnames = csv.DictReader(file).fieldnames or []
     except OSError as exc:
         return [str(exc)]
@@ -169,7 +181,7 @@ def read_benchmark_rows(csv_paths: Iterable[Path]) -> list[dict[str, object]]:
         errors = benchmark_csv_schema_errors(csv_path)
         if errors:
             continue
-        with csv_path.open(newline="", encoding="utf-8") as file:
+        with csv_path.open(newline="", encoding="utf-8-sig") as file:
             reader = csv.DictReader(file)
             for row in reader:
                 if not row.get("repetition"):
@@ -373,6 +385,64 @@ def benchmark_pivot_records(summary: list[dict[str, object]]) -> list[dict[str, 
     pivot = pivot[ordered_columns]
     pivot = pivot.rename(columns={label: f"{label} median_duration_seconds" for label in TECHNOLOGY_LABELS.values()})
     return pivot.where(pd.notna(pivot), "").to_dict(orient="records")
+
+
+def cluster_size_comparison_records(summary: list[dict[str, object]]) -> list[dict[str, object]]:
+    summary_by_key = {
+        (
+            str(row.get("environment", "")),
+            str(row.get("input_label", "")),
+            str(row.get("job_name", "")),
+            str(row.get("technology", "")),
+        ): row
+        for row in summary
+    }
+
+    def duration(environment: str, input_label: str, job_name: str, technology: str) -> object:
+        row = summary_by_key.get((environment, input_label, job_name, technology))
+        if row is None:
+            return "N/A"
+        return row.get("median_duration_seconds", "N/A")
+
+    def run_id(environment: str, input_label: str, job_name: str, technology: str) -> object:
+        row = summary_by_key.get((environment, input_label, job_name, technology))
+        if row is None:
+            return "N/A"
+        return row.get("run_id", "N/A") or "N/A"
+
+    records: list[dict[str, object]] = []
+    for input_label, records_value in CLUSTER_COMPARISON_INPUTS:
+        for job_name in JOB_LABELS:
+            for technology in CLUSTER_COMPARISON_TECHNOLOGIES:
+                local_duration = duration("local", input_label, job_name, technology)
+                docker_duration = duration("docker-simulation", input_label, job_name, technology)
+                baseline_duration = duration("aws-emr", input_label, job_name, technology)
+                larger_duration = duration("aws-emr-larger", input_label, job_name, technology)
+                speedup = divide_or_blank(baseline_duration, larger_duration)
+                notes: list[str] = []
+                if docker_duration == "N/A" and input_label == "full":
+                    notes.append("Docker standalone simulation full input was not run.")
+                if larger_duration == "N/A":
+                    notes.append("Larger EMR profile not run or not fetched yet.")
+                records.append(
+                    {
+                        "input_label": input_label,
+                        "records": records_value,
+                        "job_name": job_name,
+                        "technology": technology,
+                        "local_median_duration_seconds": local_duration,
+                        "docker_simulation_median_duration_seconds": docker_duration,
+                        "emr_baseline_median_duration_seconds": baseline_duration,
+                        "emr_larger_median_duration_seconds": larger_duration,
+                        "emr_larger_vs_baseline_speedup": speedup if speedup != "" else "N/A",
+                        "local_run_id": run_id("local", input_label, job_name, technology),
+                        "docker_simulation_run_id": run_id("docker-simulation", input_label, job_name, technology),
+                        "emr_baseline_run_id": run_id("aws-emr", input_label, job_name, technology),
+                        "emr_larger_run_id": run_id("aws-emr-larger", input_label, job_name, technology),
+                        "notes": " ".join(notes),
+                    }
+                )
+    return records
 
 
 def rows_per_second_records(summary: list[dict[str, object]]) -> list[dict[str, object]]:
@@ -746,7 +816,14 @@ def copy_first_10_tables(outputs_dir: Path, tables_dir: Path) -> tuple[list[Path
 
 
 def audit_results_dirs(benchmark_csvs: Iterable[Path]) -> list[Path]:
-    return sorted({path.parent for path in benchmark_csvs if path.parent.name == "aws-emr" or path.parent.as_posix().endswith("aws-emr")})
+    return sorted(
+        {
+            path.parent
+            for path in benchmark_csvs
+            if path.parent.name in {"aws-emr", "aws-emr-larger"}
+            or path.parent.as_posix().endswith(("aws-emr", "aws-emr-larger"))
+        }
+    )
 
 
 def read_aws_run_manifest_records(results_dirs: Iterable[Path]) -> list[dict[str, object]]:
@@ -788,7 +865,7 @@ def read_csv_records(paths: Iterable[Path]) -> list[dict[str, object]]:
     records: list[dict[str, object]] = []
     for path in paths:
         try:
-            with path.open(newline="", encoding="utf-8") as file:
+            with path.open(newline="", encoding="utf-8-sig") as file:
                 records.extend(dict(row) for row in csv.DictReader(file))
         except OSError:
             continue
@@ -807,6 +884,8 @@ def copy_aws_first_10_tables(results_dirs: Iterable[Path], tables_dir: Path, run
             continue
         for run_id in sorted(run_ids):
             run_dir = downloaded / run_id
+            if not run_dir.exists():
+                continue
             outputs = run_dir / "outputs"
             if not outputs.exists():
                 warnings.append(f"Missing downloaded AWS outputs: {display_path(outputs)}")
@@ -817,7 +896,7 @@ def copy_aws_first_10_tables(results_dirs: Iterable[Path], tables_dir: Path, run
                     continue
                 input_label, technology, repetition, _, job_name, _ = parts[:6]
                 records = read_first_10_records(source_path)
-                stem = f"first_10_aws-emr_{run_id}_{input_label}_{technology}_{repetition}_{job_name}"
+                stem = f"first_10_{results_dir.name}_{run_id}_{input_label}_{technology}_{repetition}_{job_name}"
                 tables.extend(write_table_pair(tables_dir, stem, records))
     return tables, warnings
 
@@ -851,6 +930,7 @@ def generate_artifacts(
     rows_per_second = rows_per_second_records(summary)
     speedups = speedup_records(pivot)
     scalability = scalability_ratio_records(summary)
+    cluster_comparison = cluster_size_comparison_records(summary)
 
     tables: list[Path] = []
     tables.extend(write_table_pair(tables_dir, "benchmark_summary", summary))
@@ -859,13 +939,18 @@ def generate_artifacts(
     tables.extend(write_table_pair(tables_dir, "rows_per_second", rows_per_second))
     tables.extend(write_table_pair(tables_dir, "speedup", speedups))
     tables.extend(write_table_pair(tables_dir, "scalability_ratios", scalability))
+    tables.extend(write_table_pair(tables_dir, "cluster_size_comparison", cluster_comparison))
 
     first_10_tables, first_10_warnings = copy_first_10_tables(outputs_dir, tables_dir)
     tables.extend(first_10_tables)
     warnings.extend(first_10_warnings)
 
     aws_results_dirs = audit_results_dirs(benchmark_csvs)
-    aws_run_ids = {str(row.get("run_id", "")) for row in latest_rows if str(row.get("environment", "")) == "aws-emr" and row.get("run_id")}
+    aws_run_ids = {
+        str(row.get("run_id", ""))
+        for row in latest_rows
+        if str(row.get("environment", "")).startswith("aws-emr") and row.get("run_id")
+    }
     manifest_records = read_aws_run_manifest_records(aws_results_dirs)
     step_timing_records = read_csv_records(path for results_dir in aws_results_dirs for path in sorted(results_dir.glob("step_timing_*.csv")))
     cost_records = read_csv_records(path for results_dir in aws_results_dirs for path in sorted(results_dir.glob("cost_log_*.csv")))

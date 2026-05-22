@@ -147,6 +147,22 @@ def test_read_benchmark_rows_defaults_missing_repetition_to_one(tmp_path):
     assert rows[0]["repetition"] == "1"
 
 
+def test_read_benchmark_rows_accepts_utf8_sig_header(tmp_path):
+    csv_path = tmp_path / "benchmark_20260520T120000000000Z.csv"
+    row = benchmark_row(
+        run_id="run",
+        timestamp_utc="2026-05-20T12:00:00+00:00",
+        duration_seconds=8.5,
+    )
+    content = ",".join(BENCHMARK_COLUMNS) + "\n" + ",".join(str(row[column]) for column in BENCHMARK_COLUMNS) + "\n"
+    csv_path.write_bytes(("\ufeff" + content).encode("utf-8"))
+
+    assert generate_charts.benchmark_csv_schema_errors(csv_path) == []
+    rows = generate_charts.read_benchmark_rows([csv_path])
+
+    assert rows[0]["run_id"] == "run"
+
+
 def test_read_benchmark_rows_keeps_docker_simulation_label(tmp_path):
     csv_path = tmp_path / "benchmark_20260520T120000000000Z.csv"
     write_benchmark_csv(
@@ -170,9 +186,17 @@ def test_default_chart_discovery_includes_aws_emr_results_dir():
     assert Path("experiments/results/aws-emr") in [
         path.relative_to(generate_charts.PROJECT_ROOT) for path in generate_charts.DEFAULT_RESULTS_DIRS
     ]
+    assert Path("experiments/results/aws-emr-larger") in [
+        path.relative_to(generate_charts.PROJECT_ROOT) for path in generate_charts.DEFAULT_RESULTS_DIRS
+    ]
     assert generate_charts.ENVIRONMENT_LABELS["aws-emr"] == "AWS EMR"
+    assert generate_charts.ENVIRONMENT_LABELS["aws-emr-larger"] == "AWS EMR larger cluster"
     assert "14m" in [label for label, _ in generate_charts.EXPECTED_INPUTS_BY_ENVIRONMENT["aws-emr"]]
     assert generate_charts.EXPECTED_TECHNOLOGIES_BY_ENVIRONMENT["aws-emr"] == ("spark_sql", "spark_core")
+    assert generate_charts.EXPECTED_INPUTS_BY_ENVIRONMENT["aws-emr-larger"] == (
+        ("1m", 1_000_000),
+        ("full", 7_079_081),
+    )
 
 
 def test_benchmark_pivot_contains_available_technology_duration_columns():
@@ -199,6 +223,53 @@ def test_benchmark_pivot_contains_available_technology_duration_columns():
     assert len(pivot) == 1
     assert pivot[0]["Spark SQL median_duration_seconds"] == 8.5
     assert pivot[0]["Spark Core median_duration_seconds"] == 2.25
+
+
+def test_cluster_size_comparison_keeps_emr_profiles_separate_and_marks_docker_full_na():
+    summary = [
+        {
+            "environment": "local",
+            "input_label": "full",
+            "records": 7079081,
+            "job_name": "delay_by_airport_month",
+            "technology": "Spark SQL",
+            "median_duration_seconds": 8.0,
+            "run_id": "local-run",
+        },
+        {
+            "environment": "aws-emr",
+            "input_label": "full",
+            "records": 7079081,
+            "job_name": "delay_by_airport_month",
+            "technology": "Spark SQL",
+            "median_duration_seconds": 16.0,
+            "run_id": "m4-emr-final-2",
+        },
+        {
+            "environment": "aws-emr-larger",
+            "input_label": "full",
+            "records": 7079081,
+            "job_name": "delay_by_airport_month",
+            "technology": "Spark SQL",
+            "median_duration_seconds": 12.0,
+            "run_id": "m5-emr-3core-1m-full",
+        },
+    ]
+
+    comparison = generate_charts.cluster_size_comparison_records(summary)
+    full_sql = next(
+        row
+        for row in comparison
+        if row["input_label"] == "full"
+        and row["job_name"] == "delay_by_airport_month"
+        and row["technology"] == "Spark SQL"
+    )
+
+    assert full_sql["docker_simulation_median_duration_seconds"] == "N/A"
+    assert full_sql["emr_baseline_run_id"] == "m4-emr-final-2"
+    assert full_sql["emr_larger_run_id"] == "m5-emr-3core-1m-full"
+    assert full_sql["emr_larger_vs_baseline_speedup"] == 16.0 / 12.0
+    assert "Docker standalone simulation full input was not run" in full_sql["notes"]
 
 
 def test_benchmark_summary_records_compute_aggregate_statistics():

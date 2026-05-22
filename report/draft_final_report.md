@@ -576,6 +576,43 @@ and environment.
 
 ![Docker standalone simulation execution time for airline-airport ranking](figures/execution_time_docker-simulation_airline_airport_ranking.png)
 
+# AWS EMR Cluster Experiment
+
+The project now includes real Amazon EMR evidence in addition to local and
+Docker standalone simulation runs. The baseline EMR profile is the completed
+run `m4-emr-final-2`: EMR `emr-7.13.0` in `us-east-1`, Spark on YARN, one
+primary node and two core nodes, all using `m5.xlarge` instances. That run
+covered `100k`, `500k`, `1m`, `3m`, `full`, and `14m` inputs for Spark SQL and
+Spark Core, with S3 used for uploaded inputs, source bundles, logs, metrics,
+and downloaded outputs.
+
+## Cluster Size Variation
+
+Milestone 5 uses `m4-emr-final-2` as the baseline cluster-size point and
+`m5-emr-3core-1m-full` as the larger-cluster point. The larger run used one
+primary node and three core nodes, the same `m5.xlarge` instance type, the same
+EMR release, and the same Spark/YARN execution path. It completed on cluster
+`j-LTX1FIHYB4X9` from `2026-05-22T00:46:03Z` to `2026-05-22T01:12:14Z`, with
+an estimated cost of `0.3944 USD`. The larger-profile matrix was intentionally
+limited to `1m` and `full` so the evidence stayed within AWS Academy Learner
+Lab budget limits. Docker standalone simulation is shown only where matching
+data exists; the Docker benchmark matrix currently stops at `1m`, so Docker
+`full` cells are marked `N/A` instead of being overclaimed.
+
+The generated cluster-size comparison table is stored in
+`report/tables/cluster_size_comparison.md`. Compared with the baseline EMR
+profile, the larger profile improved Spark Core medians in all four comparable
+cells, with speedups from `1.146x` to `1.221x`. Spark SQL was mixed: it improved
+slightly for the `1m` delay job (`1.052x`) but was slightly slower for `1m`
+ranking, `full` delay, and `full` ranking (`0.951x` to `0.991x`). This is still
+useful scalability evidence because it shows that adding a core node does not
+uniformly accelerate these short analytical jobs; fixed Spark startup, S3 file
+listing and reads, shuffle planning, and small output cardinality remain large
+parts of the measured runtime. These results should be interpreted as limited
+scalability evidence because clusters are short-lived, S3 I/O is part of the
+managed execution path, repetitions are constrained by budget, and Learner Lab
+service limits prevent wider cluster-size sweeps.
+
 # Critical Discussion
 
 Spark SQL is the most expressive implementation. It is especially strong for

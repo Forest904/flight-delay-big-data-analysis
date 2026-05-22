@@ -40,6 +40,7 @@ TERMINAL_STEP_STATES = {"COMPLETED", "CANCELLED", "FAILED", "INTERRUPTED"}
 SUCCESS_STEP_STATES = {"COMPLETED"}
 TERMINAL_CLUSTER_STATES = {"TERMINATED", "TERMINATED_WITH_ERRORS"}
 ACTIVE_CLUSTER_STATES = {"STARTING", "BOOTSTRAPPING", "RUNNING", "WAITING"}
+AWS_PROJECT_ENVIRONMENTS = {"aws-emr", "aws-emr-larger"}
 STEP_TIMING_COLUMNS = [
     "run_id",
     "cluster_id",
@@ -209,6 +210,10 @@ def context_from_config(config: dict[str, Any]) -> AwsContext:
     return AwsContext(config=config, bucket=bucket, prefix=prefix, region=region, results_dir=resolve_results_dir(config))
 
 
+def configured_environment(config: dict[str, Any]) -> str:
+    return str(config.get("environment", "aws-emr") or "aws-emr")
+
+
 def s3_uri(ctx: AwsContext, *parts: str) -> str:
     return join_uri(f"s3://{ctx.bucket}/{ctx.prefix}", *parts)
 
@@ -335,7 +340,7 @@ def non_smoke_steps(steps: list[BenchmarkStep]) -> list[BenchmarkStep]:
 
 def runtime_config(ctx: AwsContext, run_id: str) -> dict[str, Any]:
     config = dict(ctx.config)
-    config["environment"] = "aws-emr"
+    config["environment"] = configured_environment(ctx.config)
     config["paths"] = dict(config.get("paths", {}))
     config["paths"]["outputs_dir"] = s3_uri(ctx, "results", "runs", run_id, "outputs")
     config["paths"]["results_dir"] = str(ctx.results_dir.relative_to(PROJECT_ROOT))
@@ -532,6 +537,7 @@ def normalize_step_rows(
     execution_setting: str,
     metrics: dict[str, Any] | None,
     step_state: str,
+    environment: str = "aws-emr",
     failure_reason: str = "",
 ) -> list[dict[str, Any]]:
     common = {
@@ -540,7 +546,7 @@ def normalize_step_rows(
         "technology": step.technology,
         "input_label": step.input_label,
         "records": step.records,
-        "environment": "aws-emr",
+        "environment": environment,
         "execution_setting": execution_setting,
         "timestamp_utc": timestamp_utc,
         "input_path": step.input_s3_uri,
@@ -691,6 +697,7 @@ def create_cluster(ctx: AwsContext, run_id: str, *, dry_run: bool) -> str:
     instance_type = cluster_instance_type(ctx.config)
     primary_nodes = int(profile.get("primary_nodes", 1))
     core_nodes = int(profile.get("core_nodes", 2))
+    environment = configured_environment(ctx.config)
     service_role = str(emr_config.get("iam_role_candidates", {}).get("service_role", ["EMR_DefaultRole"])[0])
     job_flow_role = str(emr_config.get("iam_role_candidates", {}).get("ec2_instance_profile", ["EMR_EC2_DefaultRole"])[0])
     cluster_args = {
@@ -711,7 +718,7 @@ def create_cluster(ctx: AwsContext, run_id: str, *, dry_run: bool) -> str:
         "VisibleToAllUsers": True,
         "Tags": [
             {"Key": "Project", "Value": "flight-delay-big-data-analysis"},
-            {"Key": "Environment", "Value": "aws-emr"},
+            {"Key": "Environment", "Value": environment},
             {"Key": "RunId", "Value": run_id},
         ],
     }
@@ -828,7 +835,10 @@ def list_active_project_clusters(ctx: AwsContext) -> list[str]:
                 continue
             cluster = emr.describe_cluster(ClusterId=cluster_id)["Cluster"]
             tags = {str(item.get("Key", "")): str(item.get("Value", "")) for item in cluster.get("Tags", [])}
-            if tags.get("Project") == "flight-delay-big-data-analysis" and tags.get("Environment") == "aws-emr":
+            environment = tags.get("Environment", "")
+            if tags.get("Project") == "flight-delay-big-data-analysis" and (
+                environment in AWS_PROJECT_ENVIRONMENTS or environment.startswith("aws-emr")
+            ):
                 cluster_ids.append(cluster_id)
     return sorted(set(cluster_ids))
 
@@ -966,6 +976,7 @@ def command_run(args: argparse.Namespace) -> int:
     validate_uploaded_inputs(ctx, steps, dry_run=args.dry_run)
     upload_step_manifest(ctx, run_id, steps, dry_run=args.dry_run)
     execution_setting = str(config.get("benchmark", {}).get("execution_setting", "Amazon EMR"))
+    environment = configured_environment(config)
     rows: list[dict[str, Any]] = []
     step_timings: list[StepTiming] = []
     cluster_id = ""
@@ -1014,6 +1025,7 @@ def command_run(args: argparse.Namespace) -> int:
                     run_id=run_id,
                     timestamp_utc=timestamp_utc,
                     execution_setting=execution_setting,
+                    environment=environment,
                     metrics=metrics,
                     step_state=timing.step_state,
                     failure_reason=timing.failure_reason,
@@ -1031,7 +1043,17 @@ def command_run(args: argparse.Namespace) -> int:
 
     if args.dry_run and not rows:
         for step in steps:
-            rows.extend(normalize_step_rows(step, run_id=run_id, timestamp_utc=timestamp_utc, execution_setting=execution_setting, metrics=None, step_state="COMPLETED"))
+            rows.extend(
+                normalize_step_rows(
+                    step,
+                    run_id=run_id,
+                    timestamp_utc=timestamp_utc,
+                    execution_setting=execution_setting,
+                    environment=environment,
+                    metrics=None,
+                    step_state="COMPLETED",
+                )
+            )
     benchmark_path = write_benchmark_outputs(ctx, run_id, rows, dry_run=args.dry_run)
     write_step_timing(ctx, run_id, step_timings, dry_run=args.dry_run)
     ended_at_utc = isoformat_utc()

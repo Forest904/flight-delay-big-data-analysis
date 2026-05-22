@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from scripts import aws_emr_benchmark
 from src.common.uri import join_uri, parse_s3_uri
 
@@ -145,6 +147,29 @@ def test_normalize_step_rows_matches_benchmark_csv_schema():
     assert rows[0]["repetition"] == 2
 
 
+def test_normalize_step_rows_uses_configured_aws_environment_label():
+    step = aws_emr_benchmark.BenchmarkStep(
+        input_label="1m",
+        records=1000000,
+        technology="spark_sql",
+        repetition=1,
+        input_s3_uri="s3://bucket/input",
+        output_root_s3_uri="s3://bucket/output/spark_sql",
+    )
+
+    rows = aws_emr_benchmark.normalize_step_rows(
+        step,
+        run_id="m5-emr-3core-1m-full",
+        timestamp_utc="2026-05-22T12:00:00+00:00",
+        execution_setting="Amazon EMR larger",
+        environment="aws-emr-larger",
+        metrics=None,
+        step_state="COMPLETED",
+    )
+
+    assert rows[0]["environment"] == "aws-emr-larger"
+
+
 def test_dependency_step_uses_pinned_dependencies():
     config = minimal_config()
     config["aws"]["dependencies"] = ["PyYAML==6.0.3", "pandas==2.3.3"]
@@ -167,6 +192,39 @@ def test_create_cluster_dry_run_includes_idle_auto_termination(monkeypatch, caps
     assert cluster_id == "dry-run-run123"
     assert '"AutoTerminationPolicy"' in output
     assert '"IdleTimeout": 600' in output
+
+
+def test_create_cluster_dry_run_can_use_three_core_nodes(monkeypatch, capsys):
+    config = minimal_config()
+    config["environment"] = "aws-emr-larger"
+    config["emr"]["cluster_profile"]["core_nodes"] = 3
+    monkeypatch.setenv("AWS_FLIGHT_DELAY_BUCKET", "flight-delay-test")
+    context = aws_emr_benchmark.context_from_config(config)
+
+    aws_emr_benchmark.create_cluster(context, "m5-emr-3core-1m-full", dry_run=True)
+    output = capsys.readouterr().out
+
+    assert '"InstanceRole": "CORE"' in output
+    assert '"InstanceCount": 3' in output
+    assert '"Value": "aws-emr-larger"' in output
+
+
+def test_m5_larger_config_expands_to_twelve_benchmark_steps(monkeypatch):
+    monkeypatch.setenv("AWS_FLIGHT_DELAY_BUCKET", "flight-delay-test")
+    config = aws_emr_benchmark.load_yaml(Path("config/aws_emr_m5_larger.yaml"))
+    context = aws_emr_benchmark.context_from_config(config)
+    manifest = {
+        "datasets": [
+            {"label": "1m", "actual_records": 1000000, "validation_status": "success"},
+        ]
+    }
+
+    steps = aws_emr_benchmark.expand_benchmark_steps(context, "m5-emr-3core-1m-full", manifest)
+
+    assert len(steps) == 12
+    assert {step.input_label for step in steps} == {"1m", "full"}
+    assert sum(1 for step in steps if step.input_label == "1m") == 6
+    assert sum(1 for step in steps if step.input_label == "full") == 6
 
 
 def test_s3_input_prefix_validation_requires_parquet_objects(monkeypatch):

@@ -247,3 +247,5 @@ experiments/results/docker-simulation/*
 !experiments/results/docker-simulation/.gitkeep
 experiments/results/aws-emr/*
 !experiments/results/aws-emr/.gitkeep
+experiments/results/aws-emr-larger/*
+!experiments/results/aws-emr-larger/.gitkeep

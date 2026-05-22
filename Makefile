@@ -24,6 +24,8 @@ ifneq ($(strip $(LARGE_LABEL)),)
 GENERATE_SIZE_FLAGS += $(foreach label,$(LARGE_LABEL),--large-label $(label))
 endif
 AWS_EMR_GLOBAL_FLAGS :=
+AWS_CONFIG ?= config/aws_emr.yaml
+AWS_EMR_GLOBAL_FLAGS += --config $(AWS_CONFIG)
 ifeq ($(AWS_DRY_RUN),1)
 AWS_EMR_GLOBAL_FLAGS += --dry-run
 endif

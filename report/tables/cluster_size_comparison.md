@@ -1,0 +1,10 @@
+| input_label | records | job_name | technology | local_median_duration_seconds | docker_simulation_median_duration_seconds | emr_baseline_median_duration_seconds | emr_larger_median_duration_seconds | emr_larger_vs_baseline_speedup | local_run_id | docker_simulation_run_id | emr_baseline_run_id | emr_larger_run_id | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1m | 1000000 | delay_by_airport_month | Spark SQL | 5.901 | 10.921 | 15.126 | 14.374 | 1.052 | 20260521T153035251181Z | 20260521T160042313560Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
+| 1m | 1000000 | delay_by_airport_month | Spark Core | 0.812 | 2.619 | 1.923 | 1.679 | 1.146 | 20260521T153035251181Z | 20260521T160042313560Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
+| 1m | 1000000 | airline_airport_ranking | Spark SQL | 1.31 | 4.444 | 4.052 | 4.087 | 0.991 | 20260521T153035251181Z | 20260521T160042313560Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
+| 1m | 1000000 | airline_airport_ranking | Spark Core | 0.563 | 2.334 | 1.243 | 1.018 | 1.221 | 20260521T153035251181Z | 20260521T160042313560Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
+| full | 7079081 | delay_by_airport_month | Spark SQL | 7.641 | N/A | 15.505 | 16.309 | 0.951 | 20260521T153035251181Z | N/A | m4-emr-final-2 | m5-emr-3core-1m-full | Docker standalone simulation full input was not run. |
+| full | 7079081 | delay_by_airport_month | Spark Core | 0.962 | N/A | 1.918 | 1.65 | 1.163 | 20260521T153035251181Z | N/A | m4-emr-final-2 | m5-emr-3core-1m-full | Docker standalone simulation full input was not run. |
+| full | 7079081 | airline_airport_ranking | Spark SQL | 2.33 | N/A | 4.302 | 4.475 | 0.961 | 20260521T153035251181Z | N/A | m4-emr-final-2 | m5-emr-3core-1m-full | Docker standalone simulation full input was not run. |
+| full | 7079081 | airline_airport_ranking | Spark Core | 0.583 | N/A | 1.106 | 0.919 | 1.205 | 20260521T153035251181Z | N/A | m4-emr-final-2 | m5-emr-3core-1m-full | Docker standalone simulation full input was not run. |

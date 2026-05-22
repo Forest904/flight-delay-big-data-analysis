@@ -232,21 +232,30 @@ execution-time figures, and downloaded AWS first-10 sample tables.
 
 **Goal:** add limited but real cluster-size scalability evidence.
 
-- [ ] Run the baseline EMR profile:
-  - [ ] 1 primary node
-  - [ ] 2 core nodes
-- [ ] If budget allows, run a larger EMR profile:
-  - [ ] 1 primary node
-  - [ ] 3 or 4 core nodes
-- [ ] Use the same input subset for cluster-size comparison:
-  - [ ] `1m`
-  - [ ] `full`
+- [x] Run the baseline EMR profile:
+  - [x] 1 primary node
+  - [x] 2 core nodes
+      Result: baseline evidence is the completed `m4-emr-final-2` run on
+      cluster `j-VS6OEAAXUMGP`.
+- [x] If budget allows, run a larger EMR profile:
+  - [x] 1 primary node
+  - [x] 3 or 4 core nodes
+      Result: `m5-emr-3core-1m-full` completed on cluster `j-LTX1FIHYB4X9`
+      using `config/aws_emr_m5_larger.yaml` with 1 primary + 3 core nodes.
+- [x] Use the same input subset for cluster-size comparison:
+  - [x] `1m`
+  - [x] `full`
   - [ ] `14m`, if budget allows
-- [ ] Add a comparison table:
-  - local
-  - Docker standalone simulation
-  - EMR baseline cluster
-  - EMR larger cluster
+      Result: `14m` remains in the baseline EMR evidence, but the larger
+      profile intentionally used `1m` and `full` only to control Learner Lab
+      cost.
+- [x] Add a comparison table:
+  - [x] local
+  - [x] Docker standalone simulation
+  - [x] EMR baseline cluster
+  - [x] EMR larger cluster
+      Result: `report/tables/cluster_size_comparison.*` is generated. Missing
+      Docker `full` cells are shown as `N/A` with notes.
 
 **Acceptance criteria:**
 

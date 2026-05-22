@@ -787,6 +787,14 @@ make benchmark-aws-emr AWS_DRY_RUN=1 AWS_RUN_ID=m4-hardened-smoke AWS_SMOKE_ONLY
 make aws-cleanup AWS_DRY_RUN=1
 ```
 
+Use `AWS_CONFIG` to select an alternate EMR profile. Milestone 5 uses
+`config/aws_emr_m5_larger.yaml` for the larger 1 primary + 3 core node
+comparison on the `1m` and `full` inputs:
+
+```powershell
+make benchmark-aws-emr AWS_CONFIG=config/aws_emr_m5_larger.yaml AWS_RUN_ID=m5-emr-3core-1m-full AWS_DRY_RUN=1
+```
+
 Upload prepared/generated Parquet inputs, the source bundle, and runtime config:
 
 ```powershell
@@ -832,6 +840,13 @@ Fetch S3 result artifacts or force cleanup of a tracked cluster:
 ```powershell
 make aws-fetch-results
 make aws-cleanup
+```
+
+For the M5 larger-cluster run, fetch and clean up with the same config:
+
+```powershell
+make aws-fetch-results AWS_CONFIG=config/aws_emr_m5_larger.yaml AWS_RUN_ID=m5-emr-3core-1m-full
+make aws-cleanup AWS_CONFIG=config/aws_emr_m5_larger.yaml
 ```
 
 `make clean` is intentionally conservative. It removes generated data,
