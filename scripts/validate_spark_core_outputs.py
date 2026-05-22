@@ -15,6 +15,8 @@ from scripts.validation_common import (
     PROJECT_ROOT as VALIDATION_ROOT,
     TOLERANCE,
     assert_metrics_success,
+    assert_canonical_input_path,
+    assert_same_input_path,
     assert_output_row_count,
     load_yaml,
     metric_rows,
@@ -40,6 +42,9 @@ def main() -> int:
 
     sql_metrics = assert_metrics_success(sql_root, "spark_sql")
     core_metrics = assert_metrics_success(core_root, "spark_core")
+    assert_canonical_input_path(sql_metrics, local_config, "Spark SQL")
+    assert_canonical_input_path(core_metrics, local_config, "Spark Core")
+    assert_same_input_path(sql_metrics, core_metrics, "Spark Core")
     sql_metric_rows = metric_rows(sql_metrics)
     core_metric_rows = metric_rows(core_metrics)
 

@@ -66,13 +66,39 @@ def test_readme_is_ascii_and_documents_reproducibility_interfaces():
     readme = Path("README.md").read_text(encoding="utf-8")
 
     assert readme.isascii()
-    assert "â" not in readme
-    assert "|-- README.md" in readme
-    assert "`-- raw/" in readme
+    assert len(readme.splitlines()) < 100
+    assert "The original Kaggle dataset is not included in this repository" in readme
+    assert "data/raw/flight_data_2024.csv" in readme
     assert ".\\.venv\\Scripts\\python.exe -m pytest -q" in readme
     assert "make run-all-local" in readme
+    assert "make run-mapreduce" in readme
+    assert "make submission-check" in readme
     assert "make clean" in readme
-    assert "## Final Submission Checklist" in readme
+    for linked_doc in (
+        "docs/reproducibility.md",
+        "docs/benchmarking.md",
+        "docs/submission_gate.md",
+        "docs/aws_emr.md",
+        "docs/data_preparation.md",
+        "docs/spark_sql_analyses.md",
+        "docs/spark_core_analyses.md",
+        "docs/hive_analyses.md",
+        "docs/mapreduce_analyses.md",
+        "docs/docker_simulation.md",
+    ):
+        assert linked_doc in readme
+
+
+def test_scope_docs_exist_and_are_ascii():
+    for path in (
+        Path("docs/reproducibility.md"),
+        Path("docs/benchmarking.md"),
+        Path("docs/submission_gate.md"),
+        Path("docs/aws_emr.md"),
+    ):
+        text = path.read_text(encoding="utf-8")
+        assert text.isascii(), f"{path} should stay ASCII-only"
+        assert len(text.splitlines()) >= 20
 
 
 def test_makefile_targets_are_implemented_not_placeholders():
@@ -83,4 +109,5 @@ def test_makefile_targets_are_implemented_not_placeholders():
     assert "validate-hive:" in makefile
     assert "run-all-local: run-spark-sql run-spark-core run-hive validate-spark-sql validate-spark-core validate-hive" in makefile
     assert "$(VENV_PYTHON) scripts/clean_generated_artifacts.py" in makefile
+    assert "$(VENV_PYTHON) scripts/submission_check.py" in makefile
     assert "is not implemented yet" not in makefile

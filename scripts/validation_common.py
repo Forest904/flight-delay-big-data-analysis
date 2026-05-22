@@ -102,11 +102,19 @@ def assert_metrics_success(output_root: Path, technology: str) -> dict[str, Any]
 
 
 def comparable_input_path(value: object, *, container_workspace: str = "/workspace") -> str:
-    text = str(value or "").replace("\\", "/")
+    text = str(value or "").strip().replace("\\", "/")
+    if text.startswith("file://"):
+        text = text[len("file://") :]
     workspace = container_workspace.rstrip("/")
-    for prefix in (f"file://{workspace}/", f"{workspace}/"):
+    for prefix in (f"{workspace}/",):
         if text.startswith(prefix):
-            return text[len(prefix) :]
+            text = text[len(prefix) :]
+
+    project_root = PROJECT_ROOT.resolve().as_posix()
+    if text.startswith(project_root + "/"):
+        text = text[len(project_root) + 1 :]
+    if text.startswith("./"):
+        text = text[2:]
     return text
 
 
@@ -117,6 +125,25 @@ def assert_same_input_path(reference_metrics: dict[str, Any], candidate_metrics:
         raise AssertionError("Both runtime metrics files must include input_path before cross-technology validation")
     if reference != candidate:
         raise AssertionError(f"Spark SQL and {candidate_label} input_path differ. Spark SQL: {reference}; {candidate_label}: {candidate}")
+
+
+def canonical_validation_input_path(local_config: dict[str, Any]) -> str:
+    paths = local_config.get("paths", {})
+    prepared_file = paths.get("prepared_file")
+    if not prepared_file:
+        raise AssertionError("config/local.yaml must define paths.prepared_file for canonical validation")
+    return comparable_input_path(prepared_file)
+
+
+def assert_canonical_input_path(metrics: dict[str, Any], local_config: dict[str, Any], technology_label: str) -> None:
+    actual = comparable_input_path(metrics.get("input_path"))
+    expected = canonical_validation_input_path(local_config)
+    if not actual:
+        raise AssertionError(f"{technology_label} runtime metrics must include input_path")
+    if actual != expected:
+        raise AssertionError(
+            f"{technology_label} input_path must be canonical validation input. Expected {expected}; found {actual}"
+        )
 
 
 def metric_rows(metrics: dict[str, Any]) -> dict[str, int]:

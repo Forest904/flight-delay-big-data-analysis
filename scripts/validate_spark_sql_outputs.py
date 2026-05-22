@@ -19,6 +19,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.common.prepared_data import read_prepared_parquet
 from src.preparation.prepare_spark import ensure_java_17
+from scripts.validation_common import assert_canonical_input_path
 
 
 LOCAL_CONFIG = PROJECT_ROOT / "config" / "local.yaml"
@@ -115,6 +116,7 @@ def main() -> int:
     metrics = json.loads(metrics_file.read_text(encoding="utf-8"))
     if metrics.get("status") != "success":
         raise AssertionError(f"Spark SQL metrics status is not success: {metrics.get('status')}")
+    assert_canonical_input_path(metrics, local_config, "Spark SQL")
     prepared_file = validation_input_path(metrics, local_config, metrics_file)
     metric_rows = {job["job_name"]: job["output_rows"] for job in metrics["jobs"]}
 

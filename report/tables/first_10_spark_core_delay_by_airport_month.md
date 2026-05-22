@@ -1,12 +1,12 @@
 | origin_airport | month | delay_range | flight_count | avg_departure_delay | avg_arrival_delay | top_1_cause | top_1_count | top_2_cause | top_2_count | top_3_cause | top_3_count |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ABE | 1 | high | 58 | 239.397 | 232.241 | delay:late_aircraft | 27 | delay:carrier | 23 | delay:nas | 4 |
-| ABE | 1 | low | 548 | -5.5 | -14.631 | unknown | 507 | delay:nas | 39 | delay:carrier | 2 |
-| ABE | 1 | medium | 62 | 34.323 | 32.5 | delay:late_aircraft | 24 | delay:carrier | 16 | unknown | 14 |
-| ABE | 2 | high | 28 | 227.929 | 217.929 | delay:carrier | 12 | delay:late_aircraft | 12 | delay:nas | 2 |
-| ABE | 2 | low | 587 | -6.727 | -19.626 | unknown | 563 | delay:nas | 20 | delay:carrier | 2 |
-| ABE | 2 | medium | 39 | 29.872 | 10.73 | unknown | 23 | delay:carrier | 10 | delay:late_aircraft | 6 |
-| ABE | 3 | high | 46 | 173.435 | 163.391 | delay:carrier | 18 | delay:late_aircraft | 16 | delay:nas | 12 |
-| ABE | 3 | low | 669 | -6.179 | -18.369 | unknown | 655 | delay:nas | 14 |  | 0 |
-| ABE | 3 | medium | 55 | 30.218 | 19.636 | unknown | 26 | delay:late_aircraft | 14 | delay:nas | 8 |
-| ABE | 4 | high | 55 | 248.127 | 240.473 | delay:carrier | 29 | delay:late_aircraft | 14 | delay:nas | 8 |
+| ABE | 1 | high | 30 | 241.3 | 234.033 | delay:late_aircraft | 14 | delay:carrier | 12 | delay:nas | 2 |
+| ABE | 1 | low | 277 | -5.509 | -14.556 | unknown | 256 | delay:nas | 20 | delay:carrier | 1 |
+| ABE | 1 | medium | 31 | 34.323 | 32.5 | delay:late_aircraft | 12 | delay:carrier | 8 | unknown | 7 |
+| ABE | 2 | high | 14 | 227.929 | 217.929 | delay:carrier | 6 | delay:late_aircraft | 6 | delay:nas | 1 |
+| ABE | 2 | low | 297 | -6.65 | -19.571 | unknown | 285 | delay:nas | 10 | delay:carrier | 1 |
+| ABE | 2 | medium | 20 | 29.7 | 10.105 | unknown | 12 | delay:carrier | 5 | delay:late_aircraft | 3 |
+| ABE | 3 | high | 23 | 173.435 | 163.391 | delay:carrier | 9 | delay:late_aircraft | 8 | delay:nas | 6 |
+| ABE | 3 | low | 339 | -6.186 | -18.369 | unknown | 332 | delay:nas | 7 |  | 0 |
+| ABE | 3 | medium | 28 | 30.679 | 19.893 | unknown | 13 | delay:late_aircraft | 7 | delay:carrier | 4 |
+| ABE | 4 | high | 29 | 258.655 | 250.379 | delay:carrier | 16 | delay:late_aircraft | 7 | delay:nas | 4 |

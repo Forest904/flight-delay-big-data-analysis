@@ -17,8 +17,10 @@ from scripts.validation_common import (
     RANKING_COLUMNS,
     TOLERANCE,
     assert_first_10,
+    assert_canonical_input_path,
     assert_metrics_success,
     assert_output_row_count,
+    assert_same_input_path,
     load_yaml,
     metric_rows,
     read_csv_dir,
@@ -43,6 +45,9 @@ def main() -> int:
 
     sql_metrics = assert_metrics_success(sql_root, "spark_sql")
     hive_metrics = assert_metrics_success(hive_root, "hive")
+    assert_canonical_input_path(sql_metrics, local_config, "Spark SQL")
+    assert_canonical_input_path(hive_metrics, local_config, "Hive")
+    assert_same_input_path(sql_metrics, hive_metrics, "Hive")
     sql_metric_rows = metric_rows(sql_metrics)
     hive_metric_rows = metric_rows(hive_metrics)
 

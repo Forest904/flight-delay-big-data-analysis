@@ -17,6 +17,7 @@ from scripts.validation_common import (
     RANKING_COLUMNS,
     TOLERANCE,
     assert_first_10,
+    assert_canonical_input_path,
     assert_metrics_success,
     assert_output_row_count,
     assert_same_input_path,
@@ -44,6 +45,8 @@ def main() -> int:
 
     sql_metrics = assert_metrics_success(sql_root, "spark_sql")
     mapreduce_metrics = assert_metrics_success(mapreduce_root, "mapreduce")
+    assert_canonical_input_path(sql_metrics, local_config, "Spark SQL")
+    assert_canonical_input_path(mapreduce_metrics, local_config, "MapReduce")
     assert_same_input_path(sql_metrics, mapreduce_metrics, "MapReduce")
     sql_metric_rows = metric_rows(sql_metrics)
     mapreduce_metric_rows = metric_rows(mapreduce_metrics)

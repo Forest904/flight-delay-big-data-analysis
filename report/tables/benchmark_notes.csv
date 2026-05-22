@@ -1,0 +1,10 @@
+environment,input_label,job_name,technology,run_id,classification,note
+local,*,*,Spark SQL,20260521T153035251181Z,resource_limited,Pre-P1 local Spark SQL cells are carried as explicitly marked single-run evidence until the repeated local benchmark campaign is regenerated.
+local,*,*,Spark Core,20260521T153035251181Z,resource_limited,Pre-P1 local Spark Core cells are carried as explicitly marked single-run evidence until the repeated local benchmark campaign is regenerated.
+local,*,*,Hive,20260521T153035251181Z,resource_limited,Pre-P1 local Hive cells are carried as explicitly marked single-run evidence until the repeated local benchmark campaign is regenerated.
+local,100k,*,MapReduce,20260521T153912538439Z,smoke,MapReduce is optional stretch evidence and this 100k run is marked as smoke evidence.
+docker-simulation,*,*,*,20260521T160042313560Z,resource_limited,Docker standalone simulation cells are pre-P1 single-run evidence and must be regenerated with repetitions before final benchmark claims.
+aws-emr,100k,*,*,m4-hardened-smoke-3,smoke,Hardened AWS 100k cells are smoke evidence for the EMR path and do not replace the canonical matrix.
+aws-emr,500k,*,*,m4-emr-final-2,budget_limited,AWS Learner Lab budget limited this EMR input to a single run.
+aws-emr,3m,*,*,m4-emr-final-2,budget_limited,AWS Learner Lab budget limited this EMR input to a single run.
+aws-emr,14m,*,*,m4-emr-final-2,budget_limited,AWS Learner Lab budget limited this EMR input to a single run.
