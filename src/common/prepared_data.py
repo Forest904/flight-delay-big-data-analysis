@@ -7,6 +7,8 @@ from pathlib import Path
 
 from pyspark.sql import DataFrame, SparkSession
 
+from src.common.uri import is_s3_uri
+
 
 def has_windows_winutils() -> bool:
     if os.name != "nt":
@@ -22,6 +24,9 @@ def has_windows_winutils() -> bool:
 
 
 def prepared_parquet_read_paths(prepared_path: str | Path) -> list[str]:
+    if is_s3_uri(prepared_path):
+        return [str(prepared_path)]
+
     path = Path(prepared_path)
     if os.name == "nt" and not has_windows_winutils() and path.is_dir():
         part_files = sorted(path.glob("*.parquet"))

@@ -70,16 +70,18 @@ def test_discover_benchmark_csvs_ignores_latest_copy(tmp_path):
     results_dir = tmp_path / "results"
     timestamped = results_dir / "benchmark_20260520T120000123456Z.csv"
     rerun = results_dir / "benchmark_20260520T120000123456Z_1.csv"
+    named_run = results_dir / "benchmark_m4-emr-final-2.csv"
     latest = results_dir / "benchmark_latest.csv"
     unrelated = results_dir / "benchmark_notes.csv"
     write_benchmark_csv(timestamped, [])
     write_benchmark_csv(rerun, [])
+    write_benchmark_csv(named_run, [])
     write_benchmark_csv(latest, [])
     unrelated.write_text("not a benchmark\n", encoding="utf-8")
 
     discovered = generate_charts.discover_benchmark_csvs([results_dir])
 
-    assert discovered == [timestamped, rerun]
+    assert discovered == [timestamped, rerun, named_run]
 
 
 def test_latest_successful_rows_keeps_newest_success_and_excludes_failed(tmp_path):
@@ -162,6 +164,15 @@ def test_read_benchmark_rows_keeps_docker_simulation_label(tmp_path):
     rows = generate_charts.read_benchmark_rows([csv_path])
 
     assert rows[0]["environment"] == "docker-simulation"
+
+
+def test_default_chart_discovery_includes_aws_emr_results_dir():
+    assert Path("experiments/results/aws-emr") in [
+        path.relative_to(generate_charts.PROJECT_ROOT) for path in generate_charts.DEFAULT_RESULTS_DIRS
+    ]
+    assert generate_charts.ENVIRONMENT_LABELS["aws-emr"] == "AWS EMR"
+    assert "14m" in [label for label, _ in generate_charts.EXPECTED_INPUTS_BY_ENVIRONMENT["aws-emr"]]
+    assert generate_charts.EXPECTED_TECHNOLOGIES_BY_ENVIRONMENT["aws-emr"] == ("spark_sql", "spark_core")
 
 
 def test_benchmark_pivot_contains_available_technology_duration_columns():
@@ -482,3 +493,80 @@ def test_first_10_csv_inputs_are_written_as_report_tables(tmp_path):
         "first_10_spark_sql_delay_by_airport_month.md"
     ).read_text(encoding="utf-8")
     assert len(tables) == 2
+
+
+def test_benchmark_csv_schema_validation_rejects_unexpected_columns(tmp_path):
+    csv_path = tmp_path / "benchmark_bad.csv"
+    row = benchmark_row(
+        run_id="run",
+        timestamp_utc="2026-05-20T12:00:00+00:00",
+        duration_seconds=8.5,
+    )
+    row["extra"] = "not part of the schema"
+    with csv_path.open("w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=[*BENCHMARK_COLUMNS, "extra"])
+        writer.writeheader()
+        writer.writerow(row)
+
+    assert generate_charts.benchmark_csv_schema_errors(csv_path) == ["unexpected columns: extra"]
+    assert generate_charts.read_benchmark_rows([csv_path]) == []
+
+
+def test_aws_audit_records_are_flattened_for_report_tables(tmp_path):
+    results_dir = tmp_path / "aws-emr"
+    results_dir.mkdir()
+    manifest_path = results_dir / "run_manifest_m4-hardened-smoke.json"
+    manifest_path.write_text(
+        """
+{
+  "run_id": "m4-hardened-smoke",
+  "run_kind": "smoke",
+  "status": "success",
+  "canonical_run_id": "m4-emr-final-2",
+  "is_canonical_full_run": false,
+  "git": {"commit": "abc", "dirty": true},
+  "aws": {"bucket": "bucket", "region": "us-east-1", "emr_release": "emr-7.13.0", "cluster_id": "j-123", "instance_type": "m5.xlarge", "node_count": 3},
+  "artifacts": {"source_bundle_sha256": "source", "runtime_config_sha256": "runtime", "config_sha256": "config"},
+  "python_dependencies": ["pandas==3.0.3", "pyarrow==24.0.0"]
+}
+""",
+        encoding="utf-8",
+    )
+
+    records = generate_charts.read_aws_run_manifest_records([results_dir])
+
+    assert records[0]["run_id"] == "m4-hardened-smoke"
+    assert records[0]["canonical_run_id"] == "m4-emr-final-2"
+    assert records[0]["git_dirty"] is True
+    assert "pandas==3.0.3" in records[0]["dependencies"]
+
+
+def test_aws_first_10_downloaded_outputs_are_written_as_report_tables(tmp_path):
+    results_dir = tmp_path / "aws-emr"
+    sample_path = (
+        results_dir
+        / "downloaded"
+        / "m4-hardened-smoke"
+        / "outputs"
+        / "100k"
+        / "spark_sql"
+        / "rep1"
+        / "spark_sql"
+        / "delay_by_airport_month"
+        / "first_10.csv"
+    )
+    sample_path.parent.mkdir(parents=True)
+    sample_path.write_text("origin_airport,month,flight_count\nABE,1,42\n", encoding="utf-8")
+    tables_dir = tmp_path / "tables"
+
+    tables, warnings = generate_charts.copy_aws_first_10_tables(
+        [results_dir],
+        tables_dir,
+        {"m4-hardened-smoke"},
+    )
+
+    assert warnings == []
+    assert len(tables) == 2
+    assert tables_dir.joinpath(
+        "first_10_aws-emr_m4-hardened-smoke_100k_spark_sql_rep1_delay_by_airport_month.csv"
+    ).exists()

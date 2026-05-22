@@ -23,8 +23,21 @@ endif
 ifneq ($(strip $(LARGE_LABEL)),)
 GENERATE_SIZE_FLAGS += $(foreach label,$(LARGE_LABEL),--large-label $(label))
 endif
+AWS_EMR_GLOBAL_FLAGS :=
+ifeq ($(AWS_DRY_RUN),1)
+AWS_EMR_GLOBAL_FLAGS += --dry-run
+endif
+ifneq ($(strip $(AWS_RUN_ID)),)
+AWS_RUN_ID_FLAG := --run-id $(AWS_RUN_ID)
+endif
+ifneq ($(strip $(AWS_CLUSTER_ID)),)
+AWS_CLUSTER_FLAG := --cluster-id $(AWS_CLUSTER_ID)
+endif
+ifeq ($(AWS_SMOKE_ONLY),1)
+AWS_SMOKE_ONLY_FLAG := --smoke-only
+endif
 
-.PHONY: setup check-env aws-check aws-check-report inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive run-mapreduce stop-hive validate-spark-sql validate-spark-core validate-hive validate-mapreduce run-all-local benchmark-local benchmark-docker-simulation benchmark-mapreduce-local charts report clean
+.PHONY: setup check-env aws-check aws-check-report aws-upload benchmark-aws-emr aws-fetch-results aws-cleanup inspect-raw prepare generate-sizes run-spark-sql run-spark-core run-spark-core-native run-spark-core-docker run-hive run-mapreduce stop-hive validate-spark-sql validate-spark-core validate-hive validate-mapreduce run-all-local benchmark-local benchmark-docker-simulation benchmark-mapreduce-local charts report clean
 
 setup:
 	$(PYTHON_LAUNCHER) -m venv .venv
@@ -39,6 +52,18 @@ aws-check:
 
 aws-check-report:
 	$(VENV_PYTHON) scripts/check_aws_feasibility.py --write-report
+
+aws-upload:
+	$(VENV_PYTHON) scripts/aws_emr_benchmark.py $(AWS_EMR_GLOBAL_FLAGS) upload $(AWS_RUN_ID_FLAG)
+
+benchmark-aws-emr:
+	$(VENV_PYTHON) scripts/aws_emr_benchmark.py $(AWS_EMR_GLOBAL_FLAGS) run $(AWS_RUN_ID_FLAG) $(AWS_SMOKE_ONLY_FLAG)
+
+aws-fetch-results:
+	$(VENV_PYTHON) scripts/aws_emr_benchmark.py $(AWS_EMR_GLOBAL_FLAGS) fetch-results $(AWS_RUN_ID_FLAG)
+
+aws-cleanup:
+	$(VENV_PYTHON) scripts/aws_emr_benchmark.py $(AWS_EMR_GLOBAL_FLAGS) cleanup $(AWS_CLUSTER_FLAG)
 
 inspect-raw:
 	$(VENV_PYTHON) scripts/inspect_raw_dataset.py

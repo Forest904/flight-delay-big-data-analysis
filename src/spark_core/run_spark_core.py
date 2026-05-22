@@ -21,6 +21,15 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.common.runtime import configure_pyspark_python, ensure_java_17
+from src.common.uri import (
+    display_location,
+    is_s3_uri,
+    join_uri,
+    location_exists,
+    resolve_local_or_uri,
+    write_json_location,
+    write_text_location,
+)
 
 
 ensure_java_17()
@@ -114,10 +123,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--smoke-rdd", action="store_true", help="Run only the Spark Core RDD worker smoke check.")
     parser.add_argument(
         "--input-path",
-        type=Path,
         help="Prepared Parquet input to analyze. Defaults to the selected config paths.prepared_file.",
     )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="YAML config path.")
+    parser.add_argument(
+        "--output-root",
+        help="Technology output root. Defaults to <config paths.outputs_dir>/spark_core.",
+    )
     return parser.parse_args(argv)
 
 
@@ -128,14 +140,14 @@ def resolve_project_path(path_value: str) -> Path:
     return path
 
 
-def spark_core_output_root(local_config: dict[str, Any]) -> Path:
+def spark_core_output_root(local_config: dict[str, Any]) -> str:
     paths = local_config.get("paths", {})
-    outputs_dir = resolve_project_path(str(paths.get("outputs_dir", "outputs")))
-    return outputs_dir / "spark_core"
+    outputs_dir = resolve_local_or_uri(str(paths.get("outputs_dir", "outputs")), PROJECT_ROOT)
+    return join_uri(outputs_dir, "spark_core")
 
 
-def metrics_file(output_root: Path) -> Path:
-    return output_root / "runtime_metrics.json"
+def metrics_file(output_root: str | Path) -> str:
+    return join_uri(output_root, "runtime_metrics.json")
 
 
 def display_path(path: Path) -> str:
@@ -145,24 +157,34 @@ def display_path(path: Path) -> str:
         return str(path)
 
 
-def clear_path(path: Path) -> None:
-    if path.is_dir():
-        shutil.rmtree(path)
-    elif path.exists():
-        path.unlink()
+def display_runtime_path(path: str | Path) -> str:
+    return display_location(path, PROJECT_ROOT)
 
 
-def clear_spark_core_outputs(output_root: Path) -> None:
-    output_root.mkdir(parents=True, exist_ok=True)
-    for child in output_root.iterdir():
+def clear_path(path: str | Path) -> None:
+    if is_s3_uri(path):
+        return
+    local_path = Path(path)
+    if local_path.is_dir():
+        shutil.rmtree(local_path)
+    elif local_path.exists():
+        local_path.unlink()
+
+
+def clear_spark_core_outputs(output_root: str | Path) -> None:
+    if is_s3_uri(output_root):
+        return
+    local_root = Path(output_root)
+    local_root.mkdir(parents=True, exist_ok=True)
+    for child in local_root.iterdir():
         if child.name == ".gitkeep":
             continue
         clear_path(child)
 
 
-def validate_preconditions(prepared_file: Path) -> list[str]:
+def validate_preconditions(prepared_file: str | Path) -> list[str]:
     errors: list[str] = []
-    if not prepared_file.exists():
+    if not location_exists(prepared_file):
         errors.append(
             f"Prepared dataset was not found: {prepared_file}. Run `make prepare` or `make generate-sizes` first."
         )
@@ -504,23 +526,31 @@ def airline_airport_ranking_df(spark: SparkSession, flights: DataFrame) -> DataF
     return spark.createDataFrame(rows, RANKING_SCHEMA).select(*RANKING_OUTPUT_COLUMNS)
 
 
-def write_first_10_csv(df: DataFrame, output_path: Path) -> None:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+def write_first_10_csv(df: DataFrame, output_path: str | Path) -> None:
     rows = df.limit(10).toPandas()
-    rows.to_csv(output_path, index=False)
+    if is_s3_uri(output_path):
+        write_text_location(output_path, rows.to_csv(index=False))
+        return
+    local_path = Path(output_path)
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+    rows.to_csv(local_path, index=False)
 
 
-def write_full_csv(rows: Any, output_path: Path) -> None:
+def write_full_csv(rows: Any, output_path: str | Path) -> None:
     clear_path(output_path)
-    output_path.mkdir(parents=True, exist_ok=True)
-    rows.to_csv(output_path / "part-00000.csv", index=False)
+    if is_s3_uri(output_path):
+        write_text_location(join_uri(output_path, "part-00000.csv"), rows.to_csv(index=False))
+        return
+    local_path = Path(output_path)
+    local_path.mkdir(parents=True, exist_ok=True)
+    rows.to_csv(local_path / "part-00000.csv", index=False)
 
 
 def run_analysis(
     name: str,
     df: DataFrame,
-    full_output_path: Path,
-    sample_output_path: Path,
+    full_output_path: str | Path,
+    sample_output_path: str | Path,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     status = "success"
@@ -531,8 +561,12 @@ def run_analysis(
         rows = df.toPandas()
         output_rows = len(rows)
         write_full_csv(rows, full_output_path)
-        sample_output_path.parent.mkdir(parents=True, exist_ok=True)
-        rows.head(10).to_csv(sample_output_path, index=False)
+        if is_s3_uri(sample_output_path):
+            write_text_location(sample_output_path, rows.head(10).to_csv(index=False))
+        else:
+            local_sample_path = Path(sample_output_path)
+            local_sample_path.parent.mkdir(parents=True, exist_ok=True)
+            rows.head(10).to_csv(local_sample_path, index=False)
     except Exception as exc:
         status = "failed"
         error = error_excerpt(exc)
@@ -543,8 +577,8 @@ def run_analysis(
         "job_name": name,
         "duration_seconds": duration_seconds,
         "output_rows": output_rows,
-        "full_output_path": display_path(full_output_path),
-        "sample_output_path": display_path(sample_output_path),
+        "full_output_path": display_runtime_path(full_output_path),
+        "sample_output_path": display_runtime_path(sample_output_path),
         "status": status,
     }
     if error is not None:
@@ -552,11 +586,8 @@ def run_analysis(
     return metrics
 
 
-def write_metrics(metrics: dict[str, Any], output_root: Path) -> None:
-    output_root.mkdir(parents=True, exist_ok=True)
-    with metrics_file(output_root).open("w", encoding="utf-8") as file:
-        json.dump(metrics, file, indent=2, sort_keys=True)
-        file.write("\n")
+def write_metrics(metrics: dict[str, Any], output_root: str | Path) -> None:
+    write_json_location(metrics_file(output_root), metrics)
 
 
 def error_excerpt(error: Exception | str, max_chars: int = 2000) -> str:
@@ -572,10 +603,10 @@ def mark_failed(metrics: dict[str, Any], stage: str, error: Exception | str) -> 
     metrics["error"] = error_excerpt(error)
 
 
-def print_metrics(metrics: dict[str, Any], output_root: Path) -> None:
+def print_metrics(metrics: dict[str, Any], output_root: str | Path) -> None:
     print("# Spark Core Runtime Metrics")
     print(json.dumps(metrics, indent=2, sort_keys=True))
-    print(f"Spark Core outputs written to: {display_path(output_root)}")
+    print(f"Spark Core outputs written to: {display_runtime_path(output_root)}")
 
 
 def docker_wsl_hint() -> str:
@@ -597,17 +628,15 @@ def main(argv: list[str] | None = None) -> int:
     if not prepared_file_value:
         raise ValueError(f"{config_path} does not define paths.prepared_file")
 
-    prepared_file = args.input_path if args.input_path is not None else Path(str(prepared_file_value))
-    if not prepared_file.is_absolute():
-        prepared_file = PROJECT_ROOT / prepared_file
-    output_root = spark_core_output_root(local_config)
+    prepared_file = resolve_local_or_uri(args.input_path or str(prepared_file_value), PROJECT_ROOT)
+    output_root = resolve_local_or_uri(args.output_root, PROJECT_ROOT) if args.output_root else spark_core_output_root(local_config)
     spark_config = local_config.get("spark", {})
     run_metrics: dict[str, Any] = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "technology": "spark_core",
         "status": "running",
         "stage": "preflight",
-        "input_path": display_path(prepared_file),
+        "input_path": display_runtime_path(prepared_file),
         "spark_master": str(spark_config.get("master", "local[*]")),
         "spark_shuffle_partitions": int(spark_config.get("shuffle_partitions", 8)),
         "pyspark_python": PYSPARK_PYTHON,
@@ -644,14 +673,14 @@ def main(argv: list[str] | None = None) -> int:
             (
                 "delay_by_airport_month",
                 delay_report_df(spark, flights),
-                output_root / "delay_by_airport_month" / "full",
-                output_root / "delay_by_airport_month" / "first_10.csv",
+                join_uri(output_root, "delay_by_airport_month", "full"),
+                join_uri(output_root, "delay_by_airport_month", "first_10.csv"),
             ),
             (
                 "airline_airport_ranking",
                 airline_airport_ranking_df(spark, flights),
-                output_root / "airline_airport_ranking" / "full",
-                output_root / "airline_airport_ranking" / "first_10.csv",
+                join_uri(output_root, "airline_airport_ranking", "full"),
+                join_uri(output_root, "airline_airport_ranking", "first_10.csv"),
             ),
         ]
 

@@ -245,3 +245,5 @@ experiments/results/local/*
 !experiments/results/local/.gitkeep
 experiments/results/docker-simulation/*
 !experiments/results/docker-simulation/.gitkeep
+experiments/results/aws-emr/*
+!experiments/results/aws-emr/.gitkeep

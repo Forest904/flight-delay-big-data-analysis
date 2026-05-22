@@ -1,0 +1,7 @@
+| run_id | cluster_id | started_at_utc | ended_at_utc | status | notes | node_count | primary_nodes | core_nodes | instance_type | cluster_lifetime_minutes | node_hours | estimated_hourly_usd_per_node | estimated_cost_usd | budget_env_name | budget_env_value |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| m4-emr-final-2 | j-VS6OEAAXUMGP | 2026-05-21T22:51:56.622854+00:00 | 2026-05-21T23:40:53.715733+00:00 | success |  |  |  |  |  |  |  |  |  |  |  |
+| m4-emr-final | j-1NAQEHS90YQC2 | 2026-05-21T22:42:47.400092+00:00 | 2026-05-21T22:51:07.205950+00:00 | failed | Smoke step failed: spark_core 100k rep1:  |  |  |  |  |  |  |  |  |  |  |
+| m4-hardened-smoke-2 | j-2DZJ10925CT5Y | 2026-05-22T00:09:02.857382+00:00 | 2026-05-22T00:15:06.908299+00:00 | failed | Dependency step failed: Unknown Error. (logs: s3://fd-bda-380623119505-us-east-1/flight-delay/logs/emr/m4-hardened-smoke-2/j-2DZJ10925CT5Y/steps/s-07204302J1YEFG97F1H0/) | 3 | 1 | 2 | m5.xlarge | 6.068 | 0.303376 | 0.226 | 0.0686 | AWS_LEARNER_LAB_BUDGET_REMAINING_USD | 50 |
+| m4-hardened-smoke-3 | j-3P841S0DMZQP1 | 2026-05-22T00:15:34.771522+00:00 | 2026-05-22T00:24:02.487150+00:00 | success |  | 3 | 1 | 2 | m5.xlarge | 8.462 | 0.423097 | 0.226 | 0.0956 | AWS_LEARNER_LAB_BUDGET_REMAINING_USD | 50 |
+| m4-hardened-smoke | j-11XSD5ZYYK41Y | 2026-05-22T00:02:11.585023+00:00 | 2026-05-22T00:07:45.626445+00:00 | failed | Dependency step failed:  | 3 | 1 | 2 | m5.xlarge | 5.567 | 0.278367 | 0.226 | 0.0629 | AWS_LEARNER_LAB_BUDGET_REMAINING_USD | 50 |

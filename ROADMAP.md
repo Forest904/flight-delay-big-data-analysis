@@ -67,16 +67,16 @@ experiment before running any expensive workloads.
   - [x] notes and failures
       Result: M0 scaffolding writes `report/tables/aws_feasibility.{json,csv,md}`;
       per-run cost logging remains part of the M4/M6 benchmark workflow.
-- [ ] Create or select the project S3 bucket for later EMR logs/results.
-      Current status: `AWS_FLIGHT_DELAY_BUCKET` is not set yet.
+- [x] Create or select the project S3 bucket for later EMR logs/results.
+      Result: `AWS_FLIGHT_DELAY_BUCKET=fd-bda-380623119505-us-east-1` was used
+      for the completed M4 EMR runs.
 
 **Acceptance criteria:**
 
 - AWS service availability is known.
 - A safe default cluster profile is selected.
 - A cleanup rule exists before the first EMR run.
-- Remaining setup before first EMR run: create/select the project S3 bucket and
-  set `AWS_FLIGHT_DELAY_BUCKET`.
+- Project S3 bucket and `AWS_FLIGHT_DELAY_BUCKET` are configured for M4.
 
 ### M1 - Report Fixes From Professor-Style Review
 
@@ -160,36 +160,73 @@ material.
 
 **Goal:** add real cluster execution evidence with Amazon EMR.
 
-- [ ] Add an AWS benchmark environment named `aws-emr`.
-- [ ] Use this S3 layout:
+**Status:** complete. The canonical full-matrix EMR benchmark is
+`m4-emr-final-2`; the hardened instrumentation proof run is
+`m4-hardened-smoke-3`.
+
+- [x] Add an AWS benchmark environment named `aws-emr`.
+- [x] Use this S3 layout:
   - `s3://<bucket>/flight-delay/data/`
   - `s3://<bucket>/flight-delay/code/`
   - `s3://<bucket>/flight-delay/results/`
   - `s3://<bucket>/flight-delay/logs/`
-- [ ] Upload prepared Parquet inputs to S3.
-- [ ] Upload generated inputs to S3.
-- [ ] Upload the source bundle and config files to S3.
-- [ ] Run Spark SQL on EMR with Spark steps / `spark-submit`.
-- [ ] Run Spark Core on EMR with Spark steps / `spark-submit`.
-- [ ] Keep Hive local/containerized unless EMR Hive is explicitly added later.
-- [ ] Target max-grade EMR input matrix:
-  - [ ] `100k`
-  - [ ] `500k`
-  - [ ] `1m`
-  - [ ] `3m`
-  - [ ] `full`
-  - [ ] `14m`
-- [ ] Target EMR repetition policy:
-  - [ ] 3 repetitions for `100k`
-  - [ ] 3 repetitions for `1m`
-  - [ ] 3 repetitions for `full`
-  - [ ] 1 to 3 repetitions for `14m`, depending on budget
+- [x] Upload prepared Parquet inputs to S3.
+- [x] Upload generated inputs to S3.
+- [x] Upload the source bundle and config files to S3.
+- [x] Run Spark SQL on EMR with Spark steps / `spark-submit`.
+- [x] Run Spark Core on EMR with Spark steps / `spark-submit`.
+- [x] Keep Hive local/containerized unless EMR Hive is explicitly added later.
+- [x] Target max-grade EMR input matrix:
+  - [x] `100k`
+  - [x] `500k`
+  - [x] `1m`
+  - [x] `3m`
+  - [x] `full`
+  - [x] `14m`
+- [x] Target EMR repetition policy:
+  - [x] 3 repetitions for `100k`
+  - [x] 3 repetitions for `1m`
+  - [x] 3 repetitions for `full`
+  - [x] 1 to 3 repetitions for `14m`, depending on budget
+- [x] Add audit and safety hardening:
+  - [x] run manifest with canonical-run marker
+  - [x] step-level EMR timing evidence
+  - [x] expanded cost log
+  - [x] pinned EMR dependency install
+  - [x] cluster startup, step, and total-run timeouts
+  - [x] EMR idle auto-termination policy
+  - [x] tagged-cluster cleanup discovery
+  - [x] S3 input-prefix validation before cluster creation
+
+Result: real EMR run `m4-emr-final-2` completed successfully on cluster
+`j-VS6OEAAXUMGP` in `us-east-1` using the baseline 1 primary + 2 core node
+profile. The run produced 48 successful Spark SQL/Core benchmark rows covering
+`100k`, `500k`, `1m`, `3m`, `full`, and `14m`; S3 outputs and logs were fetched
+under `experiments/results/aws-emr/downloaded/m4-emr-final-2/`.
+
+Hardening result: `m4-hardened-smoke-3` completed a low-cost instrumented
+`100k` Spark SQL/Core smoke run on EMR cluster `j-3P841S0DMZQP1`. It proves the
+new run manifest, step timing CSV, expanded cost log, S3 result fetch, and
+tagged-cluster cleanup path while keeping `m4-emr-final-2` as the canonical
+full-matrix evidence. Earlier failed hardening attempts remain manifest-labeled
+as failed dependency-pin attempts.
+
+Report artifacts now include `report/tables/aws_run_manifest.*`,
+`report/tables/aws_step_timing.*`, `report/tables/aws_cost_log.*`, AWS EMR
+execution-time figures, and downloaded AWS first-10 sample tables.
 
 **Acceptance criteria:**
 
 - EMR benchmark results are stored separately from local and Docker results.
+      Result: `experiments/results/aws-emr/benchmark_m4-emr-final-2.csv`.
 - The report can honestly claim real cluster execution.
+      Result: real cluster `j-VS6OEAAXUMGP` ran from
+      `2026-05-21T22:51:56Z` to `2026-05-21T23:40:53Z`.
 - EMR outputs and timing evidence are reproducible from documented commands.
+      Result: `make aws-upload`, `make benchmark-aws-emr`, and
+      `make aws-fetch-results` document the run path.
+      Spark job `duration_seconds` records internal application timing, while
+      `step_timing_<run_id>.csv` records EMR queue/start/end wall-clock timing.
 
 ### M5 - Cluster Size Variation
 
@@ -222,44 +259,61 @@ material.
 
 **Goal:** make the AWS experiment reproducible instead of manual-only.
 
-- [ ] Add Make targets:
-  - [ ] `make aws-upload`
-  - [ ] `make benchmark-aws-emr`
-  - [ ] `make aws-fetch-results`
-  - [ ] `make aws-cleanup`
-- [ ] Add an AWS config file for:
-  - [ ] S3 bucket and prefix
-  - [ ] AWS region
-  - [ ] EMR release label
-  - [ ] cluster profile
-  - [ ] benchmark matrix
-  - [ ] repetition policy
-- [ ] Add an AWS helper script with:
-  - [ ] dry-run mode
-  - [ ] S3 upload support
-  - [ ] EMR cluster creation
-  - [ ] Spark step submission
-  - [ ] step polling
-  - [ ] result download
-  - [ ] forced cluster termination
-- [ ] Extend chart/table generation to include `aws-emr`.
-- [ ] Add tests for:
-  - [ ] AWS command construction
-  - [ ] benchmark repetition aggregation
-  - [ ] chart environment handling
-  - [ ] config parsing
-- [ ] Confirm `.gitignore` excludes:
-  - [ ] AWS credentials
-  - [ ] raw data
-  - [ ] generated Parquet datasets
-  - [ ] bulky EMR logs
-  - [ ] downloaded AWS runtime artifacts
+- [x] Add Make targets:
+  - [x] `make aws-upload`
+  - [x] `make benchmark-aws-emr`
+  - [x] `make aws-fetch-results`
+  - [x] `make aws-cleanup`
+- [x] Add an AWS config file for:
+  - [x] S3 bucket and prefix
+  - [x] AWS region
+  - [x] EMR release label
+  - [x] cluster profile
+  - [x] benchmark matrix
+  - [x] repetition policy
+- [x] Add an AWS helper script with:
+  - [x] dry-run mode
+  - [x] S3 upload support
+  - [x] EMR cluster creation
+  - [x] Spark step submission
+  - [x] step polling
+  - [x] result download
+  - [x] forced cluster termination
+  - [x] smoke-only execution
+  - [x] run manifest generation
+  - [x] step timing CSV generation
+  - [x] cost log generation
+  - [x] tagged-cluster cleanup discovery
+- [x] Extend chart/table generation to include `aws-emr`.
+- [x] Add tests for:
+  - [x] AWS command construction
+  - [x] benchmark repetition aggregation
+  - [x] chart environment handling
+  - [x] config parsing
+  - [x] pinned dependency command construction
+  - [x] S3 input validation
+  - [x] missing metrics failure behavior
+  - [x] run manifest fields and hash generation
+  - [x] tagged cleanup selection
+  - [x] AWS audit table generation
+- [x] Confirm `.gitignore` excludes:
+  - [x] AWS credentials
+  - [x] raw data
+  - [x] generated Parquet datasets
+  - [x] bulky EMR logs
+  - [x] downloaded AWS runtime artifacts
 
 **Acceptance criteria:**
 
 - AWS tooling can be dry-run tested before spending budget.
+      Result: `make aws-upload AWS_DRY_RUN=1` and
+      `make benchmark-aws-emr AWS_DRY_RUN=1` both construct the expected
+      commands without creating AWS resources.
 - EMR clusters are always terminated by the helper workflow.
+      Result: the benchmark helper terminates the tracked cluster in a
+      `finally` block and exposes `make aws-cleanup` as a manual safety valve.
 - AWS results can be merged into the existing report artifact pipeline.
+      Result: chart/table discovery includes `experiments/results/aws-emr`.
 
 ### M7 - Final Report Upgrade
 
@@ -306,25 +360,29 @@ material.
 
 ## Test Plan
 
-- [ ] Run unit tests:
+- [x] Run unit tests:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-- [ ] Run report artifact generation:
+Result: `106 passed`.
+
+- [x] Run report artifact generation:
 
 ```powershell
 make charts
 make report
 ```
 
-- [ ] Run AWS tooling in dry-run mode before any real EMR cluster is created.
-- [ ] Run one EMR smoke benchmark on `100k` before the full AWS matrix.
+Result: charts/tables regenerated and `report/draft_final_report.pdf` rebuilt.
+
+- [x] Run AWS tooling in dry-run mode before any real EMR cluster is created.
+- [x] Run one EMR smoke benchmark on `100k` before the full AWS matrix.
 - [ ] Validate EMR Spark SQL and Spark Core outputs against local Spark SQL
       samples where feasible.
-- [ ] Confirm every EMR cluster is terminated.
-- [ ] Confirm no unexpected AWS resources remain after cleanup.
+- [x] Confirm every EMR cluster is terminated.
+- [x] Confirm no unexpected AWS resources remain after cleanup.
 
 ## AWS Cost And Safety Rules
 

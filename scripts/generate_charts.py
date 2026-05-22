@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import re
 import sys
 from dataclasses import dataclass
@@ -17,11 +18,15 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from experiments.run_benchmarks import BENCHMARK_COLUMNS
 DEFAULT_RESULTS_DIRS = (
     PROJECT_ROOT / "experiments" / "results" / "local",
     PROJECT_ROOT / "experiments" / "results" / "docker-simulation",
+    PROJECT_ROOT / "experiments" / "results" / "aws-emr",
 )
 DEFAULT_OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 DEFAULT_FIGURES_DIR = PROJECT_ROOT / "report" / "figures"
@@ -42,8 +47,9 @@ JOB_LABELS = {
 ENVIRONMENT_LABELS = {
     "local": "Local",
     "docker-simulation": "Docker standalone simulation",
+    "aws-emr": "AWS EMR",
 }
-BENCHMARK_FILE_RE = re.compile(r"^benchmark_\d{8}T\d{6}(?:\d{6})?Z(?:_\d+)?\.csv$")
+BENCHMARK_FILE_RE = re.compile(r"^benchmark_(?!latest\.csv$)(?!notes\.csv$)[A-Za-z0-9][A-Za-z0-9_.-]*\.csv$")
 EXPECTED_INPUTS_BY_ENVIRONMENT = {
     "local": (
         ("100k", 100_000),
@@ -57,7 +63,37 @@ EXPECTED_INPUTS_BY_ENVIRONMENT = {
         ("500k", 500_000),
         ("1m", 1_000_000),
     ),
+    "aws-emr": (
+        ("100k", 100_000),
+        ("500k", 500_000),
+        ("1m", 1_000_000),
+        ("3m", 3_000_000),
+        ("full", 7_079_081),
+        ("14m", 14_000_000),
+    ),
 }
+EXPECTED_TECHNOLOGIES_BY_ENVIRONMENT = {
+    "aws-emr": ("spark_sql", "spark_core"),
+}
+AWS_AUDIT_MANIFEST_COLUMNS = [
+    "run_id",
+    "run_kind",
+    "status",
+    "is_canonical_full_run",
+    "canonical_run_id",
+    "git_commit",
+    "git_dirty",
+    "bucket",
+    "region",
+    "emr_release",
+    "cluster_id",
+    "instance_type",
+    "node_count",
+    "source_bundle_sha256",
+    "runtime_config_sha256",
+    "config_sha256",
+    "dependencies",
+]
 @dataclass(frozen=True)
 class GeneratedArtifacts:
     figures: list[Path]
@@ -92,8 +128,26 @@ def discover_benchmark_csvs(results_dirs: Iterable[Path]) -> list[Path]:
             path
             for path in results_dir.glob("benchmark_*.csv")
             if BENCHMARK_FILE_RE.fullmatch(path.name)
+            and benchmark_csv_schema_errors(path) == []
         )
     return sorted(csvs)
+
+
+def benchmark_csv_schema_errors(path: Path) -> list[str]:
+    try:
+        with path.open(newline="", encoding="utf-8") as file:
+            fieldnames = csv.DictReader(file).fieldnames or []
+    except OSError as exc:
+        return [str(exc)]
+    required = [column for column in BENCHMARK_COLUMNS if column != "repetition"]
+    missing = [column for column in required if column not in fieldnames]
+    unknown = [column for column in fieldnames if column not in BENCHMARK_COLUMNS]
+    errors: list[str] = []
+    if missing:
+        errors.append(f"missing columns: {', '.join(missing)}")
+    if unknown:
+        errors.append(f"unexpected columns: {', '.join(unknown)}")
+    return errors
 
 
 def parse_timestamp(value: object) -> datetime:
@@ -112,6 +166,9 @@ def parse_timestamp(value: object) -> datetime:
 def read_benchmark_rows(csv_paths: Iterable[Path]) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for csv_path in csv_paths:
+        errors = benchmark_csv_schema_errors(csv_path)
+        if errors:
+            continue
         with csv_path.open(newline="", encoding="utf-8") as file:
             reader = csv.DictReader(file)
             for row in reader:
@@ -457,9 +514,10 @@ def benchmark_status_records(rows: Iterable[dict[str, object]]) -> list[dict[str
     expected_keys: set[tuple[str, str, str, str]] = set()
     status_rows: list[dict[str, object]] = []
     for environment, inputs in EXPECTED_INPUTS_BY_ENVIRONMENT.items():
+        expected_technologies = EXPECTED_TECHNOLOGIES_BY_ENVIRONMENT.get(environment, CORE_TECHNOLOGY_ORDER)
         for input_label, records in inputs:
             for job_name in JOB_LABELS:
-                for technology in CORE_TECHNOLOGY_ORDER:
+                for technology in expected_technologies:
                     key = (environment, input_label, job_name, technology)
                     expected_keys.add(key)
                     row = latest_by_key.get(key)
@@ -518,7 +576,11 @@ def benchmark_status_records(rows: Iterable[dict[str, object]]) -> list[dict[str
 
 def write_csv(path: Path, records: list[dict[str, object]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = list(records[0].keys()) if records else []
+    fieldnames: list[str] = []
+    for record in records:
+        for key in record:
+            if key not in fieldnames:
+                fieldnames.append(key)
     with path.open("w", newline="", encoding="utf-8") as file:
         if not fieldnames:
             file.write("")
@@ -539,7 +601,11 @@ def write_markdown(path: Path, records: list[dict[str, object]]) -> None:
         path.write_text("_No data available._\n", encoding="utf-8")
         return
 
-    columns = list(records[0].keys())
+    columns: list[str] = []
+    for record in records:
+        for key in record:
+            if key not in columns:
+                columns.append(key)
     lines = [
         "| " + " | ".join(columns) + " |",
         "| " + " | ".join("---" for _ in columns) + " |",
@@ -679,6 +745,83 @@ def copy_first_10_tables(outputs_dir: Path, tables_dir: Path) -> tuple[list[Path
     return tables, warnings
 
 
+def audit_results_dirs(benchmark_csvs: Iterable[Path]) -> list[Path]:
+    return sorted({path.parent for path in benchmark_csvs if path.parent.name == "aws-emr" or path.parent.as_posix().endswith("aws-emr")})
+
+
+def read_aws_run_manifest_records(results_dirs: Iterable[Path]) -> list[dict[str, object]]:
+    records: list[dict[str, object]] = []
+    for results_dir in results_dirs:
+        for path in sorted(results_dir.glob("run_manifest_*.json")):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            aws = data.get("aws", {}) if isinstance(data.get("aws"), dict) else {}
+            git = data.get("git", {}) if isinstance(data.get("git"), dict) else {}
+            artifacts = data.get("artifacts", {}) if isinstance(data.get("artifacts"), dict) else {}
+            records.append(
+                {
+                    "run_id": data.get("run_id", ""),
+                    "run_kind": data.get("run_kind", ""),
+                    "status": data.get("status", ""),
+                    "is_canonical_full_run": data.get("is_canonical_full_run", ""),
+                    "canonical_run_id": data.get("canonical_run_id", ""),
+                    "git_commit": git.get("commit", ""),
+                    "git_dirty": git.get("dirty", ""),
+                    "bucket": aws.get("bucket", ""),
+                    "region": aws.get("region", ""),
+                    "emr_release": aws.get("emr_release", ""),
+                    "cluster_id": aws.get("cluster_id", ""),
+                    "instance_type": aws.get("instance_type", ""),
+                    "node_count": aws.get("node_count", ""),
+                    "source_bundle_sha256": artifacts.get("source_bundle_sha256", ""),
+                    "runtime_config_sha256": artifacts.get("runtime_config_sha256", ""),
+                    "config_sha256": artifacts.get("config_sha256", ""),
+                    "dependencies": "; ".join(str(item) for item in data.get("python_dependencies", [])),
+                }
+            )
+    return records
+
+
+def read_csv_records(paths: Iterable[Path]) -> list[dict[str, object]]:
+    records: list[dict[str, object]] = []
+    for path in paths:
+        try:
+            with path.open(newline="", encoding="utf-8") as file:
+                records.extend(dict(row) for row in csv.DictReader(file))
+        except OSError:
+            continue
+    return records
+
+
+def copy_aws_first_10_tables(results_dirs: Iterable[Path], tables_dir: Path, run_ids: set[str]) -> tuple[list[Path], list[str]]:
+    tables: list[Path] = []
+    warnings: list[str] = []
+    if not run_ids:
+        return tables, warnings
+
+    for results_dir in results_dirs:
+        downloaded = results_dir / "downloaded"
+        if not downloaded.exists():
+            continue
+        for run_id in sorted(run_ids):
+            run_dir = downloaded / run_id
+            outputs = run_dir / "outputs"
+            if not outputs.exists():
+                warnings.append(f"Missing downloaded AWS outputs: {display_path(outputs)}")
+                continue
+            for source_path in sorted(outputs.glob("*/*/rep1/*/*/first_10.csv")):
+                parts = source_path.relative_to(outputs).parts
+                if len(parts) < 6:
+                    continue
+                input_label, technology, repetition, _, job_name, _ = parts[:6]
+                records = read_first_10_records(source_path)
+                stem = f"first_10_aws-emr_{run_id}_{input_label}_{technology}_{repetition}_{job_name}"
+                tables.extend(write_table_pair(tables_dir, stem, records))
+    return tables, warnings
+
+
 def generate_artifacts(
     *,
     benchmark_csvs: list[Path],
@@ -689,6 +832,11 @@ def generate_artifacts(
     warnings: list[str] = []
     if not benchmark_csvs:
         warnings.append("No timestamped benchmark CSV files found.")
+
+    invalid_csvs = [(path, benchmark_csv_schema_errors(path)) for path in benchmark_csvs]
+    invalid_csvs = [(path, errors) for path, errors in invalid_csvs if errors]
+    for path, errors in invalid_csvs:
+        warnings.append(f"Skipping invalid benchmark CSV {display_path(path)}: {'; '.join(errors)}")
 
     all_rows = read_benchmark_rows(benchmark_csvs)
     successful_rows = [
@@ -715,6 +863,18 @@ def generate_artifacts(
     first_10_tables, first_10_warnings = copy_first_10_tables(outputs_dir, tables_dir)
     tables.extend(first_10_tables)
     warnings.extend(first_10_warnings)
+
+    aws_results_dirs = audit_results_dirs(benchmark_csvs)
+    aws_run_ids = {str(row.get("run_id", "")) for row in latest_rows if str(row.get("environment", "")) == "aws-emr" and row.get("run_id")}
+    manifest_records = read_aws_run_manifest_records(aws_results_dirs)
+    step_timing_records = read_csv_records(path for results_dir in aws_results_dirs for path in sorted(results_dir.glob("step_timing_*.csv")))
+    cost_records = read_csv_records(path for results_dir in aws_results_dirs for path in sorted(results_dir.glob("cost_log_*.csv")))
+    tables.extend(write_table_pair(tables_dir, "aws_run_manifest", manifest_records))
+    tables.extend(write_table_pair(tables_dir, "aws_step_timing", step_timing_records))
+    tables.extend(write_table_pair(tables_dir, "aws_cost_log", cost_records))
+    aws_first_10_tables, aws_first_10_warnings = copy_aws_first_10_tables(aws_results_dirs, tables_dir, aws_run_ids)
+    tables.extend(aws_first_10_tables)
+    warnings.extend(aws_first_10_warnings)
 
     figures = generate_execution_time_charts(latest_rows, figures_dir)
     return GeneratedArtifacts(figures=figures, tables=tables, warnings=warnings)

@@ -719,6 +719,10 @@ run-all-local
 benchmark-local
 benchmark-docker-simulation
 benchmark-mapreduce-local
+aws-upload
+benchmark-aws-emr
+aws-fetch-results
+aws-cleanup
 charts
 report
 clean
@@ -755,6 +759,80 @@ make aws-check-report
 ```
 
 This creates `report/tables/aws_feasibility.{json,csv,md}`.
+
+## AWS EMR Benchmark Lane
+
+Milestone 4 adds a real Amazon EMR execution lane for Spark SQL and Spark Core.
+Set the project bucket before running any AWS target:
+
+```powershell
+$env:AWS_FLIGHT_DELAY_BUCKET="your-unique-bucket-name"
+```
+
+The helper uses this fixed layout:
+
+```text
+s3://<bucket>/flight-delay/data/
+s3://<bucket>/flight-delay/code/
+s3://<bucket>/flight-delay/results/
+s3://<bucket>/flight-delay/logs/
+```
+
+Validate the AWS commands without creating resources:
+
+```powershell
+make aws-upload AWS_DRY_RUN=1
+make benchmark-aws-emr AWS_DRY_RUN=1
+make benchmark-aws-emr AWS_DRY_RUN=1 AWS_RUN_ID=m4-hardened-smoke AWS_SMOKE_ONLY=1
+make aws-cleanup AWS_DRY_RUN=1
+```
+
+Upload prepared/generated Parquet inputs, the source bundle, and runtime config:
+
+```powershell
+make aws-upload
+```
+
+Run the EMR benchmark lane:
+
+```powershell
+make benchmark-aws-emr
+```
+
+The run creates a short-lived EMR cluster, installs Python runtime dependencies,
+runs a `100k` Spark SQL/Spark Core smoke gate first, executes the configured
+matrix if the smoke gate passes, writes S3 logs/results, and terminates the
+cluster in cleanup. Local benchmark evidence is written separately under
+`experiments/results/aws-emr/`.
+
+Run only the low-cost instrumented smoke path:
+
+```powershell
+make benchmark-aws-emr AWS_RUN_ID=m4-hardened-smoke-3 AWS_SMOKE_ONLY=1
+```
+
+The canonical full-matrix EMR evidence remains `m4-emr-final-2`. Hardened smoke
+runs are auditability checks; they do not replace the full benchmark matrix.
+Each EMR run writes:
+
+```text
+experiments/results/aws-emr/benchmark_<run_id>.csv
+experiments/results/aws-emr/step_timing_<run_id>.csv
+experiments/results/aws-emr/cost_log_<run_id>.csv
+experiments/results/aws-emr/run_manifest_<run_id>.json
+```
+
+`duration_seconds` in the benchmark CSV is the Spark application timing reported
+by the job runtime metrics. `step_timing_<run_id>.csv` records EMR wall-clock
+step evidence, including queue/start/end timestamps, step IDs, failure reasons,
+and metrics S3 URIs.
+
+Fetch S3 result artifacts or force cleanup of a tracked cluster:
+
+```powershell
+make aws-fetch-results
+make aws-cleanup
+```
 
 `make clean` is intentionally conservative. It removes generated data,
 technology outputs, and benchmark runtime results while preserving raw Kaggle

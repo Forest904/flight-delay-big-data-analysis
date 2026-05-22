@@ -18,6 +18,7 @@ ALLOWLISTED_DIRS = (
     Path("outputs/mapreduce"),
     Path("experiments/results/local"),
     Path("experiments/results/docker-simulation"),
+    Path("experiments/results/aws-emr"),
 )
 
 

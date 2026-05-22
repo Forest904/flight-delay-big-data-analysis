@@ -1,12 +1,78 @@
 environment: aws-emr
 
+paths:
+  raw_dir: data/raw
+  raw_file: data/raw/flight_data_2024.csv
+  prepared_dir: data/prepared
+  prepared_file: data/prepared/flights_2024_clean.parquet
+  generated_dir: data/generated
+  outputs_dir: outputs
+  results_dir: experiments/results/aws-emr
+
+spark:
+  master: yarn
+  app_name: flight-delay-big-data-analysis-aws-emr
+  shuffle_partitions: 24
+
+benchmark:
+  canonical_run_id: m4-emr-final-2
+  execution_setting: "Amazon EMR cluster: 1 primary + 2 core nodes; Spark on YARN"
+  technologies:
+    - spark_sql
+    - spark_core
+  input_sizes:
+    - label: 100k
+      records: 100000
+      local_path: data/generated/flights_100k.parquet
+      s3_path: flight-delay/data/generated/flights_100k.parquet/
+      repetitions: 3
+      smoke_gate: true
+    - label: 500k
+      records: 500000
+      local_path: data/generated/flights_500k.parquet
+      s3_path: flight-delay/data/generated/flights_500k.parquet/
+      repetitions: 1
+    - label: 1m
+      records: 1000000
+      local_path: data/generated/flights_1m.parquet
+      s3_path: flight-delay/data/generated/flights_1m.parquet/
+      repetitions: 3
+    - label: 3m
+      records: 3000000
+      local_path: data/generated/flights_3m.parquet
+      s3_path: flight-delay/data/generated/flights_3m.parquet/
+      repetitions: 1
+    - label: full
+      records: 7079081
+      local_path: data/prepared/flights_2024_clean.parquet
+      s3_path: flight-delay/data/prepared/flights_2024_clean.parquet/
+      repetitions: 3
+      method: prepared_reference
+    - label: 14m
+      records: 14000000
+      local_path: data/generated/flights_14m.parquet
+      s3_path: flight-delay/data/generated/flights_14m.parquet/
+      repetitions: 1
+      max_repetitions: 3
+      optional: true
+
 aws:
   region: us-east-1
   learner_lab: true
+  dependencies:
+    - PyYAML==6.0.3
+    - pandas==2.3.3
+    - pyarrow==21.0.0
+    - boto3==1.42.97
+  timeouts:
+    cluster_startup_seconds: 900
+    step_seconds: 1800
+    total_run_seconds: 7200
   budget:
     expected_allowance_usd: 50
     minimum_remaining_usd: 45
     remaining_budget_env: AWS_LEARNER_LAB_BUDGET_REMAINING_USD
+    estimated_hourly_usd_per_node: 0.226
 
 s3:
   bucket_env: AWS_FLIGHT_DELAY_BUCKET
@@ -18,8 +84,8 @@ s3:
     logs: flight-delay/logs/
 
 emr:
-  release_label: auto
-  release_label_fallback: emr-7.10.0
+  release_label: emr-7.13.0
+  release_label_fallback: emr-7.13.0
   applications:
     - Spark
   instance_type_fallback_order:
@@ -28,7 +94,9 @@ emr:
   cluster_profile:
     primary_nodes: 1
     core_nodes: 2
+    instance_type: m5.xlarge
     terminate_after_benchmark: true
+    idle_timeout_seconds: 600
     log_destination: s3
   iam_role_candidates:
     service_role:
