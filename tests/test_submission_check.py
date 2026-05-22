@@ -134,10 +134,13 @@ def test_secret_scan_allows_placeholders_and_flags_realistic_values(tmp_path):
         encoding="utf-8",
     )
     secret = tmp_path / "leak.txt"
+    aws_access_key_id = "ASIA" + "1234567890ABCDEF"
+    aws_secret_access_key = "abcdefghijklmnopqrstuvwxyz" + "ABCDE1234567890/+="
+    kaggle_key = "KGAT" + "abcdefghijklmnop123456"
     secret.write_text(
-        "AWS_ACCESS_KEY_ID=ASIA1234567890ABCDEF\n"
-        "AWS_SECRET_ACCESS_KEY=abcdefghijklmnopqrstuvwxyzABCDE1234567890/+=\n"
-        "KAGGLE_KEY=KGATabcdefghijklmnop123456\n",
+        f"AWS_ACCESS_KEY_ID={aws_access_key_id}\n"
+        f"AWS_SECRET_ACCESS_KEY={aws_secret_access_key}\n"
+        f"KAGGLE_KEY={kaggle_key}\n",
         encoding="utf-8",
     )
 

@@ -167,20 +167,23 @@ The input-size generator creates controlled benchmark inputs under
 - `3m`
 - `full`
 - `14m`
+- `28m`
 
 Smaller inputs are selected with a deterministic hash-based method using seed
 `20240520`. This avoids chronological bias from simply taking the first rows of
-the CSV. The `14m` input was generated and validated with controlled
-replication: one complete repetition of the canonical prepared dataset plus a
-deterministic sampled remainder of `6,920,919` rows. The output keeps the same
+the CSV. The `14m` and `28m` inputs were generated and validated with
+controlled replication. The `14m` input uses one complete repetition of the
+canonical prepared dataset plus a deterministic sampled remainder of
+`6,920,919` rows. The `28m` input uses three complete repetitions plus a
+deterministic sampled remainder of `6,762,757` rows. Both outputs keep the same
 prepared schema, and no synthetic columns or schema changes are retained.
 
-This replicated larger input is valid scalability evidence because it increases
-data volume while preserving the canonical row shape, column types, null
-behavior, and analysis semantics used by the original prepared dataset. It is
-not treated as new statistical evidence about flight behavior; it is used only
-to test how the implementations respond to a larger input volume. The optional
-`28m` input was not generated for this submission.
+These replicated larger inputs are valid scalability stress evidence because
+they increase data volume while preserving the canonical row shape, column
+types, null behavior, and analysis semantics used by the original prepared
+dataset. They are not treated as new statistical evidence about flight
+behavior. In particular, `28m` is used only to test how the implementations
+respond to larger input volume under the controlled benchmark setup.
 
 # Analyses And Implementations
 
