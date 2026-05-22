@@ -51,35 +51,43 @@
 | docker-simulation | 1m | 1000000 | delay_by_airport_month | Spark Core | 3.673 | 272268.278 |
 | docker-simulation | 1m | 1000000 | delay_by_airport_month | Spark SQL | 14.541 | 68772.012 |
 | local | 100k | 100000 | airline_airport_ranking | Hive | 14.322 | 6982.271 |
-| local | 100k | 100000 | airline_airport_ranking | MapReduce | 6.551 | 15265.784 |
+| local | 100k | 100000 | airline_airport_ranking | MapReduce | 6.708 | 14907.026 |
 | local | 100k | 100000 | airline_airport_ranking | Spark Core | 0.74 | 135131.483 |
 | local | 100k | 100000 | airline_airport_ranking | Spark SQL | 1.744 | 57327.616 |
 | local | 100k | 100000 | delay_by_airport_month | Hive | 19.841 | 5040.064 |
-| local | 100k | 100000 | delay_by_airport_month | MapReduce | 7.49 | 13350.342 |
+| local | 100k | 100000 | delay_by_airport_month | MapReduce | 7.644 | 13082.344 |
 | local | 100k | 100000 | delay_by_airport_month | Spark Core | 1.002 | 99844.941 |
 | local | 100k | 100000 | delay_by_airport_month | Spark SQL | 7.966 | 12553.587 |
 | local | 500k | 500000 | airline_airport_ranking | Hive | 14.125 | 35397.165 |
+| local | 500k | 500000 | airline_airport_ranking | MapReduce | 20.328 | 24596.847 |
 | local | 500k | 500000 | airline_airport_ranking | Spark Core | 0.783 | 638197.933 |
 | local | 500k | 500000 | airline_airport_ranking | Spark SQL | 1.853 | 269899.414 |
 | local | 500k | 500000 | delay_by_airport_month | Hive | 21.005 | 23803.363 |
+| local | 500k | 500000 | delay_by_airport_month | MapReduce | 23.3 | 21459.618 |
 | local | 500k | 500000 | delay_by_airport_month | Spark Core | 1.122 | 445616.912 |
 | local | 500k | 500000 | delay_by_airport_month | Spark SQL | 8.675 | 57637.16 |
 | local | 1m | 1000000 | airline_airport_ranking | Hive | 15.984 | 62563.349 |
+| local | 1m | 1000000 | airline_airport_ranking | MapReduce | 37.887 | 26394.538 |
 | local | 1m | 1000000 | airline_airport_ranking | Spark Core | 0.796 | 1256775.591 |
 | local | 1m | 1000000 | airline_airport_ranking | Spark SQL | 2.5 | 399967.843 |
 | local | 1m | 1000000 | delay_by_airport_month | Hive | 22.411 | 44620.828 |
+| local | 1m | 1000000 | delay_by_airport_month | MapReduce | 40.762 | 24532.643 |
 | local | 1m | 1000000 | delay_by_airport_month | Spark Core | 1.195 | 836591.859 |
 | local | 1m | 1000000 | delay_by_airport_month | Spark SQL | 12.181 | 82092.815 |
 | local | 3m | 3000000 | airline_airport_ranking | Hive | 15.341 | 195548.125 |
+| local | 3m | 3000000 | airline_airport_ranking | MapReduce | 105.491 | 28438.482 |
 | local | 3m | 3000000 | airline_airport_ranking | Spark Core | 0.73 | 4110292.858 |
 | local | 3m | 3000000 | airline_airport_ranking | Spark SQL | 3.11 | 964568.815 |
 | local | 3m | 3000000 | delay_by_airport_month | Hive | 25.069 | 119670.514 |
+| local | 3m | 3000000 | delay_by_airport_month | MapReduce | 116.11 | 25837.597 |
 | local | 3m | 3000000 | delay_by_airport_month | Spark Core | 1.126 | 2663636.041 |
 | local | 3m | 3000000 | delay_by_airport_month | Spark SQL | 13.09 | 229174.003 |
 | local | full | 7079081 | airline_airport_ranking | Hive | 24.02 | 294711.67 |
+| local | full | 7079081 | airline_airport_ranking | MapReduce | 249.968 | 28319.897 |
 | local | full | 7079081 | airline_airport_ranking | Spark Core | 0.785 | 9016949.735 |
 | local | full | 7079081 | airline_airport_ranking | Spark SQL | 3.4 | 2082346.003 |
 | local | full | 7079081 | delay_by_airport_month | Hive | 35.005 | 202231.85 |
+| local | full | 7079081 | delay_by_airport_month | MapReduce | 267.284 | 26485.192 |
 | local | full | 7079081 | delay_by_airport_month | Spark Core | 1.221 | 5797103.692 |
 | local | full | 7079081 | delay_by_airport_month | Spark SQL | 12.997 | 544668.206 |
 | local | 14m | 14000000 | airline_airport_ranking | Hive | 26.78 | 522782.331 |

@@ -1,6 +1,6 @@
 | category | item | value | source |
 | --- | --- | --- | --- |
-| campaign | summary_generated_at_utc | 2026-05-22T16:56:10.187214+00:00 | script timestamp |
+| campaign | summary_generated_at_utc | 2026-05-22T19:10:13.057162+00:00 | script timestamp |
 | host | os | Windows-11-10.0.26200-SP0 | platform.platform |
 | host | python_executable | C:\Users\lucap\Documents\VSC Repository\flight-delay-big-data-analysis\.venv\Scripts\python.exe | sys.executable |
 | host | python_version | 3.12.2 | platform.python_version |
@@ -9,7 +9,7 @@
 | host | logical_cores | 16 | psutil |
 | host | ram_bytes | 33598853120 | psutil |
 | host | project_drive_total_bytes | 957397069824 | psutil.disk_usage |
-| host | project_drive_free_bytes | 533367734272 | psutil.disk_usage |
+| host | project_drive_free_bytes | 538874912768 | psutil.disk_usage |
 | host | windows_cpu_model | AMD Ryzen AI 7 350 w/ Radeon 860M | Win32_Processor |
 | host | windows_os_detail | Microsoft Windows 11 Home 10.0.26200 build 26200 64-bit | Win32_OperatingSystem |
 | host | disk_type | WD PC SN5000S SDEPMSJ-1T00-1101; media=SSD; bus=NVMe; size=1024209543168 | Get-PhysicalDisk |

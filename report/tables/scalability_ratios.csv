@@ -48,6 +48,11 @@ local,3m,3000000,airline_airport_ranking,Hive,1.0711845310860477,30.0,28.0063790
 local,full,7079081,airline_airport_ranking,Hive,1.677166745287037,70.79081,42.20857001781572
 local,14m,14000000,airline_airport_ranking,Hive,1.8698373438100913,140.0,74.87282274228609
 local,28m,28000000,airline_airport_ranking,Hive,4.646085375857039,280.0,60.265788798241765
+local,100k,100000,airline_airport_ranking,MapReduce,1.0,1.0,1.0
+local,500k,500000,airline_airport_ranking,MapReduce,3.0302718475142383,5.0,1.6500169792032184
+local,1m,1000000,airline_airport_ranking,MapReduce,5.647769476551694,10.0,1.7706105111969983
+local,3m,3000000,airline_airport_ranking,MapReduce,15.72555046430915,30.0,1.9077233619317981
+local,full,7079081,airline_airport_ranking,MapReduce,37.26286364572796,70.79081,1.899768377251808
 local,100k,100000,airline_airport_ranking,Spark Core,1.0,1.0,1.0
 local,500k,500000,airline_airport_ranking,Spark Core,1.0586957109267316,5.0,4.7227923457092675
 local,1m,1000000,airline_airport_ranking,Spark Core,1.075223642604254,10.0,9.300390731531367
@@ -69,6 +74,11 @@ local,3m,3000000,delay_by_airport_month,Hive,1.2634851699645655,30.0,23.74384813
 local,full,7079081,delay_by_airport_month,Hive,1.7642632046400042,70.79081,40.1248576821307
 local,14m,14000000,delay_by_airport_month,Hive,2.072052048942247,140.0,67.56587030304958
 local,28m,28000000,delay_by_airport_month,Hive,5.103830609901166,280.0,54.86075487239223
+local,100k,100000,delay_by_airport_month,MapReduce,1.0,1.0,1.0
+local,500k,500000,delay_by_airport_month,MapReduce,3.0481307292491127,5.0,1.64034959262778
+local,1m,1000000,delay_by_airport_month,MapReduce,5.332627366432536,10.0,1.8752482243457187
+local,3m,3000000,delay_by_airport_month,MapReduce,15.189892711695224,30.0,1.974997491384647
+local,full,7079081,delay_by_airport_month,MapReduce,34.96707671094168,70.79081,2.024498947544236
 local,100k,100000,delay_by_airport_month,Spark Core,1.0,1.0,1.0
 local,500k,500000,delay_by_airport_month,Spark Core,1.120300173830042,5.0,4.4630895511746465
 local,1m,1000000,delay_by_airport_month,Spark Core,1.1934725371498065,10.0,8.378910857791094

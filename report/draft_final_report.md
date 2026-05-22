@@ -341,11 +341,11 @@ The delay reducer computes the same grouped counts, averages, and top-three
 cause ordering as Spark SQL. The ranking reducer groups by airport, aggregates
 airline statistics, computes the airport average departure delay, and applies
 Spark SQL `RANK()` semantics with null averages last. Validation passed against
-Spark SQL for the full prepared dataset; the separate benchmark smoke run uses
-the `100k` generated input.
+Spark SQL for the full prepared dataset; the separate benchmark campaign uses
+the `100k`, `500k`, `1m`, `3m`, and `full` inputs as optional stretch evidence.
 
 The supported runtime is Docker-local Hadoop Streaming, not YARN/HDFS.
-Benchmark smoke runs use isolated output roots under
+MapReduce benchmark runs use isolated output roots under
 `outputs/mapreduce/.benchmark_runs/`, leaving `outputs/mapreduce/` reserved for
 validated report-ready outputs.
 
@@ -416,8 +416,8 @@ The reporting pipeline computes median, mean, minimum, maximum, and standard
 deviation of duration for each environment/input/job/technology group.
 Single-run CSVs are still readable as `runs=1`, and fresh benchmark campaigns
 can be forced to one run for smoke checks with `BENCHMARK_FLAGS="--repetitions
-1"`. The opt-in MapReduce benchmark smoke lets the stretch evidence be
-included without slowing the required default benchmark matrix:
+1"`. The opt-in MapReduce stretch benchmark is reported separately from the
+required default benchmark matrix:
 
 | Environment | Inputs | Technologies | Jobs | Status |
 | --- | --- | --- | --- | --- |
@@ -426,11 +426,11 @@ included without slowing the required default benchmark matrix:
 | Docker standalone simulation | `100k`, `500k`, `1m` | Spark SQL, Spark Core, Hive | both jobs | 18/18 successful |
 | AWS EMR baseline cluster | `100k`, `500k`, `1m`, `3m`, `full`, `14m` | Spark SQL, Spark Core | both jobs | 24/24 successful |
 | AWS EMR larger cluster | `1m`, `full` | Spark SQL, Spark Core | both jobs | 8/8 successful |
-| Local stretch | `100k` | Hadoop Streaming MapReduce | both jobs | 2/2 successful |
+| Local stretch | `100k`, `500k`, `1m`, `3m`, `full` | Hadoop Streaming MapReduce | both jobs | 10/10 successful, 3 repetitions each |
 
 The local run ID is `20260521T153035251181Z`. The Docker standalone simulation
-run ID is `20260521T160042313560Z`. The MapReduce smoke run ID is
-`20260521T153912538439Z`. The local `14m` run ID is
+run ID is `20260521T160042313560Z`. The MapReduce stretch benchmark run ID is
+`20260522T182250129354Z`. The local `14m` run ID is
 `20260521T220744784794Z`. The canonical AWS EMR baseline run ID is
 `m4-emr-final-2`, and the limited larger-cluster comparison run ID is
 `m5-emr-3core-1m-full`. Some local and Docker campaigns are represented as
@@ -443,7 +443,7 @@ for `500k`, `3m`, and `14m`, and a separate hardened smoke record for the
 
 For compactness, the printed pivot below focuses on median duration for the
 three required technologies. The regenerated `report/tables/benchmark_pivot.*`
-artifacts also include the optional MapReduce smoke columns when present.
+artifacts also include the optional MapReduce stretch columns when present.
 
 | environment | input_label | records | job_name | Spark SQL median s | Spark Core median s | Hive median s |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -1048,7 +1048,8 @@ numeric fields, rank values, and top-three cause labels/counts.
 | Validator | `scripts/validate_mapreduce_outputs.py` |
 | Runtime documentation | `docs/mapreduce_analyses.md` |
 
-The MapReduce benchmark smoke run on `100k` input completed both jobs
-successfully using isolated benchmark outputs. The benchmark rows are included
-in generated report tables when present, but missing MapReduce cells are not
-added to the required Spark/Hive/Spark Core benchmark status matrix.
+The MapReduce stretch benchmark completed `100k`, `500k`, `1m`, `3m`, and
+`full` inputs with three repetitions per input/job using isolated benchmark
+outputs. These rows are included in generated report tables when present, but
+missing MapReduce cells are not added to the required Spark/Hive/Spark Core
+benchmark status matrix.

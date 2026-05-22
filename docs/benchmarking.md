@@ -57,10 +57,10 @@ Run Docker standalone simulation:
 make benchmark-docker-simulation
 ```
 
-Run the optional MapReduce smoke benchmark:
+Run the optional MapReduce stretch benchmark:
 
 ```powershell
-make benchmark-mapreduce-local BENCHMARK_FLAGS="--input-label 100k --repetitions 1"
+make benchmark-mapreduce-local BENCHMARK_FLAGS="--input-label 100k --input-label 500k --input-label 1m --input-label 3m --input-label full --repetitions 3"
 ```
 
 Useful flags:

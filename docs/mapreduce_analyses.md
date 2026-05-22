@@ -96,10 +96,11 @@ benchmark metadata.
 
 ## Benchmarking
 
-Run an opt-in MapReduce benchmark smoke with:
+Run the opt-in MapReduce stretch benchmark with three repetitions on the local
+input ladder:
 
 ```powershell
-make benchmark-mapreduce-local BENCHMARK_FLAGS="--input-label 100k"
+make benchmark-mapreduce-local BENCHMARK_FLAGS="--input-label 100k --input-label 500k --input-label 1m --input-label 3m --input-label full --repetitions 3"
 ```
 
 The default `make benchmark-local` matrix intentionally remains limited to
@@ -107,7 +108,7 @@ Spark SQL, Spark Core, and Hive. MapReduce benchmark rows are included in chart
 and table generation when present, without adding missing MapReduce cells to
 the core benchmark-status matrix.
 
-Benchmark smoke runs write isolated outputs under:
+MapReduce benchmark runs write isolated outputs under:
 
 ```text
 outputs/mapreduce/.benchmark_runs/<run_id>/<input_label>/
