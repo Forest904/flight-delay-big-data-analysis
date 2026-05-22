@@ -328,33 +328,52 @@ execution-time figures, and downloaded AWS first-10 sample tables.
 
 **Goal:** convert the new work into evaluator-facing evidence.
 
-- [ ] Add a new report section: "AWS EMR Cluster Experiment."
-- [ ] Include:
-  - [ ] region
-  - [ ] EMR release
-  - [ ] Spark version
-  - [ ] instance types
-  - [ ] node counts
-  - [ ] S3 layout
-  - [ ] cluster lifetime
-  - [ ] budget controls
-- [ ] Add AWS benchmark tables and charts.
-- [ ] Add cost-awareness discussion.
-- [ ] Compare local, Docker simulation, and EMR cluster behavior.
-- [ ] Update limitations with:
-  - [ ] Learner Lab restrictions
-  - [ ] short-lived clusters
-  - [ ] S3 I/O effects
-  - [ ] small budget
-  - [ ] limited repetitions for largest inputs
-- [ ] Update the conclusion to state that the project includes real cluster
+- [x] Add a new report section: "AWS EMR Cluster Experiment."
+- [x] Include:
+  - [x] region
+  - [x] EMR release
+  - [x] Spark version
+  - [x] instance types
+  - [x] node counts
+  - [x] S3 layout
+  - [x] cluster lifetime
+  - [x] budget controls
+      Result: `report/draft_final_report.md` now summarizes the baseline
+      `m4-emr-final-2` cluster and the larger `m5-emr-3core-1m-full` cluster,
+      including `us-east-1`, EMR `emr-7.13.0`, Spark `3.5.6-amzn-2`,
+      `m5.xlarge` nodes, S3 prefixes, lifetimes, and termination/time-budget
+      controls.
+- [x] Add AWS benchmark tables and charts.
+      Result: the report references `aws_run_manifest`, `aws_step_timing`,
+      `aws_cost_log`, `benchmark_summary`, and `cluster_size_comparison`, and
+      embeds the AWS EMR baseline and larger-cluster charts.
+- [x] Add cost-awareness discussion.
+      Result: M7 explains Learner Lab budget controls, short-lived clusters,
+      forced termination, idle timeout, per-step/run timeouts, cost logs, and
+      why the larger cluster matrix was intentionally limited.
+- [x] Compare local, Docker simulation, and EMR cluster behavior.
+      Result: the critical discussion now distinguishes local execution,
+      single-host Docker standalone simulation, baseline EMR, and larger EMR
+      behavior.
+- [x] Update limitations with:
+  - [x] Learner Lab restrictions
+  - [x] short-lived clusters
+  - [x] S3 I/O effects
+  - [x] small budget
+  - [x] limited repetitions for largest inputs
+- [x] Update the conclusion to state that the project includes real cluster
       evidence.
 
 **Acceptance criteria:**
 
 - The final report directly addresses correctness, reproducibility, real
   cluster execution, scalability, cost, and technology comparison.
+      Result: the M7 report section, benchmark summary, limitations, and
+      conclusion explicitly cover these topics.
 - The previous grading weakness is explicitly resolved or honestly bounded.
+      Result: the conclusion states that real EMR evidence resolves the prior
+      cluster-evidence weakness, while Learner Lab budget and repetition limits
+      bound broad scalability claims.
 
 ## Suggested Execution Order
 
@@ -385,6 +404,17 @@ make report
 ```
 
 Result: charts/tables regenerated and `report/draft_final_report.pdf` rebuilt.
+
+M7 result: `make charts` regenerated 8 figures and 108 report tables; the
+`make report` target rebuilt `report/draft_final_report.pdf`.
+
+- [x] Run focused M7 regression tests:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q tests/test_generate_charts.py tests/test_repository_polish.py tests/test_aws_emr_benchmark.py
+```
+
+Result: `40 passed`.
 
 - [x] Run AWS tooling in dry-run mode before any real EMR cluster is created.
 - [x] Run one EMR smoke benchmark on `100k` before the full AWS matrix.

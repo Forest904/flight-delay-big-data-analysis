@@ -1,7 +1,7 @@
 ---
 title: "Flight Delay Big Data Analysis - Final Report"
 author: "Luca Foresti"
-date: "2026-05-21"
+date: "2026-05-22"
 fontsize: 10pt
 ---
 
@@ -12,6 +12,9 @@ reproducible big-data workflow. The repository prepares a canonical cleaned
 Parquet dataset, implements two analytical jobs with three required big-data
 technologies plus an optional MapReduce stretch, validates the outputs, records
 benchmark evidence, and produces the tables and figures included in this PDF.
+The evidence set includes real Amazon EMR cluster execution in addition to
+local execution and Docker standalone simulation, directly addressing the main
+scalability-evidence risk.
 
 Repository: <https://github.com/Forest904/flight-delay-big-data-analysis.git>
 
@@ -26,7 +29,7 @@ Hive. Spark SQL is used as the correctness reference because its declarative
 aggregations and window functions make the required output rules easiest to
 review. Spark Core reimplements the same logic with lower-level RDD
 transformations. Hive provides the required SQL-on-Hadoop comparison point.
-M6 adds Hadoop Streaming MapReduce as a validated stretch extension, kept
+Hadoop Streaming MapReduce is included as a validated stretch extension, kept
 separate from the grade-critical default workflow.
 
 The main reproducibility commands are:
@@ -43,12 +46,18 @@ make run-mapreduce
 make benchmark-local
 make benchmark-mapreduce-local
 make benchmark-docker-simulation
+make aws-upload
+make benchmark-aws-emr
+make aws-fetch-results
 make charts
 make report
 ```
 
 The `make benchmark-docker-simulation` target runs single-host Docker standalone
-simulation evidence.
+simulation evidence. The AWS targets reproduce the EMR upload, benchmark, and
+result-fetch workflow when AWS Academy Learner Lab access and budget are
+available; the report uses the completed EMR runs recorded under
+`experiments/results/aws-emr/` and `experiments/results/aws-emr-larger/`.
 
 # Assignment Coverage
 
@@ -57,8 +66,8 @@ simulation evidence.
 | Data preparation operations | Dataset And Preparation |
 | Implementation choices and pseudocode | Analyses And Implementations |
 | First 10 result rows | Evidence Appendix |
-| Execution-time tables and charts | Benchmark Evidence |
-| Local execution and Docker standalone simulation settings | Docker Standalone Simulation and Benchmark Evidence |
+| Execution-time tables and charts | Benchmark Evidence and AWS EMR Cluster Experiment |
+| Local, Docker standalone simulation, and AWS EMR settings | Docker Standalone Simulation, Environment And Runtime Configuration, and AWS EMR Cluster Experiment |
 | Critical discussion | Critical Discussion |
 | GitHub repository link | Executive Summary |
 
@@ -171,7 +180,7 @@ data volume while preserving the canonical row shape, column types, null
 behavior, and analysis semantics used by the original prepared dataset. It is
 not treated as new statistical evidence about flight behavior; it is used only
 to test how the implementations respond to a larger input volume. The optional
-`28m` input remains stretch evidence and was deferred for this milestone.
+`28m` input was not generated for this submission.
 
 # Analyses And Implementations
 
@@ -313,10 +322,11 @@ the exported Hive outputs against the Spark SQL reference.
 
 ## MapReduce Stretch
 
-M6 adds Hadoop Streaming MapReduce as an optional stretch, not as part of the
-three required technology baseline. The implementation uses Python mappers and
-reducers under `src/mapreduce/`, runs through a Docker-based `mapreduce-runner`
-service, and writes the same output schemas under `outputs/mapreduce/`.
+Hadoop Streaming MapReduce is implemented as an optional stretch, not as part
+of the three required technology baseline. The implementation uses Python
+mappers and reducers under `src/mapreduce/`, runs through a Docker-based
+`mapreduce-runner` service, and writes the same output schemas under
+`outputs/mapreduce/`.
 
 MapReduce reads a canonical CSV export generated from prepared Parquet. The
 export is stored under `data/generated/mapreduce_csv/` with a manifest that
@@ -356,7 +366,7 @@ it is a repeatable single-host simulation of Spark standalone execution.
 Hive is included in the Docker benchmark CSV so the report contains rows for
 all three required technologies, but Hive remains a single-node containerized
 Hive setup. Therefore the report uses the phrase "Docker standalone simulation"
-and avoids presenting these runs as future remote-service performance.
+and avoids presenting these runs as managed-service performance.
 
 The documented topology is stored in `docs/docker_simulation.md`. The command
 used to run the simulation evidence is:
@@ -399,27 +409,31 @@ input/technology configuration is run three times. Timestamped benchmark CSVs
 remain raw audit evidence, while the report-ready artifacts under
 `report/tables/` and `report/figures/` aggregate successful repetitions.
 
-The M2 reporting pipeline computes median, mean, minimum, maximum, and standard
-deviation of duration for each environment/input/job/technology group. Existing
-single-run CSVs are still readable as `runs=1`, and fresh benchmark campaigns
+The reporting pipeline computes median, mean, minimum, maximum, and standard
+deviation of duration for each environment/input/job/technology group.
+Single-run CSVs are still readable as `runs=1`, and fresh benchmark campaigns
 can be forced to one run for smoke checks with `BENCHMARK_FLAGS="--repetitions
-1"`. M6 adds an opt-in MapReduce benchmark smoke so the stretch can be included
-without slowing the required default benchmark matrix:
+1"`. The opt-in MapReduce benchmark smoke lets the stretch evidence be
+included without slowing the required default benchmark matrix:
 
 | Environment | Inputs | Technologies | Jobs | Status |
 | --- | --- | --- | --- | --- |
 | Local | `100k`, `500k`, `1m`, `3m`, `full` | Spark SQL, Spark Core, Hive | both jobs | 30/30 successful |
-| Local M3 large input | `14m` | Spark SQL, Spark Core | both jobs | 12/12 successful |
+| Local large input | `14m` | Spark SQL, Spark Core | both jobs | 12/12 successful |
 | Docker standalone simulation | `100k`, `500k`, `1m` | Spark SQL, Spark Core, Hive | both jobs | 18/18 successful |
+| AWS EMR baseline cluster | `100k`, `500k`, `1m`, `3m`, `full`, `14m` | Spark SQL, Spark Core | both jobs | 24/24 successful |
+| AWS EMR larger cluster | `1m`, `full` | Spark SQL, Spark Core | both jobs | 8/8 successful |
 | Local stretch | `100k` | Hadoop Streaming MapReduce | both jobs | 2/2 successful |
 
 The local run ID is `20260521T153035251181Z`. The Docker standalone simulation
 run ID is `20260521T160042313560Z`. The MapReduce smoke run ID is
-`20260521T153912538439Z`. The M3 `14m` run ID is
-`20260521T220744784794Z`. These legacy campaigns are represented as one-run
-aggregate rows until the benchmark matrix is regenerated with the M2 default
-repetition count; the `14m` Spark SQL and Spark Core rows use three repetitions.
-The full status matrix is stored in
+`20260521T153912538439Z`. The local `14m` run ID is
+`20260521T220744784794Z`. The canonical AWS EMR baseline run ID is
+`m4-emr-final-2`, and the limited larger-cluster comparison run ID is
+`m5-emr-3core-1m-full`. Some local and Docker campaigns are represented as
+one-run aggregate rows; AWS uses three repetitions for `1m` and `full`, one run
+for `500k`, `3m`, and `14m`, and a separate hardened smoke record for the
+`100k` audit path. The full status matrix is stored in
 `report/tables/benchmark_status.md`.
 
 ## Benchmark Pivot
@@ -562,11 +576,11 @@ records as the baseline. The compact columns `dur`, `rec`, and `thr` mean
 
 ## Benchmark Charts
 
-Execution-time charts are generated separately for local execution and Docker
-standalone simulation. Charts plot median duration and include min/max
-variability indicators when repeated successful measurements are available.
-Line plots are used only when at least three input sizes are available for a job
-and environment.
+Execution-time charts are generated separately for local execution, Docker
+standalone simulation, AWS EMR baseline, and AWS EMR larger-cluster runs. Charts
+plot median duration and include min/max variability indicators when repeated
+successful measurements are available. Line plots are used only when at least
+three input sizes are available for a job and environment.
 
 ![Local execution time for delay by airport/month](figures/execution_time_local_delay_by_airport_month.png)
 
@@ -576,19 +590,71 @@ and environment.
 
 ![Docker standalone simulation execution time for airline-airport ranking](figures/execution_time_docker-simulation_airline_airport_ranking.png)
 
+![AWS EMR baseline execution time for delay by airport/month](figures/execution_time_aws-emr_delay_by_airport_month.png)
+
+![AWS EMR baseline execution time for airline-airport ranking](figures/execution_time_aws-emr_airline_airport_ranking.png)
+
+![AWS EMR larger-cluster execution time for delay by airport/month](figures/execution_time_aws-emr-larger_delay_by_airport_month.png)
+
+![AWS EMR larger-cluster execution time for airline-airport ranking](figures/execution_time_aws-emr-larger_airline_airport_ranking.png)
+
 # AWS EMR Cluster Experiment
 
-The project now includes real Amazon EMR evidence in addition to local and
-Docker standalone simulation runs. The baseline EMR profile is the completed
-run `m4-emr-final-2`: EMR `emr-7.13.0` in `us-east-1`, Spark on YARN, one
-primary node and two core nodes, all using `m5.xlarge` instances. That run
-covered `100k`, `500k`, `1m`, `3m`, `full`, and `14m` inputs for Spark SQL and
-Spark Core, with S3 used for uploaded inputs, source bundles, logs, metrics,
-and downloaded outputs.
+The project includes real Amazon EMR evidence in addition to local and Docker
+standalone simulation runs. The AWS lane uses Spark steps on YARN, S3 for input
+and output movement, and short-lived clusters created specifically for
+benchmark evidence. Amazon's EMR Spark documentation and the EMR 7.13.0
+release notes list Spark `3.5.6-amzn-2` for release `emr-7.13.0`:
+<https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-spark.html> and
+<https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-7130-release.html>.
+
+| Field | Baseline EMR run | Larger EMR run |
+| --- | --- | --- |
+| Run ID | `m4-emr-final-2` | `m5-emr-3core-1m-full` |
+| Cluster ID | `j-VS6OEAAXUMGP` | `j-LTX1FIHYB4X9` |
+| Region | `us-east-1` | `us-east-1` |
+| EMR release | `emr-7.13.0` | `emr-7.13.0` |
+| Spark version | `3.5.6-amzn-2` | `3.5.6-amzn-2` |
+| Execution mode | Spark steps on YARN | Spark steps on YARN |
+| Instance type | `m5.xlarge` | `m5.xlarge` |
+| Node counts | 1 primary + 2 core, 3 total | 1 primary + 3 core, 4 total |
+| Inputs | `100k`, `500k`, `1m`, `3m`, `full`, `14m` | `1m`, `full` |
+| Technologies | Spark SQL, Spark Core | Spark SQL, Spark Core |
+| Cluster lifetime | `2026-05-21T22:51:56Z` to `2026-05-21T23:40:53Z` | `2026-05-22T00:46:03Z` to `2026-05-22T01:12:14Z` |
+| Cost evidence | Approximately `0.5530 USD`, estimated from run timestamps and config | `0.3944 USD` in `aws_cost_log` |
+
+The S3 layout is deliberately simple and reproducible:
+
+| Prefix | Purpose |
+| --- | --- |
+| `s3://fd-bda-380623119505-us-east-1/flight-delay/data/` | Prepared and generated Parquet inputs |
+| `s3://fd-bda-380623119505-us-east-1/flight-delay/code/` | Source bundles and per-run runtime configs |
+| `s3://fd-bda-380623119505-us-east-1/flight-delay/results/` | Runtime metrics, benchmark outputs, and fetched result evidence |
+| `s3://fd-bda-380623119505-us-east-1/flight-delay/logs/` | EMR and Spark step logs |
+
+The report-ready AWS evidence is generated into small audit artifacts instead
+of relying on console screenshots. `report/tables/aws_run_manifest.md` records
+cluster IDs, region, EMR release, instance type, node count, source-bundle hash,
+runtime-config hash, and dependency pins where available.
+`report/tables/aws_step_timing.md` records EMR step queue/start/end timings and
+S3 metrics URIs. `report/tables/aws_cost_log.md` records cluster lifetime,
+node-hours, configured hourly cost estimates, and Learner Lab budget fields.
+The aggregate timings flow into `report/tables/benchmark_summary.md`, and the
+local/Docker/EMR size comparison is summarized in
+`report/tables/cluster_size_comparison.md`.
+
+Cost controls were built into the workflow before running the expensive steps:
+the AWS config targets the AWS Academy Learner Lab budget, uses short-lived
+clusters, validates S3 input prefixes before cluster creation, sets cluster
+startup, step, and total-run timeouts, enables a 600-second idle termination
+policy for the hardened/larger runs, terminates the tracked cluster in the
+benchmark helper, and exposes `make aws-cleanup` for tagged-cluster cleanup.
+This makes the AWS results reproducible while avoiding any claim that the
+experiment was an unconstrained production benchmark.
 
 ## Cluster Size Variation
 
-Milestone 5 uses `m4-emr-final-2` as the baseline cluster-size point and
+The cluster-size comparison uses `m4-emr-final-2` as the baseline point and
 `m5-emr-3core-1m-full` as the larger-cluster point. The larger run used one
 primary node and three core nodes, the same `m5.xlarge` instance type, the same
 EMR release, and the same Spark/YARN execution path. It completed on cluster
@@ -596,8 +662,8 @@ EMR release, and the same Spark/YARN execution path. It completed on cluster
 an estimated cost of `0.3944 USD`. The larger-profile matrix was intentionally
 limited to `1m` and `full` so the evidence stayed within AWS Academy Learner
 Lab budget limits. Docker standalone simulation is shown only where matching
-data exists; the Docker benchmark matrix currently stops at `1m`, so Docker
-`full` cells are marked `N/A` instead of being overclaimed.
+data exists; the Docker benchmark matrix stops at `1m`, so Docker `full` cells
+are marked `N/A` instead of being overclaimed.
 
 The generated cluster-size comparison table is stored in
 `report/tables/cluster_size_comparison.md`. Compared with the baseline EMR
@@ -666,9 +732,25 @@ query planning are fixed costs. Reads from prepared Parquet can also benefit
 from compact columnar layout and operating-system cache effects, while both
 analyses emit relatively small aggregate outputs compared with the input size.
 At `100k`, these effects can dominate elapsed time; at larger sizes, throughput
-may improve even when raw seconds are flat or non-monotonic. The M2 workflow
+may improve even when raw seconds are flat or non-monotonic. The workflow
 therefore reports median duration and aggregate timing statistics when repeated
 runs are available, while preserving raw per-repetition CSV rows for audit.
+
+The local, Docker, and EMR environments answer different questions. Local
+execution is the fastest in many cells because it avoids S3 reads, EMR step
+queueing, YARN container startup, and remote cluster coordination; it also runs
+near a warm local filesystem on a single tuned development machine. Docker
+standalone simulation adds service and container overhead and proves a
+repeatable Spark standalone topology, but all workers still share one physical
+host. EMR is slower for several short jobs, especially Spark SQL delay
+aggregation, but it proves the missing distributed-system claim: the same
+analyses ran as managed Spark steps on real EC2-backed EMR clusters, read and
+wrote through S3, emitted logs and metrics to S3, and produced comparable
+outputs and benchmark rows. The larger EMR profile is intentionally treated as
+limited scalability evidence, not a universal speedup claim: adding one core
+node helped Spark Core consistently in the matched `1m` and `full` cells, while
+Spark SQL was mixed because fixed Spark, S3, and scheduling costs remained a
+large share of these short analytical workloads.
 
 # Reproducibility And Validation
 
@@ -700,9 +782,24 @@ sample files.
   default `make run-all-local` and `make benchmark-local` paths.
 - The Docker Spark setup is a Docker standalone simulation on one physical
   machine, not a true distributed cluster.
+- The Docker benchmark matrix stops at `1m`; Docker `full` comparison cells are
+  marked `N/A` rather than inferred.
 - Hive is containerized locally and is not running on a Hadoop/YARN service.
-- Worker-count variation was not used in M2 because the reliable Docker Compose
-  topology has two named Spark workers.
+- Docker worker-count variation is not included because the reliable Docker
+  Compose topology has two named Spark workers.
+- AWS evidence was produced inside AWS Academy Learner Lab, so service
+  availability, IAM roles, instance availability, and the budget allowance were
+  more constrained than a normal AWS account.
+- EMR clusters were intentionally short-lived and benchmark-scoped. This is
+  good for budget control but means the report does not measure long-running
+  cluster warmup, autoscaling, or production scheduling behavior.
+- S3 I/O is part of the EMR path. EMR timings therefore include object-store
+  listing/read/write effects that local and Docker bind-mounted runs avoid.
+- The Learner Lab budget was small, so the larger-cluster experiment was
+  limited to `1m` and `full` inputs instead of repeating the entire AWS matrix.
+- The largest AWS inputs have limited repetitions: `14m`, `3m`, and `500k` were
+  run once in the baseline EMR matrix, while `1m` and `full` were repeated three
+  times for the baseline and larger profiles.
 - Windows Spark runs require care around Java, Hadoop `winutils.exe`, and
   native file handling; the project includes compatibility helpers and Docker
   paths where needed.
@@ -721,6 +818,15 @@ Core demonstrates lower-level distributed transformation control, and Hive
 provides the required SQL-on-Hadoop comparison point. The completed MapReduce
 stretch adds a fourth validated implementation and shows the extra mechanics
 needed when using Hadoop Streaming directly.
+
+The final submission also includes real cluster evidence: Spark SQL and Spark
+Core ran on Amazon EMR `emr-7.13.0` clusters in `us-east-1`, with S3 inputs,
+logs, metrics, fetched outputs, run manifests, step timing, and cost logs. This
+resolves the earlier weakness that the project only had local and Docker
+standalone simulation evidence. The remaining scalability limits are stated
+explicitly: AWS Learner Lab budget and service constraints limited the number
+of repetitions, input sizes for the larger cluster, and breadth of
+cluster-size variation.
 
 # Evidence Appendix: First 10 Result Rows
 
@@ -925,9 +1031,9 @@ the required-technology samples.
 
 ## MapReduce Stretch Samples
 
-The M6 stretch implements both selected analyses with Hadoop Streaming
-MapReduce. It is optional evidence after the required Spark SQL, Spark Core,
-and Hive samples above. The validated full prepared-data run produced 11,902
+The MapReduce stretch implements both selected analyses with Hadoop Streaming.
+It is optional evidence after the required Spark SQL, Spark Core, and Hive
+samples above. The validated full prepared-data run produced 11,902
 delay rows and 1,738 ranking rows, matching the Spark SQL reference on keys,
 numeric fields, rank values, and top-three cause labels/counts.
 
