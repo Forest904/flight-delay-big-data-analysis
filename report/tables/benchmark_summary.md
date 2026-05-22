@@ -32,24 +32,24 @@
 | aws-emr-larger | full | 7079081 | airline_airport_ranking | Spark SQL | 3 | 4.475 | 4.583 | 4.34 | 4.934 | 0.312 | 1738 | m5-emr-3core-1m-full | 2026-05-22T00:46:03.790422+00:00 |
 | aws-emr-larger | full | 7079081 | delay_by_airport_month | Spark Core | 3 | 1.65 | 1.694 | 1.618 | 1.813 | 0.105 | 11902 | m5-emr-3core-1m-full | 2026-05-22T00:46:03.790422+00:00 |
 | aws-emr-larger | full | 7079081 | delay_by_airport_month | Spark SQL | 3 | 16.309 | 15.691 | 14.437 | 16.328 | 1.086 | 11902 | m5-emr-3core-1m-full | 2026-05-22T00:46:03.790422+00:00 |
-| docker-simulation | 100k | 100000 | airline_airport_ranking | Hive | 1 | 8.983 | 8.983 | 8.983 | 8.983 |  | 1641 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 100k | 100000 | airline_airport_ranking | Spark Core | 1 | 2.325 | 2.325 | 2.325 | 2.325 |  | 1641 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 100k | 100000 | airline_airport_ranking | Spark SQL | 1 | 4.01 | 4.01 | 4.01 | 4.01 |  | 1641 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 100k | 100000 | delay_by_airport_month | Hive | 1 | 12.025 | 12.025 | 12.025 | 12.025 |  | 6367 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 100k | 100000 | delay_by_airport_month | Spark Core | 1 | 2.543 | 2.543 | 2.543 | 2.543 |  | 6367 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 100k | 100000 | delay_by_airport_month | Spark SQL | 1 | 9.385 | 9.385 | 9.385 | 9.385 |  | 6367 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 500k | 500000 | airline_airport_ranking | Hive | 1 | 8.972 | 8.972 | 8.972 | 8.972 |  | 1707 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 500k | 500000 | airline_airport_ranking | Spark Core | 1 | 2.434 | 2.434 | 2.434 | 2.434 |  | 1707 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 500k | 500000 | airline_airport_ranking | Spark SQL | 1 | 5.617 | 5.617 | 5.617 | 5.617 |  | 1707 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 500k | 500000 | delay_by_airport_month | Hive | 1 | 12.619 | 12.619 | 12.619 | 12.619 |  | 9265 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 500k | 500000 | delay_by_airport_month | Spark Core | 1 | 2.623 | 2.623 | 2.623 | 2.623 |  | 9265 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 500k | 500000 | delay_by_airport_month | Spark SQL | 1 | 9.978 | 9.978 | 9.978 | 9.978 |  | 9265 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 1m | 1000000 | airline_airport_ranking | Hive | 1 | 8.901 | 8.901 | 8.901 | 8.901 |  | 1723 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 1m | 1000000 | airline_airport_ranking | Spark Core | 1 | 2.334 | 2.334 | 2.334 | 2.334 |  | 1723 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 1m | 1000000 | airline_airport_ranking | Spark SQL | 1 | 4.444 | 4.444 | 4.444 | 4.444 |  | 1723 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 1m | 1000000 | delay_by_airport_month | Hive | 1 | 12.584 | 12.584 | 12.584 | 12.584 |  | 10206 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 1m | 1000000 | delay_by_airport_month | Spark Core | 1 | 2.619 | 2.619 | 2.619 | 2.619 |  | 10206 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
-| docker-simulation | 1m | 1000000 | delay_by_airport_month | Spark SQL | 1 | 10.921 | 10.921 | 10.921 | 10.921 |  | 10206 | 20260521T160042313560Z | 2026-05-21T16:00:42.313560+00:00 |
+| docker-simulation | 100k | 100000 | airline_airport_ranking | Hive | 3 | 18.288 | 18.243 | 17.96 | 18.481 | 0.263 | 1641 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 100k | 100000 | airline_airport_ranking | Spark Core | 3 | 6.214 | 6.142 | 5.99 | 6.223 | 0.132 | 1641 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 100k | 100000 | airline_airport_ranking | Spark SQL | 3 | 12.685 | 13.654 | 11.637 | 16.64 | 2.638 | 1641 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 100k | 100000 | delay_by_airport_month | Hive | 3 | 27.848 | 28.776 | 26.939 | 31.542 | 2.438 | 6367 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 100k | 100000 | delay_by_airport_month | Spark Core | 3 | 6.954 | 6.893 | 6.639 | 7.086 | 0.23 | 6367 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 100k | 100000 | delay_by_airport_month | Spark SQL | 3 | 23.69 | 24.446 | 23.594 | 26.055 | 1.394 | 6367 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 500k | 500000 | airline_airport_ranking | Hive | 3 | 18.131 | 15.771 | 10.345 | 18.836 | 4.712 | 1707 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 500k | 500000 | airline_airport_ranking | Spark Core | 3 | 5.974 | 6.105 | 5.926 | 6.415 | 0.269 | 1707 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 500k | 500000 | airline_airport_ranking | Spark SQL | 3 | 12.537 | 13.133 | 12.01 | 14.851 | 1.511 | 1707 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 500k | 500000 | delay_by_airport_month | Hive | 3 | 28.206 | 27.802 | 25.903 | 29.296 | 1.733 | 9265 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 500k | 500000 | delay_by_airport_month | Spark Core | 3 | 7.256 | 7.357 | 6.613 | 8.202 | 0.799 | 9265 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 500k | 500000 | delay_by_airport_month | Spark SQL | 3 | 25.606 | 25.493 | 25.197 | 25.678 | 0.26 | 9265 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 1m | 1000000 | airline_airport_ranking | Hive | 3 | 10.094 | 10.491 | 10.077 | 11.301 | 0.702 | 1723 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 1m | 1000000 | airline_airport_ranking | Spark Core | 3 | 3.044 | 3.017 | 2.93 | 3.079 | 0.078 | 1723 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 1m | 1000000 | airline_airport_ranking | Spark SQL | 3 | 5.869 | 6.162 | 5.697 | 6.922 | 0.663 | 1723 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 1m | 1000000 | delay_by_airport_month | Hive | 3 | 16.797 | 17.116 | 16.305 | 18.245 | 1.009 | 10206 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 1m | 1000000 | delay_by_airport_month | Spark Core | 3 | 3.673 | 3.653 | 3.457 | 3.829 | 0.187 | 10206 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
+| docker-simulation | 1m | 1000000 | delay_by_airport_month | Spark SQL | 3 | 14.541 | 14.559 | 14.242 | 14.895 | 0.327 | 10206 | 20260522T161751426398Z | 2026-05-22T16:17:51.426398+00:00 |
 | local | 100k | 100000 | airline_airport_ranking | Hive | 3 | 14.322 | 14.207 | 13.91 | 14.389 | 0.259 | 1641 | 20260522T133525179005Z | 2026-05-22T13:35:25.179005+00:00 |
 | local | 100k | 100000 | airline_airport_ranking | MapReduce | 1 | 6.551 | 6.551 | 6.551 | 6.551 |  | 1641 | 20260521T153912538439Z | 2026-05-21T15:39:12.538439+00:00 |
 | local | 100k | 100000 | airline_airport_ranking | Spark Core | 3 | 0.74 | 0.807 | 0.719 | 0.96 | 0.134 | 1641 | 20260522T133525179005Z | 2026-05-22T13:35:25.179005+00:00 |

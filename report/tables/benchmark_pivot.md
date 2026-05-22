@@ -16,12 +16,12 @@
 | aws-emr-larger | 1m | 1000000 | delay_by_airport_month | 14.374 | 1.679 |  |  |
 | aws-emr-larger | full | 7079081 | airline_airport_ranking | 4.475 | 0.919 |  |  |
 | aws-emr-larger | full | 7079081 | delay_by_airport_month | 16.309 | 1.65 |  |  |
-| docker-simulation | 100k | 100000 | airline_airport_ranking | 4.01 | 2.325 | 8.983 |  |
-| docker-simulation | 100k | 100000 | delay_by_airport_month | 9.385 | 2.543 | 12.025 |  |
-| docker-simulation | 500k | 500000 | airline_airport_ranking | 5.617 | 2.434 | 8.972 |  |
-| docker-simulation | 500k | 500000 | delay_by_airport_month | 9.978 | 2.623 | 12.619 |  |
-| docker-simulation | 1m | 1000000 | airline_airport_ranking | 4.444 | 2.334 | 8.901 |  |
-| docker-simulation | 1m | 1000000 | delay_by_airport_month | 10.921 | 2.619 | 12.584 |  |
+| docker-simulation | 100k | 100000 | airline_airport_ranking | 12.685 | 6.214 | 18.288 |  |
+| docker-simulation | 100k | 100000 | delay_by_airport_month | 23.69 | 6.954 | 27.848 |  |
+| docker-simulation | 500k | 500000 | airline_airport_ranking | 12.537 | 5.974 | 18.131 |  |
+| docker-simulation | 500k | 500000 | delay_by_airport_month | 25.606 | 7.256 | 28.206 |  |
+| docker-simulation | 1m | 1000000 | airline_airport_ranking | 5.869 | 3.044 | 10.094 |  |
+| docker-simulation | 1m | 1000000 | delay_by_airport_month | 14.541 | 3.673 | 16.797 |  |
 | local | 100k | 100000 | airline_airport_ranking | 1.744 | 0.74 | 14.322 | 6.551 |
 | local | 100k | 100000 | delay_by_airport_month | 7.966 | 1.002 | 19.841 | 7.49 |
 | local | 500k | 500000 | airline_airport_ranking | 1.853 | 0.783 | 14.125 |  |
