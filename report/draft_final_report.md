@@ -468,33 +468,41 @@ The complete artifact is stored at `report/tables/environment_summary.md`.
 
 The benchmark runner records technology, job name, input size, environment,
 execution-setting label, repetition number, raw duration, output rows, status,
-timestamp, input path, and metrics path. By default, each selected
-input/technology configuration is run three times. Timestamped benchmark CSVs
-remain raw audit evidence, while the report-ready artifacts under
-`report/tables/` and `report/figures/` aggregate successful repetitions.
+timestamp, input path, metrics path, and phase timings when the runner exposes
+them. By default, each selected input/technology configuration is run three
+times. Timestamped benchmark CSVs remain raw audit evidence, while the
+report-ready artifacts under `report/tables/` and `report/figures/` aggregate
+successful repetitions.
 
 The reporting pipeline computes median, mean, minimum, maximum, and standard
 deviation of duration for each environment/input/job/technology group.
 `report/tables/benchmark_summary.md` is the detailed execution-time table: it
 shows `runs`, median, mean, min, max, standard deviation, output rows, run ID,
-and timestamp. Single-run CSVs are still readable as `runs=1`, and fresh
-benchmark campaigns can be forced to one run for smoke checks with
+and timestamp. `report/tables/benchmark_phase_summary.md` records median phase
+timings for rows that expose them. Single-run CSVs are still readable as
+`runs=1`, and fresh benchmark campaigns can be forced to one run for smoke checks with
 `BENCHMARK_FLAGS="--repetitions 1"`. A `runs=1` row is not treated as
 statistically equivalent to a repeated campaign; `report/tables/benchmark_notes.csv`
 marks those cells as `smoke`, `budget_limited`, or `resource_limited`.
 
 The benchmark duration column is the per-analysis job duration reported by the
 technology runner after the input has been prepared. It covers the analysis
-execution and output materialization, but it does not include the one-time data
-preparation pipeline. Some fixed costs still shape interpretation: Spark/JVM
-startup, Docker container and service startup, Hive service startup, query
-planning, local file listing, S3 I/O, and EMR step scheduling can dominate the
-shorter runs or appear in surrounding step/command timing artifacts rather than
-inside the per-job aggregate alone. Local and Docker runs read prepared Parquet
-from a warm local filesystem or bind mount, so OS cache and columnar Parquet
-reads affect the observed throughput. EMR runs read and write through S3 and
-are scheduled as managed Spark steps, so object-store and scheduler overhead
-are part of the managed execution path.
+execution and output materialization, but it is not a pure compute-only number
+and does not include the one-time data preparation pipeline. Spark SQL and
+Spark Core use the same small-result materialization boundary: collect the
+ordered aggregate once to the driver, write `full/part-00000.csv`, and derive
+`first_10.csv` from the same rows. For those runners, `result_collect_seconds`
+is the main Spark action boundary because lazy evaluation makes transformation,
+aggregation, ordering, and driver collection inseparable without adding extra
+actions. Some fixed costs still shape interpretation: Spark/JVM startup,
+Docker container and service startup, Hive service startup, query planning,
+local file listing, S3 I/O, and EMR step scheduling can dominate the shorter
+runs or appear in surrounding step/command timing artifacts rather than inside
+the per-job aggregate alone. Local and Docker runs read prepared Parquet from a
+warm local filesystem or bind mount, so OS cache and columnar Parquet reads
+affect the observed throughput. EMR runs read and write through S3 and are
+scheduled as managed Spark steps, so object-store and scheduler overhead are
+part of the managed execution path.
 
 The opt-in MapReduce stretch benchmark is reported separately from the required
 default benchmark matrix:
@@ -585,8 +593,10 @@ Rows-per-second values in `report/tables/rows_per_second.md` are computed as
 input records divided by median elapsed seconds. Throughput appears higher
 under several larger-input local and Docker cells, but fixed costs, caching,
 prepared Parquet columnar reads, and small aggregate output cardinality affect
-interpretation. The replicated `14m` and `28m` rows are therefore stress tests
-of the execution setup, not new flight-behavior observations.
+interpretation. These throughput values summarize end-to-end per-analysis
+duration, including output materialization, rather than isolated Spark compute.
+The replicated `14m` and `28m` rows are therefore stress tests of the execution
+setup, not new flight-behavior observations.
 
 ## Speedup Ratios
 

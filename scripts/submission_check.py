@@ -25,6 +25,8 @@ NOTE_CLASSIFICATIONS = {"smoke", "budget_limited", "resource_limited"}
 REQUIRED_TABLES = (
     "benchmark_summary.csv",
     "benchmark_summary.md",
+    "benchmark_phase_summary.csv",
+    "benchmark_phase_summary.md",
     "benchmark_status.csv",
     "benchmark_status.md",
     "benchmark_pivot.csv",

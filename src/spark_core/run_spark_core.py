@@ -21,6 +21,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.common.runtime import configure_pyspark_python, ensure_java_17
+from src.common.timing import MATERIALIZATION_MODE_SMALL_RESULT, rounded_seconds, timed_call
 from src.common.uri import (
     display_location,
     is_s3_uri,
@@ -652,22 +653,33 @@ def run_analysis(
     df: DataFrame,
     full_output_path: str | Path,
     sample_output_path: str | Path,
+    *,
+    input_read_seconds: float,
+    plan_build_seconds: float,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     status = "success"
     error: str | None = None
     output_rows = 0
+    result_collect_seconds: float | str = ""
+    full_output_write_seconds: float | str = ""
+    sample_output_write_seconds: float | str = ""
 
     try:
-        rows = df.toPandas()
+        rows, result_collect_seconds = timed_call(df.toPandas)
         output_rows = len(rows)
-        write_full_csv(rows, full_output_path)
+        _, full_output_write_seconds = timed_call(lambda: write_full_csv(rows, full_output_path))
         if is_s3_uri(sample_output_path):
-            write_text_location(sample_output_path, rows.head(10).to_csv(index=False))
+            _, sample_output_write_seconds = timed_call(
+                lambda: write_text_location(sample_output_path, rows.head(10).to_csv(index=False))
+            )
         else:
-            local_sample_path = Path(sample_output_path)
-            local_sample_path.parent.mkdir(parents=True, exist_ok=True)
-            rows.head(10).to_csv(local_sample_path, index=False)
+            def write_local_sample() -> None:
+                local_sample_path = Path(sample_output_path)
+                local_sample_path.parent.mkdir(parents=True, exist_ok=True)
+                rows.head(10).to_csv(local_sample_path, index=False)
+
+            _, sample_output_write_seconds = timed_call(write_local_sample)
     except Exception as exc:
         status = "failed"
         error = error_excerpt(exc)
@@ -677,6 +689,12 @@ def run_analysis(
     metrics: dict[str, Any] = {
         "job_name": name,
         "duration_seconds": duration_seconds,
+        "input_read_seconds": input_read_seconds,
+        "plan_build_seconds": plan_build_seconds,
+        "result_collect_seconds": result_collect_seconds,
+        "full_output_write_seconds": full_output_write_seconds,
+        "sample_output_write_seconds": sample_output_write_seconds,
+        "materialization_mode": MATERIALIZATION_MODE_SMALL_RESULT,
         "output_rows": output_rows,
         "full_output_path": display_runtime_path(full_output_path),
         "sample_output_path": display_runtime_path(sample_output_path),
@@ -763,7 +781,10 @@ def main(argv: list[str] | None = None) -> int:
         smoke_check_rdd_worker(spark)
 
         run_metrics["stage"] = "input_read"
+        input_read_started = time.perf_counter()
         flights = read_prepared_parquet(spark, prepared_file)
+        input_read_seconds = rounded_seconds(input_read_started)
+        run_metrics["input_read_seconds"] = input_read_seconds
 
         clear_spark_core_outputs(output_root)
         run_metrics["status"] = "running"
@@ -773,27 +794,35 @@ def main(argv: list[str] | None = None) -> int:
         analyses = [
             (
                 "delay_by_airport_month",
-                delay_report_df(spark, flights),
+                lambda: delay_report_df(spark, flights),
                 join_uri(output_root, "delay_by_airport_month", "full"),
                 join_uri(output_root, "delay_by_airport_month", "first_10.csv"),
             ),
             (
                 "delay_by_airport_month_all_causes",
-                delay_all_causes_df(spark, flights),
+                lambda: delay_all_causes_df(spark, flights),
                 join_uri(output_root, "delay_by_airport_month_all_causes", "full"),
                 join_uri(output_root, "delay_by_airport_month_all_causes", "first_10.csv"),
             ),
             (
                 "airline_airport_ranking",
-                airline_airport_ranking_df(spark, flights),
+                lambda: airline_airport_ranking_df(spark, flights),
                 join_uri(output_root, "airline_airport_ranking", "full"),
                 join_uri(output_root, "airline_airport_ranking", "first_10.csv"),
             ),
         ]
 
-        for name, df, full_path, sample_path in analyses:
+        for name, build_df, full_path, sample_path in analyses:
             run_metrics["stage"] = f"job:{name}"
-            job_metrics = run_analysis(name, df, full_path, sample_path)
+            df, plan_build_seconds = timed_call(build_df)
+            job_metrics = run_analysis(
+                name,
+                df,
+                full_path,
+                sample_path,
+                input_read_seconds=input_read_seconds,
+                plan_build_seconds=plan_build_seconds,
+            )
             run_metrics["jobs"].append(job_metrics)
             write_metrics(run_metrics, output_root)
             if job_metrics["status"] != "success":

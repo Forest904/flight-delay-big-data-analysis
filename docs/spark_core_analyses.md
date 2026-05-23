@@ -80,6 +80,14 @@ Full outputs are CSV directories with a headered `part-00000.csv`. The
 evidence and quick manual inspection. The output schemas match the Spark SQL
 reference exactly.
 
+Spark Core uses the same `small_result_collect_once` output materialization
+policy as Spark SQL for these aggregate tables: collect the ordered small result
+once to the driver, write `full/part-00000.csv`, and derive `first_10.csv` from
+the same rows. Runtime metrics include run-level `input_read_seconds` and
+job-level phase fields for plan construction, Spark result collection, full CSV
+writing, and first-10 CSV writing. The Spark Core RDD worker smoke check remains
+outside these benchmark phase fields.
+
 ## RDD Aggregation Strategy
 
 The delay report assigns known `departure_delay` values to the same numeric

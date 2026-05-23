@@ -22,7 +22,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from experiments.run_benchmarks import BENCHMARK_COLUMNS
+from experiments.run_benchmarks import BENCHMARK_COLUMNS, PHASE_BENCHMARK_COLUMNS
 DEFAULT_RESULTS_DIRS = (
     PROJECT_ROOT / "experiments" / "results" / "local",
     PROJECT_ROOT / "experiments" / "results" / "docker-simulation",
@@ -171,7 +171,8 @@ def benchmark_csv_schema_errors(path: Path) -> list[str]:
             fieldnames = csv.DictReader(file).fieldnames or []
     except OSError as exc:
         return [str(exc)]
-    required = [column for column in BENCHMARK_COLUMNS if column != "repetition"]
+    optional_columns = {"repetition", *PHASE_BENCHMARK_COLUMNS}
+    required = [column for column in BENCHMARK_COLUMNS if column not in optional_columns]
     missing = [column for column in required if column not in fieldnames]
     unknown = [column for column in fieldnames if column not in BENCHMARK_COLUMNS]
     errors: list[str] = []
@@ -206,6 +207,8 @@ def read_benchmark_rows(csv_paths: Iterable[Path]) -> list[dict[str, object]]:
             for row in reader:
                 if not row.get("repetition"):
                     row["repetition"] = "1"
+                for column in PHASE_BENCHMARK_COLUMNS:
+                    row.setdefault(column, "")
                 row["environment"] = canonical_environment(row.get("environment", ""))
                 row["_source_file"] = csv_path.name
                 row["_timestamp"] = parse_timestamp(row.get("timestamp_utc"))
@@ -367,6 +370,85 @@ def benchmark_summary_records(rows: Iterable[dict[str, object]]) -> list[dict[st
                 "max_duration_seconds": float(durations.max()),
                 "stddev_duration_seconds": "" if stddev is None or pd.isna(stddev) else float(stddev),
                 "output_rows": int(group["output_rows"].iloc[0]),
+                "run_id": group["run_id"].iloc[0],
+                "timestamp_utc": group["timestamp_utc"].iloc[0],
+            }
+        )
+    return sorted(
+        records,
+        key=lambda row: (
+            str(row.get("environment", "")),
+            int(float(row.get("records") or 0)),
+            str(row.get("input_label", "")),
+            str(row.get("job_name", "")),
+            str(row.get("technology", "")),
+        ),
+    )
+
+
+def median_or_blank(values: Iterable[object]) -> float | str:
+    numbers = [value for value in (positive_float(item) for item in values) if value is not None]
+    if not numbers:
+        return ""
+    return float(pd.Series(numbers).median())
+
+
+def materialization_mode_summary(values: Iterable[object]) -> str:
+    modes = sorted({str(value) for value in values if str(value or "").strip()})
+    if not modes:
+        return ""
+    if len(modes) == 1:
+        return modes[0]
+    return "mixed:" + ",".join(modes)
+
+
+def benchmark_phase_summary_records(rows: Iterable[dict[str, object]]) -> list[dict[str, object]]:
+    normalized_rows: list[dict[str, object]] = []
+    for row in rows:
+        duration = positive_float(row.get("duration_seconds"))
+        if duration is None:
+            continue
+        normalized_rows.append(
+            {
+                "environment": row.get("environment", ""),
+                "input_label": row.get("input_label", ""),
+                "records": int(float(row.get("records") or 0)),
+                "job_name": row.get("job_name", ""),
+                "technology": str(row.get("technology", "")),
+                "duration_seconds": duration,
+                "input_read_seconds": row.get("input_read_seconds", ""),
+                "plan_build_seconds": row.get("plan_build_seconds", ""),
+                "result_collect_seconds": row.get("result_collect_seconds", ""),
+                "full_output_write_seconds": row.get("full_output_write_seconds", ""),
+                "sample_output_write_seconds": row.get("sample_output_write_seconds", ""),
+                "materialization_mode": row.get("materialization_mode", ""),
+                "run_id": row.get("run_id", ""),
+                "timestamp_utc": row.get("timestamp_utc", ""),
+            }
+        )
+    if not normalized_rows:
+        return []
+
+    frame = pd.DataFrame(normalized_rows)
+    records: list[dict[str, object]] = []
+    group_columns = ["environment", "input_label", "records", "job_name", "technology"]
+    for key, group in frame.groupby(group_columns, sort=True):
+        environment, input_label, records_value, job_name, technology = key
+        records.append(
+            {
+                "environment": environment,
+                "input_label": input_label,
+                "records": int(records_value),
+                "job_name": job_name,
+                "technology": TECHNOLOGY_LABELS.get(str(technology), str(technology)),
+                "runs": int(len(group)),
+                "median_duration_seconds": float(group["duration_seconds"].median()),
+                "median_input_read_seconds": median_or_blank(group["input_read_seconds"]),
+                "median_plan_build_seconds": median_or_blank(group["plan_build_seconds"]),
+                "median_result_collect_seconds": median_or_blank(group["result_collect_seconds"]),
+                "median_full_output_write_seconds": median_or_blank(group["full_output_write_seconds"]),
+                "median_sample_output_write_seconds": median_or_blank(group["sample_output_write_seconds"]),
+                "materialization_mode": materialization_mode_summary(group["materialization_mode"]),
                 "run_id": group["run_id"].iloc[0],
                 "timestamp_utc": group["timestamp_utc"].iloc[0],
             }
@@ -1001,6 +1083,7 @@ def generate_artifacts(
     ]
     latest_rows = latest_successful_rows(successful_rows)
     summary = benchmark_summary_records(latest_rows)
+    phase_summary = benchmark_phase_summary_records(latest_rows)
     pivot = benchmark_pivot_records(summary)
     status = benchmark_status_records(all_rows)
     rows_per_second = rows_per_second_records(summary)
@@ -1011,6 +1094,7 @@ def generate_artifacts(
 
     tables: list[Path] = []
     tables.extend(write_table_pair(tables_dir, "benchmark_summary", summary))
+    tables.extend(write_table_pair(tables_dir, "benchmark_phase_summary", phase_summary))
     tables.extend(write_table_pair(tables_dir, "benchmark_pivot", pivot))
     tables.extend(write_table_pair(tables_dir, "benchmark_status", status))
     tables.extend(write_table_pair(tables_dir, "rows_per_second", rows_per_second))

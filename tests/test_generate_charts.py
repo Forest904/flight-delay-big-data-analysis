@@ -2,27 +2,8 @@ import csv
 from datetime import datetime, timezone
 from pathlib import Path
 
+from experiments.run_benchmarks import BENCHMARK_COLUMNS, PHASE_BENCHMARK_COLUMNS
 from scripts import generate_charts
-
-
-BENCHMARK_COLUMNS = [
-    "run_id",
-    "repetition",
-    "technology",
-    "job_name",
-    "input_label",
-    "records",
-    "environment",
-    "execution_setting",
-    "duration_seconds",
-    "output_rows",
-    "status",
-    "timestamp_utc",
-    "input_path",
-    "metrics_path",
-    "error",
-    "stage",
-]
 
 
 def write_benchmark_csv(path: Path, rows: list[dict[str, object]]) -> None:
@@ -56,6 +37,12 @@ def benchmark_row(
         "environment": environment,
         "execution_setting": environment,
         "duration_seconds": duration_seconds,
+        "input_read_seconds": 0.1,
+        "plan_build_seconds": 0.2,
+        "result_collect_seconds": 0.3,
+        "full_output_write_seconds": 0.4,
+        "sample_output_write_seconds": 0.5,
+        "materialization_mode": "small_result_collect_once",
         "output_rows": 12,
         "status": status,
         "timestamp_utc": timestamp_utc,
@@ -137,14 +124,20 @@ def test_read_benchmark_rows_defaults_missing_repetition_to_one(tmp_path):
         duration_seconds=8.5,
     )
     row.pop("repetition")
+    for column in PHASE_BENCHMARK_COLUMNS:
+        row.pop(column)
     with csv_path.open("w", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(file, fieldnames=[column for column in BENCHMARK_COLUMNS if column != "repetition"])
+        writer = csv.DictWriter(
+            file,
+            fieldnames=[column for column in BENCHMARK_COLUMNS if column != "repetition" and column not in PHASE_BENCHMARK_COLUMNS],
+        )
         writer.writeheader()
         writer.writerow(row)
 
     rows = generate_charts.read_benchmark_rows([csv_path])
 
     assert rows[0]["repetition"] == "1"
+    assert rows[0]["result_collect_seconds"] == ""
 
 
 def test_read_benchmark_rows_accepts_utf8_sig_header(tmp_path):
@@ -304,6 +297,25 @@ def test_benchmark_summary_records_compute_aggregate_statistics():
     assert summary[0]["min_duration_seconds"] == 2.0
     assert summary[0]["max_duration_seconds"] == 9.0
     assert round(summary[0]["stddev_duration_seconds"], 6) == 3.605551
+
+
+def test_benchmark_phase_summary_records_compute_phase_medians():
+    timestamp = datetime(2026, 5, 20, tzinfo=timezone.utc).isoformat()
+    rows = [
+        benchmark_row(run_id="run", timestamp_utc=timestamp, duration_seconds=2.0, repetition=1),
+        benchmark_row(run_id="run", timestamp_utc=timestamp, duration_seconds=4.0, repetition=2),
+        benchmark_row(run_id="run", timestamp_utc=timestamp, duration_seconds=9.0, repetition=3),
+    ]
+    rows[0]["result_collect_seconds"] = 1.0
+    rows[1]["result_collect_seconds"] = 3.0
+    rows[2]["result_collect_seconds"] = 5.0
+
+    phase_summary = generate_charts.benchmark_phase_summary_records(rows)
+
+    assert phase_summary[0]["runs"] == 3
+    assert phase_summary[0]["median_duration_seconds"] == 4.0
+    assert phase_summary[0]["median_result_collect_seconds"] == 3.0
+    assert phase_summary[0]["materialization_mode"] == "small_result_collect_once"
 
 
 def test_rows_per_second_records_compute_records_divided_by_duration():

@@ -93,6 +93,12 @@ records
 environment
 execution_setting
 duration_seconds
+input_read_seconds
+plan_build_seconds
+result_collect_seconds
+full_output_write_seconds
+sample_output_write_seconds
+materialization_mode
 output_rows
 status
 timestamp_utc
@@ -103,7 +109,11 @@ stage
 ```
 
 `make charts` aggregates successful rows into `report/tables/benchmark_summary.*`
-with runs, median, mean, min, max, and standard deviation.
+with runs, median, mean, min, max, and standard deviation. It also writes
+`report/tables/benchmark_phase_summary.*`, which keeps the same grouping but
+adds median phase timings when the raw benchmark rows expose them. Older raw
+benchmark CSVs remain readable; missing phase fields are left blank in the
+phase table.
 
 ## Single-Run Evidence Policy
 
@@ -128,6 +138,13 @@ Single-run rows without a note fail `make submission-check`.
 - Docker standalone simulation runs on one host and is not a real cluster.
 - AWS EMR rows include service overhead and can be budget-limited.
 - Spark and Hive startup costs can dominate small inputs.
+- Spark SQL and Spark Core use the same small-result materialization policy:
+  the ordered aggregate result is collected once to the driver, then
+  `full/part-00000.csv` and `first_10.csv` are written from those rows.
+- For Spark SQL and Spark Core, `duration_seconds` is total per-analysis
+  elapsed time, not pure compute time. `result_collect_seconds` is the main
+  Spark action boundary, so it includes transformation, aggregation, ordering,
+  and driver collection forced by `toPandas()`.
 - Prepared Parquet and warm local caches affect throughput.
 - Aggregate output cardinality is small relative to input size.
 - Controlled replication tests processing scale, not additional flight behavior.

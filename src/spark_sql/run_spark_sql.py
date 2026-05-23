@@ -20,6 +20,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.common.prepared_data import read_prepared_parquet
+from src.common.timing import MATERIALIZATION_MODE_SMALL_RESULT, rounded_seconds, timed_call
 from src.common.uri import (
     display_location,
     is_s3_uri,
@@ -507,17 +508,23 @@ def run_analysis(
     df: DataFrame,
     full_output_path: str | Path,
     sample_output_path: str | Path,
+    *,
+    input_read_seconds: float,
+    plan_build_seconds: float,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     status = "success"
     error: str | None = None
     output_rows = 0
+    result_collect_seconds: float | str = ""
+    full_output_write_seconds: float | str = ""
+    sample_output_write_seconds: float | str = ""
 
     try:
-        rows = df.toPandas()
+        rows, result_collect_seconds = timed_call(df.toPandas)
         output_rows = len(rows)
-        write_full_csv(rows, full_output_path)
-        write_first_10_csv(rows.head(10), sample_output_path)
+        _, full_output_write_seconds = timed_call(lambda: write_full_csv(rows, full_output_path))
+        _, sample_output_write_seconds = timed_call(lambda: write_first_10_csv(rows.head(10), sample_output_path))
     except Exception as exc:
         status = "failed"
         error = str(exc)
@@ -527,6 +534,12 @@ def run_analysis(
     metrics: dict[str, Any] = {
         "job_name": name,
         "duration_seconds": duration_seconds,
+        "input_read_seconds": input_read_seconds,
+        "plan_build_seconds": plan_build_seconds,
+        "result_collect_seconds": result_collect_seconds,
+        "full_output_write_seconds": full_output_write_seconds,
+        "sample_output_write_seconds": sample_output_write_seconds,
+        "materialization_mode": MATERIALIZATION_MODE_SMALL_RESULT,
         "output_rows": output_rows,
         "full_output_path": display_runtime_path(full_output_path),
         "sample_output_path": display_runtime_path(sample_output_path),
@@ -591,33 +604,44 @@ def main(argv: list[str] | None = None) -> int:
         spark = build_spark(local_config)
 
         run_metrics["stage"] = "input_read"
+        input_read_started = time.perf_counter()
         flights = read_prepared_parquet(spark, prepared_file)
         flights.createOrReplaceTempView("flights")
+        input_read_seconds = rounded_seconds(input_read_started)
+        run_metrics["input_read_seconds"] = input_read_seconds
 
         analyses = [
             (
                 "delay_by_airport_month",
-                delay_report_query(spark),
+                lambda: delay_report_query(spark),
                 join_uri(output_root, "delay_by_airport_month", "full"),
                 join_uri(output_root, "delay_by_airport_month", "first_10.csv"),
             ),
             (
                 "delay_by_airport_month_all_causes",
-                delay_all_causes_query(spark),
+                lambda: delay_all_causes_query(spark),
                 join_uri(output_root, "delay_by_airport_month_all_causes", "full"),
                 join_uri(output_root, "delay_by_airport_month_all_causes", "first_10.csv"),
             ),
             (
                 "airline_airport_ranking",
-                airline_airport_ranking_query(spark),
+                lambda: airline_airport_ranking_query(spark),
                 join_uri(output_root, "airline_airport_ranking", "full"),
                 join_uri(output_root, "airline_airport_ranking", "first_10.csv"),
             ),
         ]
 
-        for name, df, full_path, sample_path in analyses:
+        for name, build_df, full_path, sample_path in analyses:
             run_metrics["stage"] = f"job:{name}"
-            job_metrics = run_analysis(name, df, full_path, sample_path)
+            df, plan_build_seconds = timed_call(build_df)
+            job_metrics = run_analysis(
+                name,
+                df,
+                full_path,
+                sample_path,
+                input_read_seconds=input_read_seconds,
+                plan_build_seconds=plan_build_seconds,
+            )
             run_metrics["jobs"].append(job_metrics)
             if job_metrics["status"] != "success":
                 run_metrics["status"] = "failed"

@@ -162,9 +162,19 @@ Hive milestones, especially around SQL aggregation and window functions.
 - technology name
 - input path
 - Spark master and shuffle partition settings
+- run-level input-read/setup timing
 - top-level run status
 - one metrics object per attempted job with duration, row count, output paths,
-  status, and error details for failed jobs
+  phase timings, materialization mode, status, and error details for failed
+  jobs
+
+Spark SQL uses `small_result_collect_once` materialization for these aggregate
+outputs. The job-level `duration_seconds` field is the total per-analysis
+elapsed time. The `result_collect_seconds` phase is the Spark action boundary:
+because Spark evaluates lazily, it includes the transformation, aggregation,
+ordering, and final small-result collection triggered by `toPandas()`.
+`full_output_write_seconds` and `sample_output_write_seconds` then measure the
+local or S3 CSV writes from the already collected rows.
 
 The runner is fail-fast: if one analysis fails, it writes metrics for completed
 jobs plus the failed job, then exits nonzero without attempting later analyses.

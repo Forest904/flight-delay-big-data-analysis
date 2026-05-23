@@ -9,6 +9,8 @@ configure_pyspark_python()
 
 from pyspark.sql import SparkSession
 
+from src.spark_core import run_spark_core
+
 
 @pytest.fixture(scope="module")
 def spark():
@@ -46,6 +48,56 @@ def test_full_and_first_10_writers_use_same_ordered_rows(tmp_path):
         "AAA,1,3",
         "BBB,1,2",
     ]
+
+
+class FakeDataFrame:
+    def __init__(self, rows: pd.DataFrame):
+        self.rows = rows
+
+    def toPandas(self) -> pd.DataFrame:
+        return self.rows
+
+
+def test_spark_sql_run_analysis_reports_phase_metrics(tmp_path):
+    rows = pd.DataFrame({"origin_airport": ["AAA"], "flight_count": [1]})
+
+    metrics = run_spark_sql.run_analysis(
+        "sample_job",
+        FakeDataFrame(rows),
+        tmp_path / "full",
+        tmp_path / "first_10.csv",
+        input_read_seconds=0.01,
+        plan_build_seconds=0.02,
+    )
+
+    assert metrics["status"] == "success"
+    assert metrics["input_read_seconds"] == 0.01
+    assert metrics["plan_build_seconds"] == 0.02
+    assert metrics["result_collect_seconds"] >= 0
+    assert metrics["full_output_write_seconds"] >= 0
+    assert metrics["sample_output_write_seconds"] >= 0
+    assert metrics["materialization_mode"] == "small_result_collect_once"
+
+
+def test_spark_core_run_analysis_reports_phase_metrics(tmp_path):
+    rows = pd.DataFrame({"origin_airport": ["AAA"], "flight_count": [1]})
+
+    metrics = run_spark_core.run_analysis(
+        "sample_job",
+        FakeDataFrame(rows),
+        tmp_path / "full",
+        tmp_path / "first_10.csv",
+        input_read_seconds=0.03,
+        plan_build_seconds=0.04,
+    )
+
+    assert metrics["status"] == "success"
+    assert metrics["input_read_seconds"] == 0.03
+    assert metrics["plan_build_seconds"] == 0.04
+    assert metrics["result_collect_seconds"] >= 0
+    assert metrics["full_output_write_seconds"] >= 0
+    assert metrics["sample_output_write_seconds"] >= 0
+    assert metrics["materialization_mode"] == "small_result_collect_once"
 
 
 def test_compact_delay_top_three_ranking_is_deterministic(spark):

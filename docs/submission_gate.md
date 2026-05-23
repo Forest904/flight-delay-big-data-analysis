@@ -50,8 +50,8 @@ at another input such as `100k`, `1m`, `14m`, or `28m`.
 
 The gate expects:
 
-- Benchmark summary, pivot, status, speedup, scalability, rows-per-second, and
-  environment summary tables.
+- Benchmark summary, phase summary, pivot, status, speedup, scalability,
+  rows-per-second, and environment summary tables.
 - Local first-10 tables for Spark SQL, Spark Core, Hive, and MapReduce for both
   analyses.
 - Local and Docker simulation execution-time figures.
