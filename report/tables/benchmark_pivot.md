@@ -34,6 +34,24 @@
 | docker-simulation | 14m | 14000000 | delay_by_airport_month | 13.316 | 2.826 | 23.822 |  |
 | docker-simulation | 28m | 28000000 | airline_airport_ranking | 7.379 | 2.266 | 22.965 |  |
 | docker-simulation | 28m | 28000000 | delay_by_airport_month | 14.397 | 2.76 | 35.275 |  |
+| docker-simulation-spark-sql-baseline-m4 | 1m | 1000000 | airline_airport_ranking | 3.591 |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | 1m | 1000000 | delay_by_airport_month | 9.587 |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | 1m | 1000000 | delay_by_airport_month_all_causes | 5.433 |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | full | 7079081 | airline_airport_ranking | 4.12 |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | full | 7079081 | delay_by_airport_month | 11.705 |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | full | 7079081 | delay_by_airport_month_all_causes | 8.34 |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | 14m | 14000000 | airline_airport_ranking | 6.127 |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | 14m | 14000000 | delay_by_airport_month | 18.714 |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | 14m | 14000000 | delay_by_airport_month_all_causes | 13.169 |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | 1m | 1000000 | airline_airport_ranking | 1.048 |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | 1m | 1000000 | delay_by_airport_month | 5.774 |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | 1m | 1000000 | delay_by_airport_month_all_causes | 3.304 |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | full | 7079081 | airline_airport_ranking | 1.674 |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | full | 7079081 | delay_by_airport_month | 8.212 |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | full | 7079081 | delay_by_airport_month_all_causes | 5.912 |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | 14m | 14000000 | airline_airport_ranking | 1.982 |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | 14m | 14000000 | delay_by_airport_month | 9.469 |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | 14m | 14000000 | delay_by_airport_month_all_causes | 6.9 |  |  |  |
 | local | 100k | 100000 | airline_airport_ranking | 1.744 | 0.74 | 14.322 | 6.708 |
 | local | 100k | 100000 | delay_by_airport_month | 7.966 | 1.002 | 19.841 | 7.644 |
 | local | 500k | 500000 | airline_airport_ranking | 1.853 | 0.783 | 14.125 | 20.328 |
@@ -48,3 +66,21 @@
 | local | 14m | 14000000 | delay_by_airport_month | 11.868 | 1.223 | 41.112 |  |
 | local | 28m | 28000000 | airline_airport_ranking | 3.373 | 0.83 | 66.541 |  |
 | local | 28m | 28000000 | delay_by_airport_month | 11.924 | 1.333 | 101.265 |  |
+| local-spark-sql-baseline-m4 | 1m | 1000000 | airline_airport_ranking | 1.168 |  |  |  |
+| local-spark-sql-baseline-m4 | 1m | 1000000 | delay_by_airport_month | 5.749 |  |  |  |
+| local-spark-sql-baseline-m4 | 1m | 1000000 | delay_by_airport_month_all_causes | 2.313 |  |  |  |
+| local-spark-sql-baseline-m4 | full | 7079081 | airline_airport_ranking | 1.454 |  |  |  |
+| local-spark-sql-baseline-m4 | full | 7079081 | delay_by_airport_month | 7.842 |  |  |  |
+| local-spark-sql-baseline-m4 | full | 7079081 | delay_by_airport_month_all_causes | 5.053 |  |  |  |
+| local-spark-sql-baseline-m4 | 14m | 14000000 | airline_airport_ranking | 1.984 |  |  |  |
+| local-spark-sql-baseline-m4 | 14m | 14000000 | delay_by_airport_month | 9.138 |  |  |  |
+| local-spark-sql-baseline-m4 | 14m | 14000000 | delay_by_airport_month_all_causes | 4.906 |  |  |  |
+| local-spark-sql-optimized-m4 | 1m | 1000000 | airline_airport_ranking | 0.91 |  |  |  |
+| local-spark-sql-optimized-m4 | 1m | 1000000 | delay_by_airport_month | 4.684 |  |  |  |
+| local-spark-sql-optimized-m4 | 1m | 1000000 | delay_by_airport_month_all_causes | 2.175 |  |  |  |
+| local-spark-sql-optimized-m4 | full | 7079081 | airline_airport_ranking | 1.477 |  |  |  |
+| local-spark-sql-optimized-m4 | full | 7079081 | delay_by_airport_month | 6.812 |  |  |  |
+| local-spark-sql-optimized-m4 | full | 7079081 | delay_by_airport_month_all_causes | 5.328 |  |  |  |
+| local-spark-sql-optimized-m4 | 14m | 14000000 | airline_airport_ranking | 1.671 |  |  |  |
+| local-spark-sql-optimized-m4 | 14m | 14000000 | delay_by_airport_month | 8.259 |  |  |  |
+| local-spark-sql-optimized-m4 | 14m | 14000000 | delay_by_airport_month_all_causes | 4.904 |  |  |  |

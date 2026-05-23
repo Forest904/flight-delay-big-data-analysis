@@ -343,6 +343,69 @@ def test_speedup_records_compute_requested_duration_ratios():
     assert speedups[0]["hive_div_spark_core"] == 6.0
 
 
+def test_spark_sql_optimization_before_after_pairs_only_m4_labels():
+    summary = [
+        {
+            "environment": "local-spark-sql-baseline-m4",
+            "input_label": "1m",
+            "records": 1000000,
+            "job_name": "delay_by_airport_month",
+            "technology": "Spark SQL",
+            "runs": 3,
+            "median_duration_seconds": 12.0,
+            "run_id": "baseline",
+        },
+        {
+            "environment": "local-spark-sql-optimized-m4",
+            "input_label": "1m",
+            "records": 1000000,
+            "job_name": "delay_by_airport_month",
+            "technology": "Spark SQL",
+            "runs": 3,
+            "median_duration_seconds": 8.0,
+            "run_id": "optimized",
+        },
+        {
+            "environment": "local",
+            "input_label": "1m",
+            "records": 1000000,
+            "job_name": "delay_by_airport_month",
+            "technology": "Spark SQL",
+            "runs": 3,
+            "median_duration_seconds": 6.0,
+            "run_id": "main-baseline",
+        },
+        {
+            "environment": "docker-simulation-spark-sql-baseline-m4",
+            "input_label": "full",
+            "records": 7079081,
+            "job_name": "airline_airport_ranking",
+            "technology": "Spark SQL",
+            "runs": 3,
+            "median_duration_seconds": 10.0,
+            "run_id": "docker-baseline",
+        },
+    ]
+
+    records = generate_charts.spark_sql_optimization_before_after_records(summary)
+
+    assert records == [
+        {
+            "environment_family": "local",
+            "input_label": "1m",
+            "records": 1000000,
+            "job_name": "delay_by_airport_month",
+            "baseline_median_duration_seconds": 12.0,
+            "optimized_median_duration_seconds": 8.0,
+            "optimized_speedup": 1.5,
+            "baseline_runs": 3,
+            "optimized_runs": 3,
+            "baseline_run_id": "baseline",
+            "optimized_run_id": "optimized",
+        }
+    ]
+
+
 def test_scalability_ratio_records_require_three_inputs_and_100k_baseline():
     summary = [
         {

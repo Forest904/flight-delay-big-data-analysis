@@ -93,6 +93,20 @@ CLUSTER_COMPARISON_INPUTS = (
     ("full", 7_079_081),
 )
 CLUSTER_COMPARISON_TECHNOLOGIES = ("Spark SQL", "Spark Core")
+SPARK_SQL_OPTIMIZATION_ENVIRONMENT_PAIRS = (
+    ("local-spark-sql-baseline-m4", "local-spark-sql-optimized-m4", "local"),
+    (
+        "docker-simulation-spark-sql-baseline-m4",
+        "docker-simulation-spark-sql-optimized-m4",
+        "docker-simulation",
+    ),
+)
+SPARK_SQL_OPTIMIZATION_ENVIRONMENTS = {
+    environment
+    for pair in SPARK_SQL_OPTIMIZATION_ENVIRONMENT_PAIRS
+    for environment in pair[:2]
+}
+SPARK_SQL_OPTIMIZATION_INPUTS = ("1m", "full", "14m")
 AWS_AUDIT_MANIFEST_COLUMNS = [
     "run_id",
     "run_kind",
@@ -472,6 +486,54 @@ def rows_per_second_records(summary: list[dict[str, object]]) -> list[dict[str, 
     return records
 
 
+def spark_sql_optimization_before_after_records(summary: list[dict[str, object]]) -> list[dict[str, object]]:
+    summary_by_key = {
+        (
+            str(row.get("environment", "")),
+            str(row.get("input_label", "")),
+            str(row.get("job_name", "")),
+            str(row.get("technology", "")),
+        ): row
+        for row in summary
+    }
+
+    records: list[dict[str, object]] = []
+    for baseline_environment, optimized_environment, environment_family in SPARK_SQL_OPTIMIZATION_ENVIRONMENT_PAIRS:
+        job_names = sorted(
+            {
+                str(row.get("job_name", ""))
+                for row in summary
+                if str(row.get("environment", "")) in {baseline_environment, optimized_environment}
+                and str(row.get("technology", "")) == "Spark SQL"
+                and str(row.get("input_label", "")) in SPARK_SQL_OPTIMIZATION_INPUTS
+            }
+        )
+        for input_label in SPARK_SQL_OPTIMIZATION_INPUTS:
+            for job_name in job_names:
+                baseline = summary_by_key.get((baseline_environment, input_label, job_name, "Spark SQL"))
+                optimized = summary_by_key.get((optimized_environment, input_label, job_name, "Spark SQL"))
+                if baseline is None or optimized is None:
+                    continue
+                baseline_duration = baseline.get("median_duration_seconds", "")
+                optimized_duration = optimized.get("median_duration_seconds", "")
+                records.append(
+                    {
+                        "environment_family": environment_family,
+                        "input_label": input_label,
+                        "records": optimized.get("records", baseline.get("records", "")),
+                        "job_name": job_name,
+                        "baseline_median_duration_seconds": baseline_duration,
+                        "optimized_median_duration_seconds": optimized_duration,
+                        "optimized_speedup": divide_or_blank(baseline_duration, optimized_duration),
+                        "baseline_runs": baseline.get("runs", ""),
+                        "optimized_runs": optimized.get("runs", ""),
+                        "baseline_run_id": baseline.get("run_id", ""),
+                        "optimized_run_id": optimized.get("run_id", ""),
+                    }
+                )
+    return records
+
+
 def speedup_records(pivot: list[dict[str, object]]) -> list[dict[str, object]]:
     records: list[dict[str, object]] = []
     for row in pivot:
@@ -712,7 +774,14 @@ def generate_execution_time_charts(rows: list[dict[str, object]], figures_dir: P
         return []
 
     figures_dir.mkdir(parents=True, exist_ok=True)
-    frame = pd.DataFrame(benchmark_summary_records(rows))
+    chart_rows = [
+        row
+        for row in rows
+        if str(row.get("environment", "")) not in SPARK_SQL_OPTIMIZATION_ENVIRONMENTS
+    ]
+    frame = pd.DataFrame(benchmark_summary_records(chart_rows))
+    if frame.empty:
+        return []
     figures: list[Path] = []
 
     for (environment, job_name), group in frame.groupby(["environment", "job_name"], sort=True):
@@ -938,6 +1007,7 @@ def generate_artifacts(
     speedups = speedup_records(pivot)
     scalability = scalability_ratio_records(summary)
     cluster_comparison = cluster_size_comparison_records(summary)
+    spark_sql_optimization = spark_sql_optimization_before_after_records(summary)
 
     tables: list[Path] = []
     tables.extend(write_table_pair(tables_dir, "benchmark_summary", summary))
@@ -947,6 +1017,7 @@ def generate_artifacts(
     tables.extend(write_table_pair(tables_dir, "speedup", speedups))
     tables.extend(write_table_pair(tables_dir, "scalability_ratios", scalability))
     tables.extend(write_table_pair(tables_dir, "cluster_size_comparison", cluster_comparison))
+    tables.extend(write_table_pair(tables_dir, "spark_sql_optimization_before_after", spark_sql_optimization))
 
     first_10_tables, first_10_warnings = copy_first_10_tables(outputs_dir, tables_dir)
     tables.extend(first_10_tables)

@@ -81,6 +81,24 @@ docker-simulation,28m,28000000,airline_airport_ranking,Spark SQL,7.378546,379478
 docker-simulation,28m,28000000,delay_by_airport_month,Hive,35.27495,793764.4135569293
 docker-simulation,28m,28000000,delay_by_airport_month,Spark Core,2.760118,10144493.822365565
 docker-simulation,28m,28000000,delay_by_airport_month,Spark SQL,14.397201,1944822.4693119167
+docker-simulation-spark-sql-baseline-m4,1m,1000000,airline_airport_ranking,Spark SQL,3.590738,278494.2816769143
+docker-simulation-spark-sql-baseline-m4,1m,1000000,delay_by_airport_month,Spark SQL,9.586714,104311.02878421114
+docker-simulation-spark-sql-baseline-m4,1m,1000000,delay_by_airport_month_all_causes,Spark SQL,5.432835,184065.96187809863
+docker-simulation-spark-sql-baseline-m4,full,7079081,airline_airport_ranking,Spark SQL,4.120087,1718187.2615796707
+docker-simulation-spark-sql-baseline-m4,full,7079081,delay_by_airport_month,Spark SQL,11.705322,604774.5632285895
+docker-simulation-spark-sql-baseline-m4,full,7079081,delay_by_airport_month_all_causes,Spark SQL,8.340026,848808.0252987221
+docker-simulation-spark-sql-baseline-m4,14m,14000000,airline_airport_ranking,Spark SQL,6.127215,2284887.995606487
+docker-simulation-spark-sql-baseline-m4,14m,14000000,delay_by_airport_month,Spark SQL,18.71398,748103.8239861323
+docker-simulation-spark-sql-baseline-m4,14m,14000000,delay_by_airport_month_all_causes,Spark SQL,13.169358,1063073.841564638
+docker-simulation-spark-sql-optimized-m4,1m,1000000,airline_airport_ranking,Spark SQL,1.047858,954327.7810543032
+docker-simulation-spark-sql-optimized-m4,1m,1000000,delay_by_airport_month,Spark SQL,5.774278,173181.8246367771
+docker-simulation-spark-sql-optimized-m4,1m,1000000,delay_by_airport_month_all_causes,Spark SQL,3.304373,302629.2733901409
+docker-simulation-spark-sql-optimized-m4,full,7079081,airline_airport_ranking,Spark SQL,1.673856,4229205.4991588285
+docker-simulation-spark-sql-optimized-m4,full,7079081,delay_by_airport_month,Spark SQL,8.211753,862066.9667000456
+docker-simulation-spark-sql-optimized-m4,full,7079081,delay_by_airport_month_all_causes,Spark SQL,5.911999,1197409.0320380637
+docker-simulation-spark-sql-optimized-m4,14m,14000000,airline_airport_ranking,Spark SQL,1.981981,7063639.863348842
+docker-simulation-spark-sql-optimized-m4,14m,14000000,delay_by_airport_month,Spark SQL,9.468684,1478558.160775035
+docker-simulation-spark-sql-optimized-m4,14m,14000000,delay_by_airport_month_all_causes,Spark SQL,6.899514,2029128.428466121
 local,100k,100000,airline_airport_ranking,Hive,14.321988,6982.2708970291
 local,100k,100000,airline_airport_ranking,MapReduce,6.708246,14907.026367250099
 local,100k,100000,airline_airport_ranking,Spark Core,0.74002,135131.4829328937
@@ -133,3 +151,21 @@ local,28m,28000000,airline_airport_ranking,Spark SQL,3.372759,8301808.697271285
 local,28m,28000000,delay_by_airport_month,Hive,101.265195,276501.71413781407
 local,28m,28000000,delay_by_airport_month,Spark Core,1.332587,21011761.333406374
 local,28m,28000000,delay_by_airport_month,Spark SQL,11.923533,2348297.270616016
+local-spark-sql-baseline-m4,1m,1000000,airline_airport_ranking,Spark SQL,1.168272,855965.0492351097
+local-spark-sql-baseline-m4,1m,1000000,delay_by_airport_month,Spark SQL,5.748548,173956.97139521144
+local-spark-sql-baseline-m4,1m,1000000,delay_by_airport_month_all_causes,Spark SQL,2.312909,432355.963853312
+local-spark-sql-baseline-m4,full,7079081,airline_airport_ranking,Spark SQL,1.453538,4870241.438476325
+local-spark-sql-baseline-m4,full,7079081,delay_by_airport_month,Spark SQL,7.842285,902680.9150649332
+local-spark-sql-baseline-m4,full,7079081,delay_by_airport_month_all_causes,Spark SQL,5.052968,1400974.8330090356
+local-spark-sql-baseline-m4,14m,14000000,airline_airport_ranking,Spark SQL,1.984163,7055871.921812875
+local-spark-sql-baseline-m4,14m,14000000,delay_by_airport_month,Spark SQL,9.137848,1532089.3934764508
+local-spark-sql-baseline-m4,14m,14000000,delay_by_airport_month_all_causes,Spark SQL,4.906144,2853564.8362542964
+local-spark-sql-optimized-m4,1m,1000000,airline_airport_ranking,Spark SQL,0.910009,1098890.2307559596
+local-spark-sql-optimized-m4,1m,1000000,delay_by_airport_month,Spark SQL,4.683717,213505.64092578608
+local-spark-sql-optimized-m4,1m,1000000,delay_by_airport_month_all_causes,Spark SQL,2.174958,459778.9934334364
+local-spark-sql-optimized-m4,full,7079081,airline_airport_ranking,Spark SQL,1.476837,4793407.126175739
+local-spark-sql-optimized-m4,full,7079081,delay_by_airport_month,Spark SQL,6.812261,1039167.6126325752
+local-spark-sql-optimized-m4,full,7079081,delay_by_airport_month_all_causes,Spark SQL,5.328338,1328572.0613069218
+local-spark-sql-optimized-m4,14m,14000000,airline_airport_ranking,Spark SQL,1.670504,8380704.266496818
+local-spark-sql-optimized-m4,14m,14000000,delay_by_airport_month,Spark SQL,8.258864,1695148.3884466433
+local-spark-sql-optimized-m4,14m,14000000,delay_by_airport_month_all_causes,Spark SQL,4.903645,2855019.0725470544

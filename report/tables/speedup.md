@@ -34,6 +34,24 @@
 | docker-simulation | 14m | 14000000 | delay_by_airport_month | 4.712 | 1.789 | 8.431 |
 | docker-simulation | 28m | 28000000 | airline_airport_ranking | 3.256 | 3.112 | 10.136 |
 | docker-simulation | 28m | 28000000 | delay_by_airport_month | 5.216 | 2.45 | 12.78 |
+| docker-simulation-spark-sql-baseline-m4 | 1m | 1000000 | airline_airport_ranking |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | 1m | 1000000 | delay_by_airport_month |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | 1m | 1000000 | delay_by_airport_month_all_causes |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | full | 7079081 | airline_airport_ranking |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | full | 7079081 | delay_by_airport_month |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | full | 7079081 | delay_by_airport_month_all_causes |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | 14m | 14000000 | airline_airport_ranking |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | 14m | 14000000 | delay_by_airport_month |  |  |  |
+| docker-simulation-spark-sql-baseline-m4 | 14m | 14000000 | delay_by_airport_month_all_causes |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | 1m | 1000000 | airline_airport_ranking |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | 1m | 1000000 | delay_by_airport_month |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | 1m | 1000000 | delay_by_airport_month_all_causes |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | full | 7079081 | airline_airport_ranking |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | full | 7079081 | delay_by_airport_month |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | full | 7079081 | delay_by_airport_month_all_causes |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | 14m | 14000000 | airline_airport_ranking |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | 14m | 14000000 | delay_by_airport_month |  |  |  |
+| docker-simulation-spark-sql-optimized-m4 | 14m | 14000000 | delay_by_airport_month_all_causes |  |  |  |
 | local | 100k | 100000 | airline_airport_ranking | 2.357 | 8.21 | 19.354 |
 | local | 100k | 100000 | delay_by_airport_month | 7.953 | 2.491 | 19.81 |
 | local | 500k | 500000 | airline_airport_ranking | 2.365 | 7.625 | 18.03 |
@@ -48,3 +66,21 @@
 | local | 14m | 14000000 | delay_by_airport_month | 9.705 | 3.464 | 33.619 |
 | local | 28m | 28000000 | airline_airport_ranking | 4.063 | 19.729 | 80.154 |
 | local | 28m | 28000000 | delay_by_airport_month | 8.948 | 8.493 | 75.991 |
+| local-spark-sql-baseline-m4 | 1m | 1000000 | airline_airport_ranking |  |  |  |
+| local-spark-sql-baseline-m4 | 1m | 1000000 | delay_by_airport_month |  |  |  |
+| local-spark-sql-baseline-m4 | 1m | 1000000 | delay_by_airport_month_all_causes |  |  |  |
+| local-spark-sql-baseline-m4 | full | 7079081 | airline_airport_ranking |  |  |  |
+| local-spark-sql-baseline-m4 | full | 7079081 | delay_by_airport_month |  |  |  |
+| local-spark-sql-baseline-m4 | full | 7079081 | delay_by_airport_month_all_causes |  |  |  |
+| local-spark-sql-baseline-m4 | 14m | 14000000 | airline_airport_ranking |  |  |  |
+| local-spark-sql-baseline-m4 | 14m | 14000000 | delay_by_airport_month |  |  |  |
+| local-spark-sql-baseline-m4 | 14m | 14000000 | delay_by_airport_month_all_causes |  |  |  |
+| local-spark-sql-optimized-m4 | 1m | 1000000 | airline_airport_ranking |  |  |  |
+| local-spark-sql-optimized-m4 | 1m | 1000000 | delay_by_airport_month |  |  |  |
+| local-spark-sql-optimized-m4 | 1m | 1000000 | delay_by_airport_month_all_causes |  |  |  |
+| local-spark-sql-optimized-m4 | full | 7079081 | airline_airport_ranking |  |  |  |
+| local-spark-sql-optimized-m4 | full | 7079081 | delay_by_airport_month |  |  |  |
+| local-spark-sql-optimized-m4 | full | 7079081 | delay_by_airport_month_all_causes |  |  |  |
+| local-spark-sql-optimized-m4 | 14m | 14000000 | airline_airport_ranking |  |  |  |
+| local-spark-sql-optimized-m4 | 14m | 14000000 | delay_by_airport_month |  |  |  |
+| local-spark-sql-optimized-m4 | 14m | 14000000 | delay_by_airport_month_all_causes |  |  |  |

@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pyspark import StorageLevel
 from pyspark.sql import DataFrame, SparkSession
 
 
@@ -20,7 +19,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.common.prepared_data import has_windows_winutils, read_prepared_parquet
+from src.common.prepared_data import read_prepared_parquet
 from src.common.uri import (
     display_location,
     is_s3_uri,
@@ -70,6 +69,84 @@ RANKING_OUTPUT_COLUMNS = [
     "difference_from_airport_avg_departure_delay",
     "rank_at_airport",
 ]
+
+DELAY_RANGE_SQL = """
+CASE
+    WHEN departure_delay < 15 THEN 'low'
+    WHEN departure_delay >= 15 AND departure_delay <= 60 THEN 'medium'
+    WHEN departure_delay > 60 THEN 'high'
+END
+"""
+
+DERIVED_CAUSE_SQL = """
+CASE
+    WHEN cancelled = 1 AND cancellation_code IS NOT NULL
+        THEN concat('cancellation:', cancellation_code)
+    WHEN greatest(
+        coalesce(carrier_delay, 0.0),
+        coalesce(weather_delay, 0.0),
+        coalesce(nas_delay, 0.0),
+        coalesce(security_delay, 0.0),
+        coalesce(late_aircraft_delay, 0.0)
+    ) <= 0.0
+        THEN 'unknown'
+    WHEN coalesce(carrier_delay, 0.0) >= coalesce(weather_delay, 0.0)
+        AND coalesce(carrier_delay, 0.0) >= coalesce(nas_delay, 0.0)
+        AND coalesce(carrier_delay, 0.0) >= coalesce(security_delay, 0.0)
+        AND coalesce(carrier_delay, 0.0) >= coalesce(late_aircraft_delay, 0.0)
+        THEN 'delay:carrier'
+    WHEN coalesce(weather_delay, 0.0) >= coalesce(nas_delay, 0.0)
+        AND coalesce(weather_delay, 0.0) >= coalesce(security_delay, 0.0)
+        AND coalesce(weather_delay, 0.0) >= coalesce(late_aircraft_delay, 0.0)
+        THEN 'delay:weather'
+    WHEN coalesce(nas_delay, 0.0) >= coalesce(security_delay, 0.0)
+        AND coalesce(nas_delay, 0.0) >= coalesce(late_aircraft_delay, 0.0)
+        THEN 'delay:nas'
+    WHEN coalesce(security_delay, 0.0) >= coalesce(late_aircraft_delay, 0.0)
+        THEN 'delay:security'
+    ELSE 'delay:late_aircraft'
+END
+"""
+
+
+def ranged_flights_cte() -> str:
+    return f"""
+        ranged AS (
+            SELECT
+                origin_airport,
+                month,
+                departure_delay,
+                arrival_delay,
+                cancelled,
+                cancellation_code,
+                carrier_delay,
+                weather_delay,
+                nas_delay,
+                security_delay,
+                late_aircraft_delay,
+                {DELAY_RANGE_SQL} AS delay_range,
+                {DERIVED_CAUSE_SQL} AS derived_cause
+            FROM flights
+            WHERE departure_delay IS NOT NULL
+            UNION ALL
+            SELECT
+                origin_airport,
+                month,
+                departure_delay,
+                arrival_delay,
+                cancelled,
+                cancellation_code,
+                carrier_delay,
+                weather_delay,
+                nas_delay,
+                security_delay,
+                late_aircraft_delay,
+                'cancelled_no_departure_delay' AS delay_range,
+                concat('cancellation:', coalesce(cancellation_code, 'unknown')) AS derived_cause
+            FROM flights
+            WHERE cancelled = 1 AND departure_delay IS NULL
+        )
+    """
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
@@ -149,12 +226,6 @@ def validate_preconditions(prepared_file: str | Path) -> list[str]:
         errors.append(
             f"Prepared dataset was not found: {prepared_file}. Run `make prepare` or `make generate-sizes` first."
         )
-    if not is_s3_uri(prepared_file) and not has_windows_winutils():
-        errors.append(
-            "Spark SQL CSV output on Windows requires Hadoop `winutils.exe`. "
-            "Install Hadoop native tools and set HADOOP_HOME or hadoop.home.dir so "
-            "`bin\\winutils.exe` is discoverable, then retry `make run-spark-sql`."
-        )
     return errors
 
 
@@ -178,64 +249,8 @@ def build_spark(local_config: dict[str, Any]) -> SparkSession:
 
 def delay_report_query(spark: SparkSession) -> DataFrame:
     return spark.sql(
-        """
-        WITH known_departure_delay AS (
-            SELECT
-                origin_airport,
-                month,
-                departure_delay,
-                arrival_delay,
-                CASE
-                    WHEN departure_delay < 15 THEN 'low'
-                    WHEN departure_delay >= 15 AND departure_delay <= 60 THEN 'medium'
-                    WHEN departure_delay > 60 THEN 'high'
-                END AS delay_range,
-                CASE
-                    WHEN cancelled = 1 AND cancellation_code IS NOT NULL
-                        THEN concat('cancellation:', cancellation_code)
-                    WHEN greatest(
-                        coalesce(carrier_delay, 0.0),
-                        coalesce(weather_delay, 0.0),
-                        coalesce(nas_delay, 0.0),
-                        coalesce(security_delay, 0.0),
-                        coalesce(late_aircraft_delay, 0.0)
-                    ) <= 0.0
-                        THEN 'unknown'
-                    WHEN coalesce(carrier_delay, 0.0) >= coalesce(weather_delay, 0.0)
-                        AND coalesce(carrier_delay, 0.0) >= coalesce(nas_delay, 0.0)
-                        AND coalesce(carrier_delay, 0.0) >= coalesce(security_delay, 0.0)
-                        AND coalesce(carrier_delay, 0.0) >= coalesce(late_aircraft_delay, 0.0)
-                        THEN 'delay:carrier'
-                    WHEN coalesce(weather_delay, 0.0) >= coalesce(nas_delay, 0.0)
-                        AND coalesce(weather_delay, 0.0) >= coalesce(security_delay, 0.0)
-                        AND coalesce(weather_delay, 0.0) >= coalesce(late_aircraft_delay, 0.0)
-                        THEN 'delay:weather'
-                    WHEN coalesce(nas_delay, 0.0) >= coalesce(security_delay, 0.0)
-                        AND coalesce(nas_delay, 0.0) >= coalesce(late_aircraft_delay, 0.0)
-                        THEN 'delay:nas'
-                    WHEN coalesce(security_delay, 0.0) >= coalesce(late_aircraft_delay, 0.0)
-                        THEN 'delay:security'
-                    ELSE 'delay:late_aircraft'
-                END AS derived_cause
-            FROM flights
-            WHERE departure_delay IS NOT NULL
-        ),
-        cancelled_no_departure_delay AS (
-            SELECT
-                origin_airport,
-                month,
-                departure_delay,
-                arrival_delay,
-                'cancelled_no_departure_delay' AS delay_range,
-                concat('cancellation:', coalesce(cancellation_code, 'unknown')) AS derived_cause
-            FROM flights
-            WHERE cancelled = 1 AND departure_delay IS NULL
-        ),
-        ranged AS (
-            SELECT * FROM known_departure_delay
-            UNION ALL
-            SELECT * FROM cancelled_no_departure_delay
-        ),
+        f"""
+        WITH {ranged_flights_cte()},
         grouped AS (
             SELECT
                 origin_airport,
@@ -257,33 +272,35 @@ def delay_report_query(spark: SparkSession) -> DataFrame:
             FROM ranged
             GROUP BY origin_airport, month, delay_range, derived_cause
         ),
-        ranked_causes AS (
+        top_cause_groups AS (
             SELECT
                 origin_airport,
                 month,
                 delay_range,
-                derived_cause,
-                cause_count,
-                row_number() OVER (
-                    PARTITION BY origin_airport, month, delay_range
-                    ORDER BY cause_count DESC, derived_cause ASC
-                ) AS cause_rank
+                sort_array(
+                    collect_list(
+                        named_struct(
+                            'sort_count', -cause_count,
+                            'cause', derived_cause,
+                            'cause_count', cause_count
+                        )
+                    )
+                ) AS causes
             FROM cause_counts
+            GROUP BY origin_airport, month, delay_range
         ),
         top_causes AS (
             SELECT
                 origin_airport,
                 month,
                 delay_range,
-                max(CASE WHEN cause_rank = 1 THEN derived_cause END) AS top_1_cause,
-                coalesce(max(CASE WHEN cause_rank = 1 THEN cause_count END), 0) AS top_1_count,
-                max(CASE WHEN cause_rank = 2 THEN derived_cause END) AS top_2_cause,
-                coalesce(max(CASE WHEN cause_rank = 2 THEN cause_count END), 0) AS top_2_count,
-                max(CASE WHEN cause_rank = 3 THEN derived_cause END) AS top_3_cause,
-                coalesce(max(CASE WHEN cause_rank = 3 THEN cause_count END), 0) AS top_3_count
-            FROM ranked_causes
-            WHERE cause_rank <= 3
-            GROUP BY origin_airport, month, delay_range
+                get(causes, 0).cause AS top_1_cause,
+                coalesce(get(causes, 0).cause_count, 0) AS top_1_count,
+                get(causes, 1).cause AS top_2_cause,
+                coalesce(get(causes, 1).cause_count, 0) AS top_2_count,
+                get(causes, 2).cause AS top_3_cause,
+                coalesce(get(causes, 2).cause_count, 0) AS top_3_count
+            FROM top_cause_groups
         )
         SELECT
             grouped.origin_airport,
@@ -320,46 +337,8 @@ def delay_report_query(spark: SparkSession) -> DataFrame:
 
 def delay_all_causes_query(spark: SparkSession) -> DataFrame:
     return spark.sql(
-        """
-        WITH known_departure_delay AS (
-            SELECT
-                origin_airport,
-                month,
-                cancelled,
-                cancellation_code,
-                carrier_delay,
-                weather_delay,
-                nas_delay,
-                security_delay,
-                late_aircraft_delay,
-                CASE
-                    WHEN departure_delay < 15 THEN 'low'
-                    WHEN departure_delay >= 15 AND departure_delay <= 60 THEN 'medium'
-                    WHEN departure_delay > 60 THEN 'high'
-                END AS delay_range
-            FROM flights
-            WHERE departure_delay IS NOT NULL
-        ),
-        cancelled_no_departure_delay AS (
-            SELECT
-                origin_airport,
-                month,
-                cancelled,
-                cancellation_code,
-                carrier_delay,
-                weather_delay,
-                nas_delay,
-                security_delay,
-                late_aircraft_delay,
-                'cancelled_no_departure_delay' AS delay_range
-            FROM flights
-            WHERE cancelled = 1 AND departure_delay IS NULL
-        ),
-        ranged AS (
-            SELECT * FROM known_departure_delay
-            UNION ALL
-            SELECT * FROM cancelled_no_departure_delay
-        ),
+        f"""
+        WITH {ranged_flights_cte()},
         cause_events AS (
             SELECT origin_airport, month, delay_range, 'delay:carrier' AS cause
             FROM ranged
@@ -395,18 +374,33 @@ def delay_all_causes_query(spark: SparkSession) -> DataFrame:
             FROM cause_events
             GROUP BY origin_airport, month, delay_range, cause
         ),
+        ranked_groups AS (
+            SELECT
+                origin_airport,
+                month,
+                delay_range,
+                sort_array(
+                    collect_list(
+                        named_struct(
+                            'sort_count', -cause_count,
+                            'cause', cause,
+                            'cause_count', cause_count
+                        )
+                    )
+                ) AS causes
+            FROM cause_counts
+            GROUP BY origin_airport, month, delay_range
+        ),
         ranked AS (
             SELECT
                 origin_airport,
                 month,
                 delay_range,
-                row_number() OVER (
-                    PARTITION BY origin_airport, month, delay_range
-                    ORDER BY cause_count DESC, cause ASC
-                ) AS cause_rank,
-                cause,
-                cause_count
-            FROM cause_counts
+                rank_index + 1 AS cause_rank,
+                cause_record.cause AS cause,
+                cause_record.cause_count AS cause_count
+            FROM ranked_groups
+            LATERAL VIEW posexplode(causes) exploded AS rank_index, cause_record
         )
         SELECT
             origin_airport,
@@ -489,8 +483,7 @@ def airline_airport_ranking_query(spark: SparkSession) -> DataFrame:
     ).select(*RANKING_OUTPUT_COLUMNS)
 
 
-def write_first_10_csv(df: DataFrame, output_path: str | Path) -> None:
-    rows = df.limit(10).toPandas()
+def write_first_10_csv(rows: Any, output_path: str | Path) -> None:
     if is_s3_uri(output_path):
         write_text_location(output_path, rows.to_csv(index=False))
         return
@@ -499,13 +492,14 @@ def write_first_10_csv(df: DataFrame, output_path: str | Path) -> None:
     rows.to_csv(local_path, index=False)
 
 
-def write_full_csv(df: DataFrame, output_path: str | Path) -> None:
+def write_full_csv(rows: Any, output_path: str | Path) -> None:
     clear_path(output_path)
-    (
-        df.write.mode("overwrite" if is_s3_uri(output_path) else "error")
-        .option("header", "true")
-        .csv(str(output_path))
-    )
+    if is_s3_uri(output_path):
+        write_text_location(join_uri(output_path, "part-00000.csv"), rows.to_csv(index=False))
+        return
+    local_path = Path(output_path)
+    local_path.mkdir(parents=True, exist_ok=True)
+    rows.to_csv(local_path / "part-00000.csv", index=False)
 
 
 def run_analysis(
@@ -515,21 +509,20 @@ def run_analysis(
     sample_output_path: str | Path,
 ) -> dict[str, Any]:
     started = time.perf_counter()
-    persisted = df.persist(StorageLevel.MEMORY_AND_DISK)
     status = "success"
     error: str | None = None
     output_rows = 0
 
     try:
-        output_rows = persisted.count()
-        write_full_csv(persisted, full_output_path)
-        write_first_10_csv(persisted, sample_output_path)
+        rows = df.toPandas()
+        output_rows = len(rows)
+        write_full_csv(rows, full_output_path)
+        write_first_10_csv(rows.head(10), sample_output_path)
     except Exception as exc:
         status = "failed"
         error = str(exc)
     finally:
         duration_seconds = round(time.perf_counter() - started, 6)
-        persisted.unpersist()
 
     metrics: dict[str, Any] = {
         "job_name": name,

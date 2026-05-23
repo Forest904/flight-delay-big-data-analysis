@@ -17,11 +17,10 @@ settings from `config/local.yaml`. The script uses
 `src.common.prepared_data.read_prepared_parquet()` so local Windows runs can read
 the prepared Parquet directory even when Hadoop native tools are unavailable.
 
-On Windows, Spark SQL output writing requires Hadoop `winutils.exe`. Set
-`HADOOP_HOME` or `hadoop.home.dir` to a Hadoop directory containing
-`bin\winutils.exe` before running `make run-spark-sql`. The job checks this
-before clearing existing outputs and exits with an actionable preflight error if
-the tool is missing.
+On Windows, the runner avoids Spark's native CSV writer for final outputs. It
+reads Parquet through `src.common.prepared_data.read_prepared_parquet()` and
+writes the small aggregate CSV tables with pandas, matching the Spark Core
+output path and avoiding Hadoop native-tool fragility for local report outputs.
 
 ## Output Layout
 
@@ -39,9 +38,13 @@ outputs/spark_sql/
   runtime_metrics.json
 ```
 
-Full outputs are Spark-written CSV directories with headers. The `first_10.csv`
-files are single CSV files with headers, intended for report evidence and quick
-manual inspection. All generated outputs remain ignored by Git.
+Full outputs are CSV directories with a headered `part-00000.csv`, matching the
+Spark Core output shape. Spark SQL collects the already ordered aggregate result
+once with pandas, writes the full CSV part, and derives `first_10.csv` from the
+same in-memory rows. The result tables are small relative to the input data, so
+this avoids separate Spark actions for count, full output materialization, and
+sample materialization while keeping deterministic report samples. All generated
+outputs remain ignored by Git.
 
 ## Delay Report By Airport, Month, And Delay Range
 
@@ -86,9 +89,10 @@ The cause field is derived per flight:
   `delay:late_aircraft`.
 - Flights without a positive delay cause use `unknown`.
 
-Spark SQL computes the top three causes with a grouped count and
-`ROW_NUMBER() OVER (PARTITION BY origin_airport, month, delay_range ORDER BY
-cause_count DESC, derived_cause ASC)`, which gives deterministic tie-breaking.
+Spark SQL computes the top three causes with grouped counts and a compact
+per-group sorted cause array ordered by `cause_count DESC, derived_cause ASC`,
+which gives deterministic tie-breaking without a separate top-three window over
+the grouped cause rows.
 Groups with fewer than three available causes use null cause labels and `0`
 counts for the missing slots.
 

@@ -323,8 +323,8 @@ Spark SQL is the reference implementation. It expresses both analyses with
 DataFrame temporary views, SQL aggregations, and window functions. The ranking
 job uses `RANK() OVER (PARTITION BY origin_airport ORDER BY
 avg_departure_delay ASC NULLS LAST)`. The delay job uses grouped cause counts
-and `ROW_NUMBER()` to select the top three causes with deterministic
-tie-breaking.
+and compact per-group cause arrays to select the top three causes with
+deterministic tie-breaking.
 
 Spark SQL is the most concise implementation in this project. The grouping
 keys, derived fields, ranking rule, and top-three cause rule are visible in the
@@ -334,8 +334,9 @@ but it does not remove distributed execution cost.
 
 Execution plan: `make run-spark-sql` reads the canonical prepared Parquet input
 with the Spark settings from `config/local.yaml`, registers a temporary view,
-executes one SQL query per analysis, writes full CSV outputs plus first-10
-samples under `outputs/spark_sql/`, and records runtime metrics in
+executes one SQL query per analysis, collects each ordered aggregate result
+once, writes a headered `full/part-00000.csv` plus first-10 sample under
+`outputs/spark_sql/`, and records runtime metrics in
 `outputs/spark_sql/runtime_metrics.json`. Its outputs are validated directly
 and then used as the correctness reference for Spark Core, Hive, and the
 MapReduce stretch.
@@ -545,6 +546,30 @@ Compact examples from that table are:
   16.676 s; max 17.363 s.
 - AWS EMR larger `28m` delay, Spark SQL: 1 smoke/stress run; 19.184 s.
 - AWS EMR `100k` delay, Spark SQL: 1 smoke run; 15.832 s.
+
+## Spark SQL Optimization Check
+
+Milestone 4 adds a targeted Spark SQL before/after benchmark lane for `1m`,
+`full`, and `14m` in local and Docker standalone simulation environments. The
+raw M4 rows use distinct labels, such as `local-spark-sql-baseline-m4` and
+`local-spark-sql-optimized-m4`, so optimized evidence does not silently replace
+the main baseline matrix. The generated comparison table is
+`report/tables/spark_sql_optimization_before_after.md`.
+
+The optimization keeps the schemas and deterministic output order but changes
+Spark SQL materialization to match Spark Core's small-result path: collect the
+ordered aggregate once, write `full/part-00000.csv`, and derive `first_10.csv`
+from the same rows. The delay-cause ranking also avoids a separate top-three
+window by ranking compact grouped cause lists. The measured local result is
+mixed but mostly positive: 7 of 9 cells improved, including `full`
+`delay_by_airport_month` from 7.842 s to 6.812 s, while `full`
+`delay_by_airport_month_all_causes` moved from 5.053 s to 5.328 s. Docker
+standalone simulation improved all 9 M4 cells, including `14m`
+`delay_by_airport_month` from 18.714 s to 9.469 s and `14m`
+`delay_by_airport_month_all_causes` from 13.169 s to 6.900 s. The remaining
+physical plans still include scans, exchanges, aggregations, sorts, and the
+airline ranking window, so SQL expressiveness does not remove shuffle or sort
+costs.
 
 ## Benchmark Pivot
 
