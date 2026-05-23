@@ -24,8 +24,12 @@
 | docker-simulation | 100k | 100000 | delay_by_airport_month | 3.407 | 1.176 | 4.005 |
 | docker-simulation | 500k | 500000 | airline_airport_ranking | 2.099 | 1.446 | 3.035 |
 | docker-simulation | 500k | 500000 | delay_by_airport_month | 3.529 | 1.102 | 3.887 |
-| docker-simulation | 1m | 1000000 | airline_airport_ranking | 1.928 | 1.72 | 3.316 |
-| docker-simulation | 1m | 1000000 | delay_by_airport_month | 3.959 | 1.155 | 4.573 |
+| docker-simulation | 1m | 1000000 | airline_airport_ranking | 0.514 | 9.769 | 5.02 |
+| docker-simulation | 1m | 1000000 | delay_by_airport_month | 2.449 | 2.666 | 6.529 |
+| docker-simulation | 1m | 1000000 | delay_by_airport_month_all_causes | 1.494 |  |  |
+| docker-simulation | 1m_hc8 | 1000000 | airline_airport_ranking | 0.598 |  |  |
+| docker-simulation | 1m_hc8 | 1000000 | delay_by_airport_month | 2.074 |  |  |
+| docker-simulation | 1m_hc8 | 1000000 | delay_by_airport_month_all_causes | 1.551 |  |  |
 | docker-simulation | 3m | 3000000 | airline_airport_ranking | 2.536 | 1.519 | 3.852 |
 | docker-simulation | 3m | 3000000 | delay_by_airport_month | 4.391 | 1.229 | 5.398 |
 | docker-simulation | full | 7079081 | airline_airport_ranking | 2.754 | 2.089 | 5.754 |
@@ -56,8 +60,12 @@
 | local | 100k | 100000 | delay_by_airport_month | 7.953 | 2.491 | 19.81 |
 | local | 500k | 500000 | airline_airport_ranking | 2.365 | 7.625 | 18.03 |
 | local | 500k | 500000 | delay_by_airport_month | 7.731 | 2.421 | 18.721 |
-| local | 1m | 1000000 | airline_airport_ranking | 3.142 | 6.393 | 20.088 |
-| local | 1m | 1000000 | delay_by_airport_month | 10.191 | 1.84 | 18.749 |
+| local | 1m | 1000000 | airline_airport_ranking | 1.679 | 17.578 | 29.521 |
+| local | 1m | 1000000 | delay_by_airport_month | 5.512 | 5.012 | 27.628 |
+| local | 1m | 1000000 | delay_by_airport_month_all_causes | 4.245 |  |  |
+| local | 1m_hc8 | 1000000 | airline_airport_ranking | 1.846 |  |  |
+| local | 1m_hc8 | 1000000 | delay_by_airport_month | 4.58 |  |  |
+| local | 1m_hc8 | 1000000 | delay_by_airport_month_all_causes | 3.213 |  |  |
 | local | 3m | 3000000 | airline_airport_ranking | 4.261 | 4.933 | 21.019 |
 | local | 3m | 3000000 | delay_by_airport_month | 11.623 | 1.915 | 22.258 |
 | local | full | 7079081 | airline_airport_ranking | 4.33 | 7.066 | 30.596 |

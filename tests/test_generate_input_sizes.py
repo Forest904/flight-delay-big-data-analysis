@@ -6,9 +6,11 @@ from src.preparation.generate_input_sizes import (
     DEFAULT_SEED,
     benchmark_inputs_for_manifest,
     deterministic_hash_limit,
+    high_cardinality_stress_dataset,
     expected_reuse_fields,
     generate_manifest,
     replication_plan,
+    selected_cardinality_stress_specs,
     selected_size_specs,
     write_manifest,
     assert_reusable_previous_entry,
@@ -60,6 +62,13 @@ def test_selected_size_specs_filters_large_labels_when_requested():
 def test_selected_size_specs_rejects_unknown_large_label():
     with pytest.raises(ValueError, match="Unknown large input label"):
         selected_size_specs(include_large=True, large_labels={"56m"})
+
+
+def test_selected_cardinality_stress_specs_are_opt_in():
+    assert selected_cardinality_stress_specs(False) == []
+    assert [(spec.label, spec.source_label, spec.variant_factor) for spec in selected_cardinality_stress_specs(True)] == [
+        ("1m_hc8", "1m", 8)
+    ]
 
 
 def test_replication_plan_for_optional_large_inputs():
@@ -199,6 +208,33 @@ def test_deterministic_hash_limit_selects_stable_rows():
         spark.stop()
 
 
+def test_high_cardinality_stress_dataset_suffixes_keys_without_changing_numeric_values():
+    spark = SparkSession.builder.master("local[2]").appName("test-high-cardinality-stress-dataset").getOrCreate()
+    try:
+        df = spark.range(0, 3).selectExpr(
+            "CASE id WHEN 0 THEN 'AA' WHEN 1 THEN 'DL' ELSE 'UA' END as airline_code",
+            "CASE id WHEN 1 THEN NULL WHEN 0 THEN 'American' ELSE 'United' END as airline_name",
+            "CASE id WHEN 0 THEN 'JFK' WHEN 1 THEN 'LAX' ELSE 'SFO' END as origin_airport",
+            "CASE id WHEN 0 THEN cast(10.0 as double) WHEN 1 THEN cast(-3.0 as double) ELSE cast(NULL as double) END as departure_delay",
+            "cast(id + 1 as int) as month",
+        )
+
+        first = high_cardinality_stress_dataset(df, 8, DEFAULT_SEED)
+        second = high_cardinality_stress_dataset(df, 8, DEFAULT_SEED)
+        rows = first.orderBy("month").collect()
+
+        assert first.schema == df.schema
+        assert first.count() == df.count()
+        assert first.exceptAll(second).count() == 0
+        assert second.exceptAll(first).count() == 0
+        assert [row["departure_delay"] for row in rows] == [10.0, -3.0, None]
+        assert all("_HC0" in row["airline_code"] for row in rows)
+        assert all("_HC0" in row["origin_airport"] for row in rows)
+        assert rows[1]["airline_name"] is None
+    finally:
+        spark.stop()
+
+
 def test_generate_manifest_reuses_matching_previous_manifest(tmp_path, monkeypatch):
     monkeypatch.setattr(generate_input_sizes, "DEFAULT_SIZE_SPECS", (("2r", 2),))
     spark = SparkSession.builder.master("local[2]").appName("test-generate-manifest-reuse").getOrCreate()
@@ -267,8 +303,116 @@ spark:
         generate_manifest(config_path, DEFAULT_SEED + 1, force=False, include_large=False)
 
 
+def test_generate_manifest_records_input_kinds_and_cardinality_stress_metadata(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_input_sizes, "DEFAULT_SIZE_SPECS", (("2r", 2),))
+    monkeypatch.setattr(generate_input_sizes, "LARGE_SIZE_SPECS", (("5r", 5),))
+    monkeypatch.setattr(generate_input_sizes, "DEFAULT_CARDINALITY_STRESS_SPECS", (("2r_hc2", "2r", 2),))
+    spark = SparkSession.builder.master("local[2]").appName("test-generate-manifest-cardinality-stress").getOrCreate()
+    try:
+        prepared_path = tmp_path / "prepared.parquet"
+        generated_dir = tmp_path / "generated"
+        config_path = tmp_path / "local.yaml"
+        spark.range(0, 3).selectExpr(
+            "concat('2024-01-0', cast(id + 1 as string)) as flight_date",
+            "cast(1 as int) as month",
+            "CASE id WHEN 0 THEN 'AA' WHEN 1 THEN 'DL' ELSE 'UA' END as airline_code",
+            "CASE id WHEN 1 THEN NULL WHEN 0 THEN 'American' ELSE 'United' END as airline_name",
+            "CASE id WHEN 0 THEN 'JFK' WHEN 1 THEN 'LAX' ELSE 'SFO' END as origin_airport",
+            "CASE id WHEN 0 THEN cast(10.0 as double) WHEN 1 THEN cast(-3.0 as double) ELSE cast(NULL as double) END as departure_delay",
+        ).write.parquet(str(prepared_path))
+        config_path.write_text(
+            f"""
+paths:
+  prepared_file: {prepared_path.as_posix()}
+  generated_dir: {generated_dir.as_posix()}
+spark:
+  master: local[2]
+  app_name: test-generate-input-sizes
+  shuffle_partitions: 2
+""".lstrip(),
+            encoding="utf-8",
+        )
+    finally:
+        spark.stop()
+
+    manifest = generate_manifest(
+        config_path,
+        DEFAULT_SEED,
+        force=True,
+        include_large=True,
+        large_labels={"5r"},
+        include_cardinality_stress=True,
+    )
+    by_label = {entry["label"]: entry for entry in manifest["datasets"]}
+
+    assert by_label["full"]["input_kind"] == "original_prepared"
+    assert by_label["full"]["synthetic_input"] is False
+    assert by_label["2r"]["input_kind"] == "deterministic_subset"
+    assert by_label["2r"]["synthetic_input"] is False
+    assert by_label["5r"]["input_kind"] == "row_volume_replication"
+    assert by_label["5r"]["synthetic_input"] is True
+    assert by_label["2r_hc2"]["input_kind"] == "high_cardinality_stress"
+    assert by_label["2r_hc2"]["synthetic_input"] is True
+    assert by_label["2r_hc2"]["source_input_label"] == "2r"
+    assert by_label["2r_hc2"]["variant_factor"] == 2
+    assert by_label["2r_hc2"]["variant_columns"] == ["origin_airport", "airline_code", "airline_name"]
+    assert by_label["2r_hc2"]["row_count_policy"] == "same_as_source"
+    assert by_label["2r_hc2"]["actual_records"] == by_label["2r"]["actual_records"]
+
+
+def test_generate_manifest_requires_force_for_changed_cardinality_stress_metadata(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_input_sizes, "DEFAULT_SIZE_SPECS", (("2r", 2),))
+    monkeypatch.setattr(generate_input_sizes, "DEFAULT_CARDINALITY_STRESS_SPECS", (("2r_hc", "2r", 2),))
+    spark = SparkSession.builder.master("local[2]").appName("test-cardinality-stress-reuse-conflict").getOrCreate()
+    try:
+        prepared_path = tmp_path / "prepared.parquet"
+        generated_dir = tmp_path / "generated"
+        config_path = tmp_path / "local.yaml"
+        spark.range(0, 3).selectExpr(
+            "CASE id WHEN 0 THEN 'AA' WHEN 1 THEN 'DL' ELSE 'UA' END as airline_code",
+            "CASE id WHEN 1 THEN NULL WHEN 0 THEN 'American' ELSE 'United' END as airline_name",
+            "CASE id WHEN 0 THEN 'JFK' WHEN 1 THEN 'LAX' ELSE 'SFO' END as origin_airport",
+            "CASE id WHEN 0 THEN cast(10.0 as double) WHEN 1 THEN cast(-3.0 as double) ELSE cast(NULL as double) END as departure_delay",
+        ).write.parquet(str(prepared_path))
+        config_path.write_text(
+            f"""
+paths:
+  prepared_file: {prepared_path.as_posix()}
+  generated_dir: {generated_dir.as_posix()}
+spark:
+  master: local[2]
+  app_name: test-generate-input-sizes
+  shuffle_partitions: 2
+""".lstrip(),
+            encoding="utf-8",
+        )
+    finally:
+        spark.stop()
+
+    generated_manifest = generate_manifest(
+        config_path,
+        DEFAULT_SEED,
+        force=True,
+        include_large=False,
+        include_cardinality_stress=True,
+    )
+    write_manifest(generated_manifest, generated_dir)
+    monkeypatch.setattr(generate_input_sizes, "DEFAULT_CARDINALITY_STRESS_SPECS", (("2r_hc", "2r", 3),))
+
+    with pytest.raises(ValueError, match="metadata differs"):
+        generate_manifest(
+            config_path,
+            DEFAULT_SEED,
+            force=False,
+            include_large=False,
+            include_cardinality_stress=True,
+        )
+
+
 def test_makefile_wires_large_label_filter():
     makefile = generate_input_sizes.PROJECT_ROOT.joinpath("Makefile").read_text(encoding="utf-8")
 
     assert "LARGE_LABEL" in makefile
     assert "--large-label $(label)" in makefile
+    assert "GENERATE_CARDINALITY_STRESS" in makefile
+    assert "--include-cardinality-stress" in makefile

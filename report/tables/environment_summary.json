@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-05-23T22:48:09.013442+00:00",
+  "generated_at_utc": "2026-05-23T23:38:48.921488+00:00",
   "records": [
     {
       "category": "campaign",
       "item": "summary_generated_at_utc",
       "source": "script timestamp",
-      "value": "2026-05-23T22:48:05.884625+00:00"
+      "value": "2026-05-23T23:38:44.997625+00:00"
     },
     {
       "category": "host",
@@ -59,7 +59,7 @@
       "category": "host",
       "item": "project_drive_free_bytes",
       "source": "psutil.disk_usage",
-      "value": "540703059968"
+      "value": "540664434688"
     },
     {
       "category": "host",

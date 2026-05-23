@@ -22,7 +22,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from experiments.run_benchmarks import BENCHMARK_COLUMNS, PHASE_BENCHMARK_COLUMNS
+from experiments.run_benchmarks import BENCHMARK_COLUMNS, INPUT_METADATA_COLUMNS, PHASE_BENCHMARK_COLUMNS
 DEFAULT_RESULTS_DIRS = (
     PROJECT_ROOT / "experiments" / "results" / "local",
     PROJECT_ROOT / "experiments" / "results" / "docker-simulation",
@@ -171,7 +171,7 @@ def benchmark_csv_schema_errors(path: Path) -> list[str]:
             fieldnames = csv.DictReader(file).fieldnames or []
     except OSError as exc:
         return [str(exc)]
-    optional_columns = {"repetition", *PHASE_BENCHMARK_COLUMNS}
+    optional_columns = {"repetition", *PHASE_BENCHMARK_COLUMNS, *INPUT_METADATA_COLUMNS}
     required = [column for column in BENCHMARK_COLUMNS if column not in optional_columns]
     missing = [column for column in required if column not in fieldnames]
     unknown = [column for column in fieldnames if column not in BENCHMARK_COLUMNS]
@@ -208,6 +208,8 @@ def read_benchmark_rows(csv_paths: Iterable[Path]) -> list[dict[str, object]]:
                 if not row.get("repetition"):
                     row["repetition"] = "1"
                 for column in PHASE_BENCHMARK_COLUMNS:
+                    row.setdefault(column, "")
+                for column in INPUT_METADATA_COLUMNS:
                     row.setdefault(column, "")
                 row["environment"] = canonical_environment(row.get("environment", ""))
                 row["_source_file"] = csv_path.name
@@ -338,6 +340,10 @@ def benchmark_summary_records(rows: Iterable[dict[str, object]]) -> list[dict[st
                 "environment": row.get("environment", ""),
                 "input_label": row.get("input_label", ""),
                 "records": int(float(row.get("records") or 0)),
+                "input_kind": row.get("input_kind", ""),
+                "synthetic_input": row.get("synthetic_input", ""),
+                "source_input_label": row.get("source_input_label", ""),
+                "stress_variant_factor": row.get("stress_variant_factor", ""),
                 "job_name": row.get("job_name", ""),
                 "technology": str(row.get("technology", "")),
                 "duration_seconds": duration,
@@ -351,9 +357,29 @@ def benchmark_summary_records(rows: Iterable[dict[str, object]]) -> list[dict[st
 
     frame = pd.DataFrame(normalized_rows)
     records: list[dict[str, object]] = []
-    group_columns = ["environment", "input_label", "records", "job_name", "technology"]
+    group_columns = [
+        "environment",
+        "input_label",
+        "records",
+        "input_kind",
+        "synthetic_input",
+        "source_input_label",
+        "stress_variant_factor",
+        "job_name",
+        "technology",
+    ]
     for key, group in frame.groupby(group_columns, sort=True):
-        environment, input_label, records_value, job_name, technology = key
+        (
+            environment,
+            input_label,
+            records_value,
+            input_kind,
+            synthetic_input,
+            source_input_label,
+            stress_variant_factor,
+            job_name,
+            technology,
+        ) = key
         durations = group["duration_seconds"]
         stddev = durations.std(ddof=1) if len(durations) > 1 else None
         records.append(
@@ -361,6 +387,10 @@ def benchmark_summary_records(rows: Iterable[dict[str, object]]) -> list[dict[st
                 "environment": environment,
                 "input_label": input_label,
                 "records": int(records_value),
+                "input_kind": input_kind,
+                "synthetic_input": synthetic_input,
+                "source_input_label": source_input_label,
+                "stress_variant_factor": stress_variant_factor,
                 "job_name": job_name,
                 "technology": TECHNOLOGY_LABELS.get(str(technology), str(technology)),
                 "runs": int(len(durations)),
@@ -413,6 +443,10 @@ def benchmark_phase_summary_records(rows: Iterable[dict[str, object]]) -> list[d
                 "environment": row.get("environment", ""),
                 "input_label": row.get("input_label", ""),
                 "records": int(float(row.get("records") or 0)),
+                "input_kind": row.get("input_kind", ""),
+                "synthetic_input": row.get("synthetic_input", ""),
+                "source_input_label": row.get("source_input_label", ""),
+                "stress_variant_factor": row.get("stress_variant_factor", ""),
                 "job_name": row.get("job_name", ""),
                 "technology": str(row.get("technology", "")),
                 "duration_seconds": duration,
@@ -431,14 +465,38 @@ def benchmark_phase_summary_records(rows: Iterable[dict[str, object]]) -> list[d
 
     frame = pd.DataFrame(normalized_rows)
     records: list[dict[str, object]] = []
-    group_columns = ["environment", "input_label", "records", "job_name", "technology"]
+    group_columns = [
+        "environment",
+        "input_label",
+        "records",
+        "input_kind",
+        "synthetic_input",
+        "source_input_label",
+        "stress_variant_factor",
+        "job_name",
+        "technology",
+    ]
     for key, group in frame.groupby(group_columns, sort=True):
-        environment, input_label, records_value, job_name, technology = key
+        (
+            environment,
+            input_label,
+            records_value,
+            input_kind,
+            synthetic_input,
+            source_input_label,
+            stress_variant_factor,
+            job_name,
+            technology,
+        ) = key
         records.append(
             {
                 "environment": environment,
                 "input_label": input_label,
                 "records": int(records_value),
+                "input_kind": input_kind,
+                "synthetic_input": synthetic_input,
+                "source_input_label": source_input_label,
+                "stress_variant_factor": stress_variant_factor,
                 "job_name": job_name,
                 "technology": TECHNOLOGY_LABELS.get(str(technology), str(technology)),
                 "runs": int(len(group)),
@@ -559,6 +617,7 @@ def rows_per_second_records(summary: list[dict[str, object]]) -> list[dict[str, 
                 "environment": row.get("environment", ""),
                 "input_label": row.get("input_label", ""),
                 "records": row.get("records", ""),
+                "input_kind": row.get("input_kind", ""),
                 "job_name": row.get("job_name", ""),
                 "technology": row.get("technology", ""),
                 "median_duration_seconds": row.get("median_duration_seconds", ""),
@@ -641,7 +700,15 @@ def scalability_ratio_records(summary: list[dict[str, object]]) -> list[dict[str
     if not summary:
         return records
 
-    frame = pd.DataFrame(summary).sort_values(["environment", "job_name", "technology", "records", "input_label"])
+    row_volume_summary = [
+        row
+        for row in summary
+        if str(row.get("input_kind", "")) != "high_cardinality_stress"
+    ]
+    if not row_volume_summary:
+        return records
+
+    frame = pd.DataFrame(row_volume_summary).sort_values(["environment", "job_name", "technology", "records", "input_label"])
     for (environment, job_name, technology), group in frame.groupby(["environment", "job_name", "technology"], sort=True):
         group = group.drop_duplicates(subset=["input_label"], keep="first")
         if len(group) < 3:
@@ -678,6 +745,67 @@ def scalability_ratio_records(summary: list[dict[str, object]]) -> list[dict[str
     return records
 
 
+def cardinality_stress_comparison_records(summary: list[dict[str, object]]) -> list[dict[str, object]]:
+    summary_by_key = {
+        (
+            str(row.get("environment", "")),
+            str(row.get("input_label", "")),
+            str(row.get("job_name", "")),
+            str(row.get("technology", "")),
+        ): row
+        for row in summary
+    }
+    records: list[dict[str, object]] = []
+    stress_rows = [
+        row
+        for row in summary
+        if str(row.get("input_kind", "")) == "high_cardinality_stress"
+    ]
+    for stress in sorted(
+        stress_rows,
+        key=lambda row: (
+            str(row.get("environment", "")),
+            str(row.get("input_label", "")),
+            str(row.get("job_name", "")),
+            str(row.get("technology", "")),
+        ),
+    ):
+        baseline_label = str(stress.get("source_input_label", "")) or "1m"
+        key = (
+            str(stress.get("environment", "")),
+            baseline_label,
+            str(stress.get("job_name", "")),
+            str(stress.get("technology", "")),
+        )
+        baseline = summary_by_key.get(key)
+        if baseline is None:
+            continue
+        baseline_duration = baseline.get("median_duration_seconds", "")
+        stress_duration = stress.get("median_duration_seconds", "")
+        baseline_output_rows = baseline.get("output_rows", "")
+        stress_output_rows = stress.get("output_rows", "")
+        records.append(
+            {
+                "environment": stress.get("environment", ""),
+                "baseline_input_label": baseline_label,
+                "stress_input_label": stress.get("input_label", ""),
+                "records": stress.get("records", ""),
+                "variant_factor": stress.get("stress_variant_factor", ""),
+                "job_name": stress.get("job_name", ""),
+                "technology": stress.get("technology", ""),
+                "baseline_median_duration_seconds": baseline_duration,
+                "stress_median_duration_seconds": stress_duration,
+                "stress_duration_div_baseline": divide_or_blank(stress_duration, baseline_duration),
+                "baseline_output_rows": baseline_output_rows,
+                "stress_output_rows": stress_output_rows,
+                "stress_output_rows_div_baseline": divide_or_blank(stress_output_rows, baseline_output_rows),
+                "baseline_run_id": baseline.get("run_id", ""),
+                "stress_run_id": stress.get("run_id", ""),
+            }
+        )
+    return records
+
+
 def row_reason(row: dict[str, object]) -> str:
     error = str(row.get("error", "") or "").strip()
     stage = str(row.get("stage", "") or "").strip()
@@ -697,6 +825,7 @@ def benchmark_status_record(row: dict[str, object], *, records: int | None = Non
         "environment": row.get("environment", ""),
         "input_label": row.get("input_label", ""),
         "records": records if records is not None else int(float(row.get("records") or 0)),
+        "input_kind": row.get("input_kind", ""),
         "job_name": row.get("job_name", ""),
         "technology": TECHNOLOGY_LABELS.get(technology, technology),
         "status": row.get("status", ""),
@@ -757,6 +886,7 @@ def benchmark_status_records(rows: Iterable[dict[str, object]]) -> list[dict[str
                             "environment": environment,
                             "input_label": input_label,
                             "records": records,
+                            "input_kind": "",
                             "job_name": job_name,
                             "technology": TECHNOLOGY_LABELS[technology],
                             "status": "not_run",
@@ -1089,6 +1219,7 @@ def generate_artifacts(
     rows_per_second = rows_per_second_records(summary)
     speedups = speedup_records(pivot)
     scalability = scalability_ratio_records(summary)
+    cardinality_stress = cardinality_stress_comparison_records(summary)
     cluster_comparison = cluster_size_comparison_records(summary)
     spark_sql_optimization = spark_sql_optimization_before_after_records(summary)
 
@@ -1100,6 +1231,7 @@ def generate_artifacts(
     tables.extend(write_table_pair(tables_dir, "rows_per_second", rows_per_second))
     tables.extend(write_table_pair(tables_dir, "speedup", speedups))
     tables.extend(write_table_pair(tables_dir, "scalability_ratios", scalability))
+    tables.extend(write_table_pair(tables_dir, "cardinality_stress_comparison", cardinality_stress))
     tables.extend(write_table_pair(tables_dir, "cluster_size_comparison", cluster_comparison))
     tables.extend(write_table_pair(tables_dir, "spark_sql_optimization_before_after", spark_sql_optimization))
 

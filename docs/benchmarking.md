@@ -16,9 +16,25 @@ Configured inputs come from `config/local.yaml` and the generated input manifest
 | `full` | `data/prepared/flights_2024_clean.parquet` |
 | `14m` | Optional controlled replication stress input |
 | `28m` | Optional controlled replication stress input |
+| `1m_hc8` | Optional synthetic high-cardinality stress input derived from `1m` |
 
 The `14m` and `28m` inputs are scalability stress data. They must not be
 described as new statistical observations.
+
+Manifest entries include an `input_kind` field:
+
+- `original_prepared`: the canonical prepared Parquet input.
+- `deterministic_subset`: hash-limited row-count subsets.
+- `row_volume_replication`: replicated row-volume stress inputs such as `14m`
+  and `28m`.
+- `high_cardinality_stress`: synthetic cardinality/shuffle stress inputs such
+  as `1m_hc8`.
+
+The `1m_hc8` input keeps the source row count, schema, and numeric values from
+`1m`, but suffixes `origin_airport`, `airline_code`, and non-null
+`airline_name` values with deterministic variants `_HC00` through `_HC07`.
+It is benchmark-only stress evidence and must not be interpreted as additional
+flight-behavior observations.
 
 ## Required Evidence
 
@@ -45,6 +61,12 @@ Generate benchmark inputs first:
 make generate-sizes
 ```
 
+Generate the optional high-cardinality stress input:
+
+```powershell
+make generate-sizes GENERATE_CARDINALITY_STRESS=1
+```
+
 Run local benchmarks:
 
 ```powershell
@@ -68,6 +90,8 @@ Useful flags:
 ```powershell
 make benchmark-local BENCHMARK_FLAGS="--input-label 1m --technology spark_sql --repetitions 3"
 make benchmark-local BENCHMARK_FLAGS="--include-optional --input-label 14m --repetitions 3"
+make benchmark-local BENCHMARK_FLAGS="--input-label 1m --input-label 1m_hc8 --technology spark_sql --technology spark_core --repetitions 3"
+make benchmark-docker-simulation BENCHMARK_FLAGS="--input-label 1m --input-label 1m_hc8 --technology spark_sql --technology spark_core --repetitions 3"
 ```
 
 ## Output Files
@@ -90,6 +114,10 @@ technology
 job_name
 input_label
 records
+input_kind
+synthetic_input
+source_input_label
+stress_variant_factor
 environment
 execution_setting
 duration_seconds
@@ -114,6 +142,13 @@ with runs, median, mean, min, max, and standard deviation. It also writes
 adds median phase timings when the raw benchmark rows expose them. Older raw
 benchmark CSVs remain readable; missing phase fields are left blank in the
 phase table.
+
+`make charts` also writes `report/tables/cardinality_stress_comparison.*` when
+both baseline and stress rows are available. That table compares `1m` with
+`1m_hc8` by environment, job, and Spark technology using median duration and
+aggregate output-row cardinality ratios. High-cardinality stress rows are kept
+out of row-volume scalability ratios so the two stress dimensions remain
+separate.
 
 ## Single-Run Evidence Policy
 
@@ -148,3 +183,5 @@ Single-run rows without a note fail `make submission-check`.
 - Prepared Parquet and warm local caches affect throughput.
 - Aggregate output cardinality is small relative to input size.
 - Controlled replication tests processing scale, not additional flight behavior.
+- High-cardinality stress inputs test shuffle/output-key cardinality, not
+  additional flight behavior.

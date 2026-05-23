@@ -2,7 +2,7 @@ import csv
 from datetime import datetime, timezone
 from pathlib import Path
 
-from experiments.run_benchmarks import BENCHMARK_COLUMNS, PHASE_BENCHMARK_COLUMNS
+from experiments.run_benchmarks import BENCHMARK_COLUMNS, INPUT_METADATA_COLUMNS, PHASE_BENCHMARK_COLUMNS
 from scripts import generate_charts
 
 
@@ -34,6 +34,10 @@ def benchmark_row(
         "job_name": job_name,
         "input_label": input_label,
         "records": records,
+        "input_kind": "",
+        "synthetic_input": "",
+        "source_input_label": "",
+        "stress_variant_factor": "",
         "environment": environment,
         "execution_setting": environment,
         "duration_seconds": duration_seconds,
@@ -126,10 +130,18 @@ def test_read_benchmark_rows_defaults_missing_repetition_to_one(tmp_path):
     row.pop("repetition")
     for column in PHASE_BENCHMARK_COLUMNS:
         row.pop(column)
+    for column in INPUT_METADATA_COLUMNS:
+        row.pop(column)
     with csv_path.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(
             file,
-            fieldnames=[column for column in BENCHMARK_COLUMNS if column != "repetition" and column not in PHASE_BENCHMARK_COLUMNS],
+            fieldnames=[
+                column
+                for column in BENCHMARK_COLUMNS
+                if column != "repetition"
+                and column not in PHASE_BENCHMARK_COLUMNS
+                and column not in INPUT_METADATA_COLUMNS
+            ],
         )
         writer.writeheader()
         writer.writerow(row)
@@ -469,6 +481,91 @@ def test_scalability_ratio_records_require_three_inputs_and_100k_baseline():
     assert one_million["median_duration_vs_100k"] == 2.5
     assert one_million["records_vs_100k"] == 10.0
     assert one_million["throughput_vs_100k"] == 4.0
+
+
+def test_scalability_ratio_records_exclude_high_cardinality_stress_inputs():
+    summary = [
+        {
+            "environment": "local",
+            "input_label": "100k",
+            "records": 100000,
+            "input_kind": "deterministic_subset",
+            "job_name": "delay_by_airport_month",
+            "technology": "Spark SQL",
+            "median_duration_seconds": 2.0,
+        },
+        {
+            "environment": "local",
+            "input_label": "500k",
+            "records": 500000,
+            "input_kind": "deterministic_subset",
+            "job_name": "delay_by_airport_month",
+            "technology": "Spark SQL",
+            "median_duration_seconds": 4.0,
+        },
+        {
+            "environment": "local",
+            "input_label": "1m_hc8",
+            "records": 1000000,
+            "input_kind": "high_cardinality_stress",
+            "job_name": "delay_by_airport_month",
+            "technology": "Spark SQL",
+            "median_duration_seconds": 5.0,
+        },
+    ]
+
+    assert generate_charts.scalability_ratio_records(summary) == []
+
+
+def test_cardinality_stress_comparison_records_compare_baseline_and_stress():
+    summary = [
+        {
+            "environment": "local",
+            "input_label": "1m",
+            "records": 1000000,
+            "input_kind": "deterministic_subset",
+            "job_name": "airline_airport_ranking",
+            "technology": "Spark Core",
+            "median_duration_seconds": 2.0,
+            "output_rows": 100,
+            "run_id": "baseline",
+        },
+        {
+            "environment": "local",
+            "input_label": "1m_hc8",
+            "records": 1000000,
+            "input_kind": "high_cardinality_stress",
+            "source_input_label": "1m",
+            "stress_variant_factor": 8,
+            "job_name": "airline_airport_ranking",
+            "technology": "Spark Core",
+            "median_duration_seconds": 5.0,
+            "output_rows": 800,
+            "run_id": "stress",
+        },
+    ]
+
+    records = generate_charts.cardinality_stress_comparison_records(summary)
+
+    assert records == [
+        {
+            "environment": "local",
+            "baseline_input_label": "1m",
+            "stress_input_label": "1m_hc8",
+            "records": 1000000,
+            "variant_factor": 8,
+            "job_name": "airline_airport_ranking",
+            "technology": "Spark Core",
+            "baseline_median_duration_seconds": 2.0,
+            "stress_median_duration_seconds": 5.0,
+            "stress_duration_div_baseline": 2.5,
+            "baseline_output_rows": 100,
+            "stress_output_rows": 800,
+            "stress_output_rows_div_baseline": 8.0,
+            "baseline_run_id": "baseline",
+            "stress_run_id": "stress",
+        }
+    ]
 
 
 def chart_rows(input_sizes: list[tuple[str, int]]) -> list[dict[str, object]]:

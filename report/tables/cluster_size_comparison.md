@@ -1,9 +1,9 @@
 | input_label | records | job_name | technology | local_median_duration_seconds | docker_simulation_median_duration_seconds | emr_baseline_median_duration_seconds | emr_larger_median_duration_seconds | emr_larger_vs_baseline_speedup | local_run_id | docker_simulation_run_id | emr_baseline_run_id | emr_larger_run_id | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1m | 1000000 | delay_by_airport_month | Spark SQL | 12.181 | 14.541 | 15.126 | 14.374 | 1.052 | 20260522T133525179005Z | 20260522T161751426398Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
-| 1m | 1000000 | delay_by_airport_month | Spark Core | 1.195 | 3.673 | 1.923 | 1.679 | 1.146 | 20260522T133525179005Z | 20260522T161751426398Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
-| 1m | 1000000 | airline_airport_ranking | Spark SQL | 2.5 | 5.869 | 4.052 | 4.087 | 0.991 | 20260522T133525179005Z | 20260522T161751426398Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
-| 1m | 1000000 | airline_airport_ranking | Spark Core | 0.796 | 3.044 | 1.243 | 1.018 | 1.221 | 20260522T133525179005Z | 20260522T161751426398Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
+| 1m | 1000000 | delay_by_airport_month | Spark SQL | 4.471 | 6.3 | 15.126 | 14.374 | 1.052 | 20260523T232403721782Z | 20260523T232929496789Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
+| 1m | 1000000 | delay_by_airport_month | Spark Core | 0.811 | 2.573 | 1.923 | 1.679 | 1.146 | 20260523T232403721782Z | 20260523T232929496789Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
+| 1m | 1000000 | airline_airport_ranking | Spark SQL | 0.909 | 1.033 | 4.052 | 4.087 | 0.991 | 20260523T232403721782Z | 20260523T232929496789Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
+| 1m | 1000000 | airline_airport_ranking | Spark Core | 0.541 | 2.011 | 1.243 | 1.018 | 1.221 | 20260523T232403721782Z | 20260523T232929496789Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
 | full | 7079081 | delay_by_airport_month | Spark SQL | 12.997 | 12.503 | 15.505 | 16.309 | 0.951 | 20260522T133525179005Z | 20260523T002948918166Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
 | full | 7079081 | delay_by_airport_month | Spark Core | 1.221 | 2.774 | 1.918 | 1.65 | 1.163 | 20260522T133525179005Z | 20260523T002948918166Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |
 | full | 7079081 | airline_airport_ranking | Spark SQL | 3.4 | 6.444 | 4.302 | 4.475 | 0.961 | 20260522T133525179005Z | 20260523T002948918166Z | m4-emr-final-2 | m5-emr-3core-1m-full |  |

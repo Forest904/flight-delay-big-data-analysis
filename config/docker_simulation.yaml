@@ -50,6 +50,12 @@ benchmark:
       path: data/generated/flights_28m.parquet
       method: controlled_replication
       optional: true
+    - label: 1m_hc8
+      records: 1000000
+      path: data/generated/flights_1m_hc8.parquet
+      method: controlled_high_cardinality_suffix
+      input_kind: high_cardinality_stress
+      optional: true
 
 docker_simulation_notes:
   spark_topology: "Spark standalone on Docker Compose with one master and two workers."

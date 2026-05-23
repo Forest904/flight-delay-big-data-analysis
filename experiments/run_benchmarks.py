@@ -30,6 +30,12 @@ PHASE_BENCHMARK_COLUMNS = [
     "sample_output_write_seconds",
     "materialization_mode",
 ]
+INPUT_METADATA_COLUMNS = [
+    "input_kind",
+    "synthetic_input",
+    "source_input_label",
+    "stress_variant_factor",
+]
 BENCHMARK_COLUMNS = [
     "run_id",
     "repetition",
@@ -37,6 +43,7 @@ BENCHMARK_COLUMNS = [
     "job_name",
     "input_label",
     "records",
+    *INPUT_METADATA_COLUMNS,
     "environment",
     "execution_setting",
     "duration_seconds",
@@ -56,6 +63,10 @@ class BenchmarkInput:
     label: str
     records: int
     path: Path
+    input_kind: str = ""
+    synthetic_input: bool = False
+    source_input_label: str = ""
+    stress_variant_factor: int | str = ""
 
 
 @dataclass(frozen=True)
@@ -161,6 +172,10 @@ def selected_benchmark_inputs(
                 label=label,
                 records=int(manifest_entry.get("actual_records", entry.get("records", 0))),
                 path=resolve_project_path(str(manifest_entry.get("path", entry.get("path"))), project_root=project_root),
+                input_kind=str(manifest_entry.get("input_kind", entry.get("input_kind", ""))),
+                synthetic_input=bool(manifest_entry.get("synthetic_input", False)),
+                source_input_label=str(manifest_entry.get("source_input_label", "")),
+                stress_variant_factor=manifest_entry.get("variant_factor", ""),
             )
         )
 
@@ -214,6 +229,17 @@ def mapreduce_benchmark_output_root(
     return output_root_for_technology(local_config, "mapreduce", project_root=project_root) / ".benchmark_runs" / run_id / input_label
 
 
+def technology_benchmark_output_root(
+    local_config: dict[str, Any],
+    technology: str,
+    *,
+    run_id: str,
+    input_label: str,
+    project_root: Path = PROJECT_ROOT,
+) -> Path:
+    return output_root_for_technology(local_config, technology, project_root=project_root) / ".benchmark_runs" / run_id / input_label / technology
+
+
 def build_command(
     technology: str,
     input_path: Path,
@@ -233,28 +259,47 @@ def build_command(
     benchmark_config = local_config.get("benchmark", {})
     spark_driver_service = benchmark_config.get("spark_driver_service")
     container_workspace = str(benchmark_config.get("container_workspace", "/workspace"))
+    spark_benchmark_output_root: Path | None = None
+    if technology in {"spark_sql", "spark_core"} and run_id is not None and input_label is not None:
+        spark_benchmark_output_root = technology_benchmark_output_root(
+            local_config,
+            technology,
+            run_id=run_id,
+            input_label=input_label,
+            project_root=project_root,
+        )
+        metrics_path = spark_benchmark_output_root / "runtime_metrics.json"
 
     if spark_driver_service and technology in {"spark_sql", "spark_core"}:
         script = {
             "spark_sql": "src/spark_sql/run_spark_sql.py",
             "spark_core": "src/spark_core/run_spark_core.py",
         }[technology]
-        return CommandSpec(
-            command=[
-                docker_bin or docker_executable(),
-                "compose",
-                "exec",
-                "-T",
-                str(spark_driver_service),
-                "python",
-                script,
-                "--config",
-                container_workspace_path(config_path, project_root=project_root, workspace=container_workspace),
-                "--input-path",
-                container_workspace_path(input_path, project_root=project_root, workspace=container_workspace),
-            ],
-            metrics_path=metrics_path,
-        )
+        command = [
+            docker_bin or docker_executable(),
+            "compose",
+            "exec",
+            "-T",
+            str(spark_driver_service),
+            "python",
+            script,
+            "--config",
+            container_workspace_path(config_path, project_root=project_root, workspace=container_workspace),
+            "--input-path",
+            container_workspace_path(input_path, project_root=project_root, workspace=container_workspace),
+        ]
+        if spark_benchmark_output_root is not None:
+            command.extend(
+                [
+                    "--output-root",
+                    container_workspace_path(
+                        spark_benchmark_output_root,
+                        project_root=project_root,
+                        workspace=container_workspace,
+                    ),
+                ]
+            )
+        return CommandSpec(command=command, metrics_path=metrics_path)
 
     if technology == "spark_sql":
         command = [
@@ -265,6 +310,8 @@ def build_command(
             "--input-path",
             input_arg,
         ]
+        if spark_benchmark_output_root is not None:
+            command.extend(["--output-root", display_path(spark_benchmark_output_root, project_root=project_root)])
     elif technology == "spark_core":
         if os_name == "nt":
             command = [
@@ -280,6 +327,8 @@ def build_command(
                 "--input-path",
                 input_arg,
             ]
+            if spark_benchmark_output_root is not None:
+                command.extend(["--output-root", display_path(spark_benchmark_output_root, project_root=project_root)])
         else:
             command = [
                 python_executable,
@@ -289,6 +338,8 @@ def build_command(
                 "--input-path",
                 input_arg,
             ]
+            if spark_benchmark_output_root is not None:
+                command.extend(["--output-root", display_path(spark_benchmark_output_root, project_root=project_root)])
     elif technology == "hive":
         command = [
             python_executable,
@@ -427,6 +478,10 @@ def normalize_metrics_rows(
         "technology": technology,
         "input_label": benchmark_input.label,
         "records": benchmark_input.records,
+        "input_kind": benchmark_input.input_kind,
+        "synthetic_input": benchmark_input.synthetic_input,
+        "source_input_label": benchmark_input.source_input_label,
+        "stress_variant_factor": benchmark_input.stress_variant_factor,
         "environment": environment,
         "execution_setting": execution_setting,
         "timestamp_utc": timestamp_utc,

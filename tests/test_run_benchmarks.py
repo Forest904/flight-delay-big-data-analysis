@@ -177,6 +177,47 @@ def test_selected_benchmark_inputs_include_optional_when_requested(tmp_path):
     assert [item.label for item in selected] == ["100k", "14m"]
 
 
+def test_selected_benchmark_inputs_carry_manifest_input_metadata(tmp_path):
+    local_config = {
+        "benchmark": {
+            "input_sizes": [
+                {
+                    "label": "1m_hc8",
+                    "records": 1000000,
+                    "path": "data/generated/flights_1m_hc8.parquet",
+                    "optional": True,
+                },
+            ]
+        }
+    }
+    manifest = {
+        "datasets": [
+            {
+                "label": "1m_hc8",
+                "actual_records": 1000000,
+                "path": "data/generated/flights_1m_hc8.parquet",
+                "input_kind": "high_cardinality_stress",
+                "synthetic_input": True,
+                "source_input_label": "1m",
+                "variant_factor": 8,
+                "validation_status": "success",
+            }
+        ]
+    }
+
+    selected = run_benchmarks.selected_benchmark_inputs(
+        local_config,
+        manifest,
+        labels=["1m_hc8"],
+        project_root=tmp_path,
+    )
+
+    assert selected[0].input_kind == "high_cardinality_stress"
+    assert selected[0].synthetic_input is True
+    assert selected[0].source_input_label == "1m"
+    assert selected[0].stress_variant_factor == 8
+
+
 def test_normalize_metrics_rows_expands_successful_jobs():
     rows = run_benchmarks.normalize_metrics_rows(
         run_id="20260520T120000Z",
@@ -219,6 +260,10 @@ def test_normalize_metrics_rows_expands_successful_jobs():
             "job_name": "delay_by_airport_month",
             "input_label": "100k",
             "records": 100000,
+            "input_kind": "",
+            "synthetic_input": False,
+            "source_input_label": "",
+            "stress_variant_factor": "",
             "environment": "local",
             "execution_setting": "local",
             "duration_seconds": 2.5,
@@ -387,6 +432,36 @@ def test_build_command_uses_native_spark_core_outside_windows(tmp_path):
         "data/generated/flights_100k.parquet",
     ]
     assert spec.metrics_path == tmp_path / "outputs" / "spark_core" / "runtime_metrics.json"
+
+
+def test_build_command_isolates_spark_benchmark_outputs_when_run_id_is_available(tmp_path):
+    local_config = {"paths": {"outputs_dir": "outputs"}}
+    input_path = tmp_path / "data" / "generated" / "flights_1m_hc8.parquet"
+    config_path = tmp_path / "config" / "local.yaml"
+
+    spec = run_benchmarks.build_command(
+        "spark_sql",
+        input_path,
+        local_config,
+        config_path=config_path,
+        project_root=tmp_path,
+        python_executable="python",
+        run_id="20260524T120000000000Z",
+        input_label="1m_hc8",
+    )
+
+    output_root = "outputs/spark_sql/.benchmark_runs/20260524T120000000000Z/1m_hc8/spark_sql"
+    assert spec.command == [
+        "python",
+        "src/spark_sql/run_spark_sql.py",
+        "--config",
+        "config/local.yaml",
+        "--input-path",
+        "data/generated/flights_1m_hc8.parquet",
+        "--output-root",
+        output_root,
+    ]
+    assert spec.metrics_path == tmp_path / output_root / "runtime_metrics.json"
 
 
 def test_build_command_uses_docker_spark_core_on_windows(tmp_path):
@@ -614,7 +689,7 @@ def test_docker_simulation_config_lists_required_docker_simulation_inputs():
     required = [entry["label"] for entry in config["benchmark"]["input_sizes"] if not entry.get("optional")]
     optional = [entry["label"] for entry in config["benchmark"]["input_sizes"] if entry.get("optional")]
     assert required == ["100k", "500k", "1m"]
-    assert optional == ["3m", "full", "14m", "28m"]
+    assert optional == ["3m", "full", "14m", "28m", "1m_hc8"]
 
 
 def test_docker_simulation_large_inputs_are_requestable_without_default_matrix(tmp_path):

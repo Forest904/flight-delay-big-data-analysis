@@ -77,6 +77,10 @@ class BenchmarkStep:
     repetition: int
     input_s3_uri: str
     output_root_s3_uri: str
+    input_kind: str = ""
+    synthetic_input: bool = False
+    source_input_label: str = ""
+    stress_variant_factor: int | str = ""
 
 
 @dataclass(frozen=True)
@@ -279,11 +283,20 @@ def manifest_records_by_label(manifest: dict[str, Any]) -> dict[str, int]:
     return records
 
 
+def manifest_entries_by_label(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    entries: dict[str, dict[str, Any]] = {}
+    for entry in manifest.get("datasets", []):
+        if isinstance(entry, dict) and entry.get("validation_status") == "success":
+            entries[str(entry.get("label"))] = entry
+    return entries
+
+
 def configured_inputs(config: dict[str, Any], manifest: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     entries = config.get("benchmark", {}).get("input_sizes", [])
     if not isinstance(entries, list):
         raise ValueError("benchmark.input_sizes must be a list")
     manifest_records = manifest_records_by_label(manifest or {})
+    manifest_entries = manifest_entries_by_label(manifest or {})
     normalized: list[dict[str, Any]] = []
     for entry in entries:
         if not isinstance(entry, dict):
@@ -292,6 +305,16 @@ def configured_inputs(config: dict[str, Any], manifest: dict[str, Any] | None = 
         label = str(copied["label"])
         if label in manifest_records:
             copied["records"] = manifest_records[label]
+        if label in manifest_entries:
+            manifest_entry = manifest_entries[label]
+            for source_key, target_key in (
+                ("input_kind", "input_kind"),
+                ("synthetic_input", "synthetic_input"),
+                ("source_input_label", "source_input_label"),
+                ("variant_factor", "stress_variant_factor"),
+            ):
+                if source_key in manifest_entry:
+                    copied[target_key] = manifest_entry[source_key]
         normalized.append(copied)
     return normalized
 
@@ -324,6 +347,10 @@ def expand_benchmark_steps(ctx: AwsContext, run_id: str, manifest: dict[str, Any
                         repetition=repetition,
                         input_s3_uri=input_s3_uri,
                         output_root_s3_uri=output_root,
+                        input_kind=str(entry.get("input_kind", "")),
+                        synthetic_input=bool(entry.get("synthetic_input", False)),
+                        source_input_label=str(entry.get("source_input_label", "")),
+                        stress_variant_factor=entry.get("stress_variant_factor", ""),
                     )
                 )
     return steps
@@ -546,6 +573,10 @@ def normalize_step_rows(
         "technology": step.technology,
         "input_label": step.input_label,
         "records": step.records,
+        "input_kind": step.input_kind,
+        "synthetic_input": step.synthetic_input,
+        "source_input_label": step.source_input_label,
+        "stress_variant_factor": step.stress_variant_factor,
         "environment": environment,
         "execution_setting": execution_setting,
         "timestamp_utc": timestamp_utc,

@@ -32,6 +32,11 @@ LARGE_SIZE_SPECS: tuple[tuple[str, int], ...] = (
     ("14m", 14_000_000),
     ("28m", 28_000_000),
 )
+DEFAULT_CARDINALITY_STRESS_SPECS: tuple[tuple[str, str, int], ...] = (
+    ("1m_hc8", "1m", 8),
+)
+STRESS_VARIANT_COLUMNS = ("origin_airport", "airline_code", "airline_name")
+STRESS_SUFFIX_FORMAT = "_HC%02d"
 
 
 @dataclass(frozen=True)
@@ -44,6 +49,13 @@ class SizeSpec:
 class ReplicationPlan:
     full_repetitions: int
     remainder_records: int
+
+
+@dataclass(frozen=True)
+class CardinalityStressSpec:
+    label: str
+    source_label: str
+    variant_factor: int
 
 
 def selected_size_specs(include_large: bool, large_labels: set[str] | None = None) -> list[SizeSpec]:
@@ -60,6 +72,15 @@ def selected_size_specs(include_large: bool, large_labels: set[str] | None = Non
             if not large_labels or label in large_labels
         )
     return specs
+
+
+def selected_cardinality_stress_specs(include_cardinality_stress: bool) -> list[CardinalityStressSpec]:
+    if not include_cardinality_stress:
+        return []
+    return [
+        CardinalityStressSpec(label=label, source_label=source_label, variant_factor=variant_factor)
+        for label, source_label, variant_factor in DEFAULT_CARDINALITY_STRESS_SPECS
+    ]
 
 
 def replication_plan(target_records: int, base_records: int) -> ReplicationPlan:
@@ -168,6 +189,9 @@ def expected_reuse_fields(
     seed: int | None,
     source_path: Path,
     replication: ReplicationPlan | None,
+    input_kind: str = "",
+    synthetic_input: bool = False,
+    stress_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     fields: dict[str, Any] = {
         "label": label,
@@ -182,6 +206,10 @@ def expected_reuse_fields(
             "full_repetitions": replication.full_repetitions,
             "remainder_records": replication.remainder_records,
         }
+    if stress_metadata is not None:
+        fields["input_kind"] = input_kind
+        fields["synthetic_input"] = synthetic_input
+        fields.update(stress_metadata)
     return fields
 
 
@@ -303,6 +331,32 @@ def replicated_dataset(df, target_records: int, base_records: int, seed: int):
     return output.select(*df.columns)
 
 
+def high_cardinality_stress_dataset(df, variant_factor: int, seed: int):
+    from pyspark.sql import functions as F
+
+    if variant_factor <= 1:
+        raise ValueError("variant_factor must be greater than 1")
+
+    original_columns = list(df.columns)
+    variant_column = "_m6_hc_variant"
+    suffix_column = "_m6_hc_suffix"
+    stressed = (
+        df.withColumn(
+            variant_column,
+            F.pmod(F.xxhash64(F.lit(seed), stable_row_key_expression(original_columns)), F.lit(variant_factor)),
+        )
+        .withColumn(suffix_column, F.format_string(STRESS_SUFFIX_FORMAT, F.col(variant_column)))
+    )
+    for column in STRESS_VARIANT_COLUMNS:
+        if column not in original_columns:
+            continue
+        stressed = stressed.withColumn(
+            column,
+            F.when(F.col(column).isNull(), F.col(column)).otherwise(F.concat(F.col(column), F.col(suffix_column))),
+        )
+    return stressed.select(*original_columns)
+
+
 def write_dataset(df, output_path: Path, force: bool) -> str:
     from src.common.prepared_data import has_windows_winutils
     from src.preparation.prepare_spark import write_parquet_with_pyarrow
@@ -351,10 +405,13 @@ def manifest_entry(
     source_path: Path,
     schema_matches_source: bool,
     validation_status: str,
+    input_kind: str,
+    synthetic_input: bool,
     writer: str | None = None,
     replication: ReplicationPlan | None = None,
     generated: bool = False,
     reused_from_manifest: bool = False,
+    stress_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     entry: dict[str, Any] = {
         "label": label,
@@ -364,6 +421,8 @@ def manifest_entry(
         "method": method,
         "seed": seed,
         "source_path": display_path(source_path),
+        "input_kind": input_kind,
+        "synthetic_input": synthetic_input,
         "schema_matches_source": schema_matches_source,
         "validation_status": validation_status,
         "generated": generated,
@@ -376,6 +435,8 @@ def manifest_entry(
             "full_repetitions": replication.full_repetitions,
             "remainder_records": replication.remainder_records,
         }
+    if stress_metadata is not None:
+        entry.update(stress_metadata)
     return entry
 
 
@@ -385,6 +446,7 @@ def generate_manifest(
     force: bool,
     include_large: bool,
     large_labels: set[str] | None = None,
+    include_cardinality_stress: bool = False,
 ) -> dict[str, Any]:
     from src.common.prepared_data import read_prepared_parquet
     from src.common.runtime import ensure_java_17
@@ -425,6 +487,8 @@ def generate_manifest(
             source_path=prepared_path,
             schema_matches_source=True,
             validation_status="success",
+            input_kind="original_prepared",
+            synthetic_input=False,
             generated=False,
             reused_from_manifest=False,
         )
@@ -435,10 +499,14 @@ def generate_manifest(
             output_path = generated_dir / f"flights_{spec.label}.parquet"
             if spec.records <= base_records:
                 method = "deterministic_hash_limit"
+                input_kind = "deterministic_subset"
+                synthetic_input = False
                 plan = None
             else:
                 plan = replication_plan(spec.records, base_records)
                 method = "controlled_replication"
+                input_kind = "row_volume_replication"
+                synthetic_input = True
 
             if output_path.exists() and not force:
                 expected = expected_reuse_fields(
@@ -449,6 +517,8 @@ def generate_manifest(
                     seed=seed,
                     source_path=prepared_path,
                     replication=plan,
+                    input_kind=input_kind,
+                    synthetic_input=synthetic_input,
                 )
                 assert_reusable_previous_entry(previous_entries.get(spec.label), expected)
                 writer = "existing_validated"
@@ -481,11 +551,86 @@ def generate_manifest(
                 validation_status="success",
                 writer=writer,
                 replication=plan,
+                input_kind=input_kind,
+                synthetic_input=synthetic_input,
                 generated=generated,
                 reused_from_manifest=reused_from_manifest,
             )
             validate_manifest_entry(entry)
             entries.append(entry)
+
+        entries_by_label = {str(entry["label"]): entry for entry in entries}
+        for spec in selected_cardinality_stress_specs(include_cardinality_stress):
+            source_entry = entries_by_label.get(spec.source_label)
+            if source_entry is None:
+                raise ValueError(f"Cardinality stress source input is missing: {spec.source_label}")
+            source_input_path = resolve_project_path(str(source_entry["path"]))
+            output_path = generated_dir / f"flights_{spec.label}.parquet"
+            stress_metadata = {
+                "source_input_label": spec.source_label,
+                "variant_factor": spec.variant_factor,
+                "variant_columns": [
+                    column
+                    for column in STRESS_VARIANT_COLUMNS
+                    if column in source_schema.fieldNames()
+                ],
+                "suffix_format": STRESS_SUFFIX_FORMAT,
+                "row_count_policy": "same_as_source",
+            }
+            target_records = int(source_entry["actual_records"])
+            method = "controlled_high_cardinality_suffix"
+
+            if output_path.exists() and not force:
+                expected = expected_reuse_fields(
+                    label=spec.label,
+                    path=output_path,
+                    target_records=target_records,
+                    method=method,
+                    seed=seed,
+                    source_path=source_input_path,
+                    replication=None,
+                    input_kind="high_cardinality_stress",
+                    synthetic_input=True,
+                    stress_metadata=stress_metadata,
+                )
+                assert_reusable_previous_entry(previous_entries.get(spec.label), expected)
+                writer = "existing_validated"
+                generated = False
+                reused_from_manifest = True
+            else:
+                source_input_df = read_prepared_parquet(spark, source_input_path)
+                dataset = high_cardinality_stress_dataset(source_input_df, spec.variant_factor, seed)
+                writer = write_dataset(dataset, output_path, force=force)
+                generated = True
+                reused_from_manifest = False
+
+            actual_records, schema_matches_source = validate_dataset(
+                spark,
+                output_path,
+                source_schema,
+                target_records,
+            )
+            entry = manifest_entry(
+                label=spec.label,
+                path=output_path,
+                target_records=target_records,
+                actual_records=actual_records,
+                method=method,
+                seed=seed,
+                source_path=source_input_path,
+                schema_matches_source=schema_matches_source,
+                validation_status="success",
+                writer=writer,
+                replication=None,
+                input_kind="high_cardinality_stress",
+                synthetic_input=True,
+                generated=generated,
+                reused_from_manifest=reused_from_manifest,
+                stress_metadata=stress_metadata,
+            )
+            validate_manifest_entry(entry)
+            entries.append(entry)
+            entries_by_label[spec.label] = entry
     finally:
         spark.stop()
 
@@ -496,6 +641,7 @@ def generate_manifest(
         "seed": seed,
         "include_large": include_large,
         "large_labels": sorted(large_labels) if large_labels else [],
+        "include_cardinality_stress": include_cardinality_stress,
         "datasets": entries,
     }
 
@@ -519,6 +665,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="append",
         help="Optional large input label to generate when --include-large is set. Repeat to select multiple labels.",
     )
+    parser.add_argument(
+        "--include-cardinality-stress",
+        action="store_true",
+        help="Also generate synthetic high-cardinality benchmark stress inputs.",
+    )
     return parser.parse_args(argv)
 
 
@@ -540,6 +691,7 @@ def main(argv: list[str] | None = None) -> int:
         force=args.force,
         include_large=args.include_large,
         large_labels=large_labels,
+        include_cardinality_stress=args.include_cardinality_stress,
     )
     manifest_path = write_manifest(manifest, generated_dir)
 

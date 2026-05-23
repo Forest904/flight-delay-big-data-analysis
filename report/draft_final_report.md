@@ -189,6 +189,7 @@ The input-size generator creates controlled benchmark inputs under
 - `full`
 - `14m`
 - `28m`
+- `1m_hc8`
 
 Smaller inputs are selected with a deterministic hash-based method using seed
 `20240520`. This avoids chronological bias from simply taking the first rows of
@@ -205,6 +206,16 @@ types, null behavior, and analysis semantics used by the original prepared
 dataset. They are not treated as new statistical observations about flight
 behavior. In particular, `14m` and `28m` test how the implementations respond
 to larger input volume under the controlled benchmark setup.
+
+The optional `1m_hc8` input is a separate synthetic cardinality stress input.
+It keeps the `1m` row count, prepared schema, numeric delay values,
+cancellation fields, and delay-cause values unchanged, but appends one of
+eight deterministic suffixes (`_HC00` through `_HC07`) to `origin_airport`,
+`airline_code`, and non-null `airline_name`. This increases grouping-key and
+aggregate-output cardinality without claiming new flight observations. Report
+tables identify it as `input_kind = high_cardinality_stress`, and any
+`1m_hc8` benchmark rows are interpreted only as shuffle/cardinality stress
+evidence.
 
 # Analyses And Implementations
 
@@ -614,6 +625,15 @@ measured setup, but fixed startup costs, cache behavior, shuffle and aggregation
 pressure, and the small result cardinality limit what can be inferred from
 them.
 
+High-cardinality stress rows are kept out of this row-volume scalability table.
+When `1m_hc8` benchmark evidence is present, the generated
+`report/tables/cardinality_stress_comparison.md` table compares it directly
+against the `1m` baseline by environment, Spark technology, and job. That table
+reports both median-duration ratios and aggregate-output-row ratios, so the
+discussion separates two stress dimensions: more rows with mostly unchanged key
+cardinality (`14m` and `28m`) versus the same row count with more grouping keys
+and shuffle/output partitions (`1m_hc8`).
+
 ## Benchmark Charts
 
 Execution-time charts are generated separately for local execution, Docker
@@ -832,6 +852,9 @@ sample files.
 - The Docker benchmark matrix includes `full`, `14m`, and `28m`, but it still
   runs on one physical host with shared Docker Desktop CPU, memory, and disk
   limits.
+- The `1m_hc8` high-cardinality input is synthetic benchmark stress data. Its
+  suffixed airport and airline keys are not real airports, airlines, or flight
+  statistics.
 - Hive is containerized locally and is not running on a Hadoop/YARN service.
 - Docker worker-count variation is not included because the reliable Docker
   Compose topology has two named Spark workers.
