@@ -16,6 +16,10 @@ from src.mapreduce import run_mapreduce
 from src.mapreduce.mapreduce_logic import (
     CANONICAL_COLUMNS,
     CANCELLED_NO_DEPARTURE_DELAY_RANGE,
+    all_causes_key_values,
+    all_causes_output_sort_key,
+    all_causes_rows_from_group,
+    all_positive_causes,
     delay_key_value,
     delay_range,
     delay_row_from_group,
@@ -85,6 +89,71 @@ def test_delay_key_value_includes_cancelled_null_departure_bucket():
 
     non_cancelled_null = record_from_row(canonical_row(departure_delay="", arrival_delay="", cancelled="0"))
     assert delay_key_value(non_cancelled_null) is None
+
+
+def test_all_positive_causes_include_every_positive_delay_field_and_available_cancellation_code():
+    record = record_from_row(
+        canonical_row(
+            cancelled="1",
+            cancellation_code="B",
+            carrier_delay="7",
+            weather_delay="0",
+            nas_delay="2",
+            security_delay="-1",
+            late_aircraft_delay="3",
+        )
+    )
+
+    assert all_positive_causes(record) == [
+        "delay:carrier",
+        "delay:nas",
+        "delay:late_aircraft",
+        "cancellation:B",
+    ]
+
+
+def test_all_causes_key_values_use_same_delay_population_without_unknown_or_missing_cancellation_code():
+    multi_cause = record_from_row(canonical_row(carrier_delay="7", weather_delay="7", nas_delay="0"))
+
+    assert all_causes_key_values(multi_cause) == [
+        (["ABE", 1, "medium"], "delay:carrier"),
+        (["ABE", 1, "medium"], "delay:weather"),
+    ]
+
+    missing_code = record_from_row(
+        canonical_row(
+            departure_delay="",
+            arrival_delay="",
+            cancelled="1",
+            cancellation_code="",
+            carrier_delay="0",
+            weather_delay="0",
+        )
+    )
+    assert all_causes_key_values(missing_code) == []
+
+    non_cancelled_null = record_from_row(canonical_row(departure_delay="", arrival_delay="", cancelled="0"))
+    assert all_causes_key_values(non_cancelled_null) == []
+
+
+def test_all_causes_reducer_rows_rank_by_count_descending_and_cause_ascending():
+    rows = all_causes_rows_from_group(
+        ["ABE", 1, "high"],
+        [
+            "delay:weather",
+            "delay:carrier",
+            "delay:weather",
+            "delay:carrier",
+            "delay:nas",
+        ],
+    )
+
+    assert rows == [
+        ["ABE", 1, "high", 1, "delay:carrier", 2],
+        ["ABE", 1, "high", 2, "delay:weather", 2],
+        ["ABE", 1, "high", 3, "delay:nas", 1],
+    ]
+    assert sorted(rows, key=all_causes_output_sort_key) == rows
 
 
 def test_top_three_causes_use_count_descending_and_label_ascending():

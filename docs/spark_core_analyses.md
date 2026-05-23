@@ -66,6 +66,9 @@ outputs/spark_core/
   delay_by_airport_month/
     full/
     first_10.csv
+  delay_by_airport_month_all_causes/
+    full/
+    first_10.csv
   airline_airport_ranking/
     full/
     first_10.csv
@@ -89,6 +92,13 @@ delay_range)`. A second keyed RDD counts causes by `(origin_airport, month,
 delay_range, cause)`, sorts the reduced cause counts by count descending and
 cause label ascending, and emits the first three causes. Groups with fewer than
 three available causes are padded with null cause labels and `0` counts.
+
+The companion all-positive cause job uses the same eligible flight population
+but emits one event for every positive delay-cause field and one cancellation
+event for cancelled flights with an available `cancellation_code`. It reduces by
+`(origin_airport, month, delay_range, cause)`, ranks each group by count
+descending and cause label ascending, and writes the normalized
+`delay_by_airport_month_all_causes` schema.
 
 The airline-airport ranking aggregates airline statistics with `reduceByKey` on
 `(origin_airport, airline_code)` and airport averages with `reduceByKey` on

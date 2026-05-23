@@ -20,8 +20,10 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.common.prepared_data import read_prepared_parquet
 from src.preparation.prepare_spark import ensure_java_17
 from scripts.validation_common import (
+    ALL_CAUSES_COLUMNS,
     ALLOWED_DELAY_RANGES,
     CANCELLED_NO_DEPARTURE_DELAY_RANGE,
+    assert_all_causes_semantics,
     assert_cancellation_bucket_semantics,
     assert_canonical_input_path,
 )
@@ -126,12 +128,16 @@ def main() -> int:
     metric_rows = {job["job_name"]: job["output_rows"] for job in metrics["jobs"]}
 
     delay = read_csv_dir(output_root / "delay_by_airport_month" / "full")
+    all_causes = read_csv_dir(output_root / "delay_by_airport_month_all_causes" / "full")
     ranking = read_csv_dir(output_root / "airline_airport_ranking" / "full")
 
     assert_columns(delay, DELAY_COLUMNS, "delay_by_airport_month")
+    assert_columns(all_causes, ALL_CAUSES_COLUMNS, "delay_by_airport_month_all_causes")
     assert_columns(ranking, RANKING_COLUMNS, "airline_airport_ranking")
     if len(delay) != metric_rows["delay_by_airport_month"]:
         raise AssertionError("Delay output row count does not match runtime metrics")
+    if len(all_causes) != metric_rows["delay_by_airport_month_all_causes"]:
+        raise AssertionError("All-causes output row count does not match runtime metrics")
     if len(ranking) != metric_rows["airline_airport_ranking"]:
         raise AssertionError("Ranking output row count does not match runtime metrics")
 
@@ -139,6 +145,7 @@ def main() -> int:
     if not delay_ranges <= ALLOWED_DELAY_RANGES:
         raise AssertionError(f"Unexpected delay ranges: {sorted(delay_ranges)}")
     assert_cancellation_bucket_semantics(delay, "delay_by_airport_month")
+    assert_all_causes_semantics(all_causes, "delay_by_airport_month_all_causes")
     for column in ("top_1_count", "top_2_count", "top_3_count"):
         if not (pd.to_numeric(delay[column], errors="coerce") >= 0).all():
             raise AssertionError(f"{column} must be non-negative")
@@ -176,6 +183,20 @@ def main() -> int:
             (F.col("cancelled") == 1) & F.col("departure_delay").isNull()
         ).count()
         total_prepared_rows = flights.count()
+        included = flights.where(
+            F.col("departure_delay").isNotNull()
+            | ((F.col("cancelled") == 1) & F.col("departure_delay").isNull())
+        )
+        expected_all_cause_events = included.select(
+            (
+                (F.coalesce(F.col("carrier_delay"), F.lit(0.0)) > 0.0).cast("int")
+                + (F.coalesce(F.col("weather_delay"), F.lit(0.0)) > 0.0).cast("int")
+                + (F.coalesce(F.col("nas_delay"), F.lit(0.0)) > 0.0).cast("int")
+                + (F.coalesce(F.col("security_delay"), F.lit(0.0)) > 0.0).cast("int")
+                + (F.coalesce(F.col("late_aircraft_delay"), F.lit(0.0)) > 0.0).cast("int")
+                + ((F.col("cancelled") == 1) & F.col("cancellation_code").isNotNull()).cast("int")
+            ).alias("cause_events")
+        ).agg(F.sum("cause_events")).first()[0]
     finally:
         spark.stop()
 
@@ -195,9 +216,11 @@ def main() -> int:
         raise AssertionError("Cancellation bucket flight count does not match cancelled null-departure rows")
     if int(ranking["flight_count"].sum()) != total_prepared_rows:
         raise AssertionError("Ranking grouped flight counts do not match all prepared rows")
+    if int(pd.to_numeric(all_causes["cause_count"], errors="coerce").sum()) != int(expected_all_cause_events or 0):
+        raise AssertionError("All-causes counts do not match expected positive delay and cancellation-code events")
 
     print("Spark SQL output validation passed")
-    print(f"delay rows: {len(delay)}; ranking rows: {len(ranking)}")
+    print(f"delay rows: {len(delay)}; all-cause rows: {len(all_causes)}; ranking rows: {len(ranking)}")
     print(
         "delay grouped flights: "
         f"{int(delay['flight_count'].sum())}; "

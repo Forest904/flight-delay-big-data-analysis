@@ -65,6 +65,10 @@ outputs/mapreduce/
     full/
       part-00000.csv
     first_10.csv
+  delay_by_airport_month_all_causes/
+    full/
+      part-00000.csv
+    first_10.csv
   airline_airport_ranking/
     full/
       part-00000.csv
@@ -75,6 +79,7 @@ outputs/mapreduce/
 The output schemas and job names match Spark SQL, Spark Core, and Hive:
 
 - `delay_by_airport_month`
+- `delay_by_airport_month_all_causes`
 - `airline_airport_ranking`
 
 ## Implementation Notes
@@ -85,6 +90,12 @@ under the supplementary `cancelled_no_departure_delay` bucket with cancellation
 cause labels; other null departure-delay rows are skipped. The reducer
 aggregates counts and averages, then sorts cause counts by count descending and
 cause label ascending to emit the top-three cause schema.
+
+The all-positive cause mapper uses the same row eligibility rules, but emits one
+key-value pair for every positive delay-cause field plus one cancellation-code
+pair for cancelled flights with an available code. Its reducer counts and ranks
+all causes inside each airport-month-range group, then emits the normalized
+`delay_by_airport_month_all_causes` schema.
 
 The ranking mapper emits one record per flight keyed by `origin_airport`. The
 reducer aggregates airline-level and airport-level departure statistics, applies

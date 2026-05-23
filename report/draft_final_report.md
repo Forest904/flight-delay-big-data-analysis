@@ -9,9 +9,9 @@ fontsize: 10pt
 
 This project analyzes the 2024 United States flight delay dataset with a
 reproducible big-data workflow. The submitted artifacts show a canonical
-cleaned Parquet dataset, two analytical jobs implemented with three required
-big-data technologies plus an optional MapReduce stretch, validated outputs,
-benchmark evidence, and the tables and figures included in this PDF. The
+cleaned Parquet dataset, two analytical analyses implemented with three
+required big-data technologies plus an optional MapReduce stretch, validated
+outputs, benchmark evidence, and the tables and figures included in this PDF. The
 evidence set includes real Amazon EMR cluster execution in addition to local
 execution and Docker standalone simulation, reducing the earlier
 scalability-evidence risk while leaving the benchmark limits stated explicitly.
@@ -90,6 +90,7 @@ first-10 report samples.
 | Average arrival delay | `avg_arrival_delay` |
 | Top cause labels | `top_1_cause`, `top_2_cause`, `top_3_cause` |
 | Top cause counts | `top_1_count`, `top_2_count`, `top_3_count` |
+| All positive causes companion | `delay_by_airport_month_all_causes`: `cause_rank`, `cause`, `cause_count` |
 
 | Analysis 3.3 requirement | Output column(s) |
 | --- | --- |
@@ -241,12 +242,27 @@ The stable output schema includes:
 | Metrics | `flight_count`, `avg_departure_delay`, `avg_arrival_delay` |
 | Top causes | `top_1_cause`, `top_1_count`, `top_2_cause`, `top_2_count`, `top_3_cause`, `top_3_count` |
 
-Cause labels are derived from cancellation codes or the largest positive
-delay-cause field. In the `cancelled_no_departure_delay` bucket, cancellation
-codes are reported as `cancellation:<code>`, with `cancellation:unknown` as a
-fallback if a cancelled row has no code. Cause ties are deterministic: cause
-count descending, then cause label ascending. Groups with fewer than three
-available causes use an empty cause value and count `0`.
+Cause labels in the core `delay_by_airport_month` output are dominant causes:
+one cause is selected per flight, using cancellation codes first and otherwise
+the largest positive delay-cause field. In the
+`cancelled_no_departure_delay` bucket, cancellation codes are reported as
+`cancellation:<code>`, with `cancellation:unknown` as a fallback if a cancelled
+row has no code. Cause ties are deterministic: cause count descending, then
+cause label ascending. Groups with fewer than three available causes use an
+empty cause value and count `0`.
+
+The companion `delay_by_airport_month_all_causes` output removes the ambiguity
+in the assignment wording by counting every positive delay-cause field:
+`carrier_delay`, `weather_delay`, `nas_delay`, `security_delay`, and
+`late_aircraft_delay`. Cancelled flights also contribute `cancellation:<code>`
+when a cancellation code is available. Flights with no positive delay-cause
+field and no available cancellation code do not appear in the companion view.
+The companion schema is normalized:
+
+| Field group | Columns |
+| --- | --- |
+| Grouping keys | `origin_airport`, `month`, `delay_range` |
+| Cause ranking | `cause_rank`, `cause`, `cause_count` |
 
 Textual pseudocode:
 
@@ -261,6 +277,17 @@ count causes inside each group
 rank causes by count descending and cause label ascending
 emit the first three causes and pad missing slots with count 0
 order output deterministically
+```
+
+All-positive companion pseudocode:
+
+```text
+keep the same rows as the dominant-cause delay analysis
+emit one event for each positive delay-cause field
+emit cancellation:<code> for cancelled rows with an available code
+group by origin_airport, month, delay_range, cause
+rank causes by count descending and cause label ascending
+emit normalized cause_rank, cause, and cause_count rows
 ```
 
 ## Assignment Analysis 3.3 - Ranking of Airline-Airport Pairs
@@ -859,6 +886,21 @@ naming convention and summarized after the required-technology samples.
 | ABE | 3 | medium | unknown (2) | delay:carrier (1) | none (0) |
 | ABE | 4 | high | delay:carrier (4) | delay:late_aircraft (2) | none (0) |
 
+### All-Positive Cause Companion
+
+| Origin | Mo. | Range | Rank | Cause | Count |
+| --- | --- | --- | --- | --- | --- |
+| ABE | 1 | cancelled_no_departure_delay | 1 | cancellation:B | 11 |
+| ABE | 1 | low | 1 | delay:nas | 21 |
+| ABE | 1 | low | 2 | delay:carrier | 4 |
+| ABE | 1 | low | 3 | delay:late_aircraft | 1 |
+| ABE | 1 | low | 4 | delay:weather | 1 |
+| ABE | 1 | medium | 1 | delay:late_aircraft | 16 |
+| ABE | 1 | medium | 2 | delay:nas | 14 |
+| ABE | 1 | medium | 3 | delay:carrier | 13 |
+| ABE | 1 | medium | 4 | delay:weather | 3 |
+| ABE | 1 | medium | 5 | delay:security | 1 |
+
 ### Ranking Metrics
 
 | Origin | Airline | Flights | Avg dep. | Avg arr. | Cancel rate |
@@ -1028,6 +1070,7 @@ numeric fields, rank values, and top-three cause labels/counts.
 | --- | --- |
 | Runtime metrics | `outputs/mapreduce/runtime_metrics.json` |
 | Delay sample | `report/tables/first_10_mapreduce_delay_by_airport_month.md` |
+| All-positive cause sample | `report/tables/first_10_mapreduce_delay_by_airport_month_all_causes.md` |
 | Ranking sample | `report/tables/first_10_mapreduce_airline_airport_ranking.md` |
 | Validator | `scripts/validate_mapreduce_outputs.py` |
 | Runtime documentation | `docs/mapreduce_analyses.md` |

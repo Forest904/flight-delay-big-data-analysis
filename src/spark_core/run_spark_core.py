@@ -66,6 +66,15 @@ DELAY_OUTPUT_COLUMNS = [
     "top_3_count",
 ]
 
+ALL_CAUSES_OUTPUT_COLUMNS = [
+    "origin_airport",
+    "month",
+    "delay_range",
+    "cause_rank",
+    "cause",
+    "cause_count",
+]
+
 RANKING_OUTPUT_COLUMNS = [
     "origin_airport",
     "airline",
@@ -100,6 +109,17 @@ DELAY_SCHEMA = StructType(
         StructField("top_2_count", LongType(), False),
         StructField("top_3_cause", StringType(), True),
         StructField("top_3_count", LongType(), False),
+    ]
+)
+
+ALL_CAUSES_SCHEMA = StructType(
+    [
+        StructField("origin_airport", StringType(), False),
+        StructField("month", IntegerType(), False),
+        StructField("delay_range", StringType(), False),
+        StructField("cause_rank", IntegerType(), False),
+        StructField("cause", StringType(), False),
+        StructField("cause_count", LongType(), False),
     ]
 )
 
@@ -286,6 +306,25 @@ def cancellation_cause(row: Any) -> str:
     return f"cancellation:{cancellation_code}"
 
 
+def all_positive_causes(row: Any) -> list[str]:
+    causes = []
+    for label, column in (
+        ("delay:carrier", "carrier_delay"),
+        ("delay:weather", "weather_delay"),
+        ("delay:nas", "nas_delay"),
+        ("delay:security", "security_delay"),
+        ("delay:late_aircraft", "late_aircraft_delay"),
+    ):
+        value = to_float(row[column]) or 0.0
+        if value > 0.0:
+            causes.append(label)
+
+    cancellation_code = row["cancellation_code"]
+    if row["cancelled"] == 1 and cancellation_code is not None:
+        causes.append(f"cancellation:{cancellation_code}")
+    return causes
+
+
 def delay_accumulator(departure_delay: float | None, arrival_delay: float | None) -> tuple[int, float, int, float, int]:
     departure_sum = 0.0 if departure_delay is None else departure_delay
     departure_count = 0 if departure_delay is None else 1
@@ -320,6 +359,18 @@ def ranged_delay_record(row: Any) -> tuple[tuple[str, int, str], tuple[float | N
     return key, value
 
 
+def all_causes_records(row: Any) -> list[tuple[tuple[tuple[str, int, str], str], int]]:
+    departure_delay = to_float(row["departure_delay"])
+    if departure_delay is None:
+        if row["cancelled"] != 1:
+            return []
+        key = (row["origin_airport"], int(row["month"]), CANCELLED_NO_DEPARTURE_DELAY_RANGE)
+    else:
+        key = (row["origin_airport"], int(row["month"]), delay_range(departure_delay))
+
+    return [((key, cause), 1) for cause in all_positive_causes(row)]
+
+
 def top_three_causes(causes: list[tuple[str, int]]) -> tuple[str | None, int, str | None, int, str | None, int]:
     ordered = sorted(causes, key=lambda item: (-item[1], item[0]))
     padded: list[tuple[str | None, int]] = [(cause, count) for cause, count in ordered[:3]]
@@ -352,6 +403,22 @@ def delay_output_sort_key(
     ],
 ) -> tuple[str, int, int, str]:
     return row[0], row[1], DELAY_RANGE_SORT_ORDER.get(row[2], 99), row[2]
+
+
+def all_causes_rows_from_group(
+    item: tuple[tuple[str, int, str], list[tuple[str, int]]],
+) -> list[tuple[str, int, str, int, str, int]]:
+    key, causes = item
+    origin_airport, month, range_label = key
+    ordered = sorted(causes, key=lambda cause: (-cause[1], cause[0]))
+    return [
+        (origin_airport, month, range_label, rank, cause, count)
+        for rank, (cause, count) in enumerate(ordered, start=1)
+    ]
+
+
+def all_causes_output_sort_key(row: tuple[str, int, str, int, str, int]) -> tuple[str, int, int, str, int, str]:
+    return row[0], row[1], DELAY_RANGE_SORT_ORDER.get(row[2], 99), row[2], row[3], row[4]
 
 
 def delay_report_df(spark: SparkSession, flights: DataFrame) -> DataFrame:
@@ -395,6 +462,20 @@ def delay_report_df(spark: SparkSession, flights: DataFrame) -> DataFrame:
     )
 
     return spark.createDataFrame(rows, DELAY_SCHEMA).select(*DELAY_OUTPUT_COLUMNS)
+
+
+def delay_all_causes_df(spark: SparkSession, flights: DataFrame) -> DataFrame:
+    partitions = rdd_partitions(spark)
+    rows = (
+        flights.rdd.flatMap(all_causes_records)
+        .reduceByKey(lambda left, right: left + right, numPartitions=partitions)
+        .map(lambda item: (item[0][0], (item[0][1], item[1])))
+        .combineByKey(add_to_list, merge_value, merge_lists, numPartitions=partitions)
+        .flatMap(all_causes_rows_from_group)
+        .sortBy(all_causes_output_sort_key, numPartitions=partitions)
+    )
+
+    return spark.createDataFrame(rows, ALL_CAUSES_SCHEMA).select(*ALL_CAUSES_OUTPUT_COLUMNS)
 
 
 def stats_accumulator(
@@ -695,6 +776,12 @@ def main(argv: list[str] | None = None) -> int:
                 delay_report_df(spark, flights),
                 join_uri(output_root, "delay_by_airport_month", "full"),
                 join_uri(output_root, "delay_by_airport_month", "first_10.csv"),
+            ),
+            (
+                "delay_by_airport_month_all_causes",
+                delay_all_causes_df(spark, flights),
+                join_uri(output_root, "delay_by_airport_month_all_causes", "full"),
+                join_uri(output_root, "delay_by_airport_month_all_causes", "first_10.csv"),
             ),
             (
                 "airline_airport_ranking",

@@ -30,6 +30,9 @@ outputs/spark_sql/
   delay_by_airport_month/
     full/
     first_10.csv
+  delay_by_airport_month_all_causes/
+    full/
+    first_10.csv
   airline_airport_ranking/
     full/
     first_10.csv
@@ -88,6 +91,29 @@ Spark SQL computes the top three causes with a grouped count and
 cause_count DESC, derived_cause ASC)`, which gives deterministic tie-breaking.
 Groups with fewer than three available causes use null cause labels and `0`
 counts for the missing slots.
+
+## All-Positive Causes Companion
+
+`delay_by_airport_month_all_causes` keeps the same airport, month, and delay
+range population as `delay_by_airport_month`, but it counts every available
+positive cause field instead of selecting one dominant cause per flight.
+
+Stable output schema:
+
+| Column | Type | Notes |
+|---|---|---|
+| origin_airport | string | Departure airport code. |
+| month | int | Month number from the prepared dataset. |
+| delay_range | string | One of `low`, `medium`, `high`, or `cancelled_no_departure_delay`. |
+| cause_rank | int | Rank within the airport-month-range group. |
+| cause | string | Positive delay cause or available `cancellation:<code>`. |
+| cause_count | long | Number of contributing cause events. |
+
+Each positive `carrier_delay`, `weather_delay`, `nas_delay`, `security_delay`,
+and `late_aircraft_delay` field contributes one cause event. Cancelled flights
+with an available cancellation code also contribute `cancellation:<code>`.
+Flights with no positive delay fields and no available cancellation code do not
+appear in this companion output. Ranking uses `cause_count DESC, cause ASC`.
 
 ## Airline-Airport Ranking
 

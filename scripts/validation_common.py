@@ -28,6 +28,15 @@ DELAY_COLUMNS = [
     "top_3_count",
 ]
 
+ALL_CAUSES_COLUMNS = [
+    "origin_airport",
+    "month",
+    "delay_range",
+    "cause_rank",
+    "cause",
+    "cause_count",
+]
+
 RANKING_COLUMNS = [
     "origin_airport",
     "airline",
@@ -41,9 +50,18 @@ RANKING_COLUMNS = [
 ]
 
 DELAY_KEYS = ["origin_airport", "month", "delay_range"]
+ALL_CAUSES_KEYS = ["origin_airport", "month", "delay_range", "cause"]
+ALL_CAUSES_RANK_KEYS = ["origin_airport", "month", "delay_range", "cause_rank"]
 RANKING_KEYS = ["origin_airport", "airline"]
 CANCELLED_NO_DEPARTURE_DELAY_RANGE = "cancelled_no_departure_delay"
 ALLOWED_DELAY_RANGES = {"low", "medium", "high", CANCELLED_NO_DEPARTURE_DELAY_RANGE}
+ALLOWED_DELAY_CAUSES = {
+    "delay:carrier",
+    "delay:weather",
+    "delay:nas",
+    "delay:security",
+    "delay:late_aircraft",
+}
 
 DELAY_NUMERIC_COLUMNS = [
     "flight_count",
@@ -54,6 +72,7 @@ DELAY_NUMERIC_COLUMNS = [
     "top_3_count",
 ]
 DELAY_CAUSE_COLUMNS = ["top_1_cause", "top_2_cause", "top_3_cause"]
+ALL_CAUSES_NUMERIC_COLUMNS = ["cause_rank", "cause_count"]
 RANKING_NUMERIC_COLUMNS = [
     "flight_count",
     "avg_departure_delay",
@@ -238,6 +257,24 @@ def validate_delay(sql: pd.DataFrame, candidate: pd.DataFrame, *, technology: st
     assert_string_columns_equal(merged, DELAY_CAUSE_COLUMNS, "sql", technology, "delay_by_airport_month")
 
 
+def validate_all_causes(sql: pd.DataFrame, candidate: pd.DataFrame, *, technology: str, candidate_label: str) -> None:
+    assert_columns(sql, ALL_CAUSES_COLUMNS, "spark_sql delay_by_airport_month_all_causes")
+    assert_columns(candidate, ALL_CAUSES_COLUMNS, f"{technology} delay_by_airport_month_all_causes")
+    assert_delay_range_domain(sql, "spark_sql delay_by_airport_month_all_causes")
+    assert_delay_range_domain(candidate, f"{technology} delay_by_airport_month_all_causes")
+    assert_all_causes_semantics(sql, "spark_sql delay_by_airport_month_all_causes")
+    assert_all_causes_semantics(candidate, f"{technology} delay_by_airport_month_all_causes")
+    assert_equal_row_count(sql, candidate, "delay_by_airport_month_all_causes", candidate_label)
+    assert_unique_keys(sql, ALL_CAUSES_KEYS, "spark_sql delay_by_airport_month_all_causes")
+    assert_unique_keys(candidate, ALL_CAUSES_KEYS, f"{technology} delay_by_airport_month_all_causes")
+    assert_unique_keys(sql, ALL_CAUSES_RANK_KEYS, "spark_sql delay_by_airport_month_all_causes")
+    assert_unique_keys(candidate, ALL_CAUSES_RANK_KEYS, f"{technology} delay_by_airport_month_all_causes")
+    assert_key_sets_match(sql, candidate, ALL_CAUSES_KEYS, "delay_by_airport_month_all_causes", candidate_label)
+
+    merged = sql.merge(candidate, on=ALL_CAUSES_KEYS, suffixes=("_sql", f"_{technology}"), how="inner")
+    assert_numeric_close(merged, ALL_CAUSES_NUMERIC_COLUMNS, "delay_by_airport_month_all_causes", technology)
+
+
 def assert_delay_range_domain(delay: pd.DataFrame, label: str) -> None:
     delay_ranges = set(delay["delay_range"].unique())
     if not delay_ranges <= ALLOWED_DELAY_RANGES:
@@ -260,6 +297,38 @@ def assert_cancellation_bucket_semantics(delay: pd.DataFrame, label: str) -> Non
         if bad.any():
             sample = bucket.loc[bad].head(3)
             raise AssertionError(f"{label} cancellation bucket has non-cancellation cause labels: {sample}")
+
+
+def assert_all_causes_semantics(all_causes: pd.DataFrame, label: str) -> None:
+    if all_causes.empty:
+        raise AssertionError(f"{label} must contain at least one cause row")
+    if all_causes["cause"].isna().any():
+        raise AssertionError(f"{label} cause must not contain null values")
+
+    cause_count = pd.to_numeric(all_causes["cause_count"], errors="coerce")
+    if not (cause_count > 0).all():
+        raise AssertionError(f"{label} cause_count values must be positive")
+
+    cause_rank = pd.to_numeric(all_causes["cause_rank"], errors="coerce")
+    if not (cause_rank >= 1).all():
+        raise AssertionError(f"{label} cause_rank values must start at 1")
+
+    valid_cause = all_causes["cause"].isin(ALLOWED_DELAY_CAUSES) | all_causes["cause"].str.startswith(
+        "cancellation:", na=False
+    )
+    if not valid_cause.all():
+        sample = all_causes.loc[~valid_cause].head(3)
+        raise AssertionError(f"{label} has unexpected cause labels: {sample}")
+
+    for key, group in all_causes.groupby(DELAY_KEYS, sort=False):
+        comparable = group.copy()
+        comparable["cause_count"] = pd.to_numeric(comparable["cause_count"], errors="coerce")
+        comparable["cause_rank"] = pd.to_numeric(comparable["cause_rank"], errors="coerce")
+        ordered = comparable.sort_values(["cause_count", "cause"], ascending=[False, True])
+        expected_ranks = list(range(1, len(ordered) + 1))
+        actual_ranks = ordered["cause_rank"].astype(int).tolist()
+        if actual_ranks != expected_ranks:
+            raise AssertionError(f"{label} ranks are not deterministic for {key}: {ordered.head(5)}")
 
 
 def assert_ranking_order(ranking: pd.DataFrame, label: str) -> None:

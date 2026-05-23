@@ -45,6 +45,15 @@ DELAY_OUTPUT_COLUMNS = [
     "top_3_count",
 ]
 
+ALL_CAUSES_OUTPUT_COLUMNS = [
+    "origin_airport",
+    "month",
+    "delay_range",
+    "cause_rank",
+    "cause",
+    "cause_count",
+]
+
 RANKING_OUTPUT_COLUMNS = [
     "origin_airport",
     "airline",
@@ -257,6 +266,23 @@ def cancellation_cause(record: FlightRecord) -> str:
     return f"cancellation:{record.cancellation_code}"
 
 
+def all_positive_causes(record: FlightRecord) -> list[str]:
+    causes = []
+    for label, value in (
+        ("delay:carrier", record.carrier_delay),
+        ("delay:weather", record.weather_delay),
+        ("delay:nas", record.nas_delay),
+        ("delay:security", record.security_delay),
+        ("delay:late_aircraft", record.late_aircraft_delay),
+    ):
+        if (value or 0.0) > 0.0:
+            causes.append(label)
+
+    if record.cancelled == 1 and record.cancellation_code is not None:
+        causes.append(f"cancellation:{record.cancellation_code}")
+    return causes
+
+
 def delay_key_value(record: FlightRecord) -> tuple[list[Any], list[Any]] | None:
     if record.departure_delay is None:
         if record.cancelled != 1:
@@ -269,6 +295,16 @@ def delay_key_value(record: FlightRecord) -> tuple[list[Any], list[Any]] | None:
         [record.origin_airport, record.month, delay_range(record.departure_delay)],
         [record.departure_delay, record.arrival_delay, derived_cause(record)],
     )
+
+
+def all_causes_key_values(record: FlightRecord) -> list[tuple[list[Any], str]]:
+    if record.departure_delay is None:
+        if record.cancelled != 1:
+            return []
+        key = [record.origin_airport, record.month, CANCELLED_NO_DEPARTURE_DELAY_RANGE]
+    else:
+        key = [record.origin_airport, record.month, delay_range(record.departure_delay)]
+    return [(key, cause) for cause in all_positive_causes(record)]
 
 
 def add_delay_value(accumulator: DelayAccumulator, value: list[Any]) -> None:
@@ -323,6 +359,16 @@ def delay_row_from_group(key: list[Any], values: list[Any]) -> list[Any]:
         top_2_count,
         top_3_cause,
         top_3_count,
+    ]
+
+
+def all_causes_rows_from_group(key: list[Any], values: list[Any]) -> list[list[Any]]:
+    origin_airport, month, range_label = key
+    cause_counts = Counter(str(value) for value in values)
+    ordered = sorted(cause_counts.items(), key=lambda item: (-item[1], item[0]))
+    return [
+        [origin_airport, int(month), range_label, rank, cause, count]
+        for rank, (cause, count) in enumerate(ordered, start=1)
     ]
 
 
@@ -405,6 +451,10 @@ def ranking_rows_from_group(origin_airport: str, values: list[Any]) -> list[list
 
 def delay_output_sort_key(row: list[Any]) -> tuple[str, int, int, str]:
     return str(row[0]), int(row[1]), DELAY_RANGE_SORT_ORDER.get(str(row[2]), 99), str(row[2])
+
+
+def all_causes_output_sort_key(row: list[Any]) -> tuple[str, int, int, str, int, str]:
+    return str(row[0]), int(row[1]), DELAY_RANGE_SORT_ORDER.get(str(row[2]), 99), str(row[2]), int(row[3]), str(row[4])
 
 
 def ranking_output_sort_key(row: list[Any]) -> tuple[str, int, tuple[int, float], str]:

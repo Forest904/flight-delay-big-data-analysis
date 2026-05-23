@@ -15,6 +15,7 @@ TABLES_DIR = PROJECT_ROOT / "report" / "tables"
 FIGURES_DIR = PROJECT_ROOT / "report" / "figures"
 
 JOBS = ("delay_by_airport_month", "airline_airport_ranking")
+OUTPUT_JOBS = (*JOBS, "delay_by_airport_month_all_causes")
 CORE_TECHNOLOGIES = ("Spark SQL", "Spark Core", "Hive")
 LOCAL_INPUTS = ("100k", "500k", "1m", "3m", "full", "14m", "28m")
 DOCKER_INPUTS = ("100k", "500k", "1m", "3m", "full", "14m", "28m")
@@ -99,7 +100,7 @@ def run_gate_commands(project_root: Path = PROJECT_ROOT) -> list[str]:
 def required_first_10_table_names() -> list[str]:
     names: list[str] = []
     for technology in TECHNOLOGY_SLUGS:
-        for job in JOBS:
+        for job in OUTPUT_JOBS:
             stem = f"first_10_{technology}_{job}"
             names.extend([f"{stem}.csv", f"{stem}.md"])
     return names

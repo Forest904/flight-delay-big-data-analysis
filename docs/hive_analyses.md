@@ -58,6 +58,10 @@ outputs/hive/
     full/
       part-00000.csv
     first_10.csv
+  delay_by_airport_month_all_causes/
+    full/
+      part-00000.csv
+    first_10.csv
   airline_airport_ranking/
     full/
       part-00000.csv
@@ -68,6 +72,7 @@ outputs/hive/
 The output schemas and job names match Spark SQL and Spark Core:
 
 - `delay_by_airport_month`
+- `delay_by_airport_month_all_causes`
 - `airline_airport_ranking`
 
 Runtime metrics capture generation timestamp, input path, Hive table metadata,
@@ -78,6 +83,10 @@ The delay query follows the Spark SQL cancellation policy: known departure
 delays use the `low`, `medium`, and `high` numeric ranges, while cancelled rows
 with null `departure_delay` are reported in the supplementary
 `cancelled_no_departure_delay` bucket with cancellation-code cause labels.
+The companion `delay_by_airport_month_all_causes` query uses the same grouping
+population, expands every positive delay-cause field into its own event, adds
+available cancellation-code events for cancelled flights, and ranks causes by
+count descending then cause label ascending.
 
 Internally, Hive writes query results through temporary text tables located under
 `outputs/hive/.tmp_exports/` with a control-character delimiter. The Python

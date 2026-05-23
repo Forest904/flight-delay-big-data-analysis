@@ -26,6 +26,7 @@ HIVE_NULL_VALUE = r"\N"
 
 DDL_FILE = HIVE_DIR / "ddl.sql"
 DELAY_QUERY_FILE = HIVE_DIR / "analysis_delay_by_airport_month.sql"
+ALL_CAUSES_QUERY_FILE = HIVE_DIR / "analysis_delay_by_airport_month_all_causes.sql"
 RANKING_QUERY_FILE = HIVE_DIR / "analysis_airline_airport_ranking.sql"
 
 HIVE_JDBC_URL = "jdbc:hive2://localhost:10000/"
@@ -44,6 +45,15 @@ DELAY_OUTPUT_COLUMNS = [
     "top_2_count",
     "top_3_cause",
     "top_3_count",
+]
+
+ALL_CAUSES_OUTPUT_COLUMNS = [
+    "origin_airport",
+    "month",
+    "delay_range",
+    "cause_rank",
+    "cause",
+    "cause_count",
 ]
 
 RANKING_OUTPUT_COLUMNS = [
@@ -176,7 +186,7 @@ def validate_preconditions(prepared_file: Path) -> list[str]:
         errors.append(
             f"Prepared dataset was not found: {display_path(prepared_file)}. Run `make prepare` or `make generate-sizes` first."
         )
-    for sql_file in (DDL_FILE, DELAY_QUERY_FILE, RANKING_QUERY_FILE):
+    for sql_file in (DDL_FILE, DELAY_QUERY_FILE, ALL_CAUSES_QUERY_FILE, RANKING_QUERY_FILE):
         if not sql_file.exists():
             errors.append(f"Required Hive SQL file is missing: {display_path(sql_file)}")
     try:
@@ -475,6 +485,13 @@ def main(argv: list[str] | None = None) -> int:
                 DELAY_OUTPUT_COLUMNS,
                 output_root / "delay_by_airport_month" / "full",
                 output_root / "delay_by_airport_month" / "first_10.csv",
+            ),
+            (
+                "delay_by_airport_month_all_causes",
+                ALL_CAUSES_QUERY_FILE,
+                ALL_CAUSES_OUTPUT_COLUMNS,
+                output_root / "delay_by_airport_month_all_causes" / "full",
+                output_root / "delay_by_airport_month_all_causes" / "first_10.csv",
             ),
             (
                 "airline_airport_ranking",

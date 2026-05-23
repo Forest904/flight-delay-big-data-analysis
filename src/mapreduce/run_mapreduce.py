@@ -26,9 +26,11 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.mapreduce.mapreduce_logic import (
+    ALL_CAUSES_OUTPUT_COLUMNS,
     CANONICAL_COLUMNS,
     DELAY_OUTPUT_COLUMNS,
     RANKING_OUTPUT_COLUMNS,
+    all_causes_output_sort_key,
     delay_output_sort_key,
     ranking_output_sort_key,
 )
@@ -407,6 +409,13 @@ def mapreduce_jobs() -> list[JobSpec]:
             reducer=source_dir / "reducer_delay.py",
             columns=DELAY_OUTPUT_COLUMNS,
             sort_key=delay_output_sort_key,
+        ),
+        JobSpec(
+            name="delay_by_airport_month_all_causes",
+            mapper=source_dir / "mapper_delay_all_causes.py",
+            reducer=source_dir / "reducer_delay_all_causes.py",
+            columns=ALL_CAUSES_OUTPUT_COLUMNS,
+            sort_key=all_causes_output_sort_key,
         ),
         JobSpec(
             name="airline_airport_ranking",

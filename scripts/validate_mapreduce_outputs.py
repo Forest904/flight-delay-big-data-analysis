@@ -12,6 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.validation_common import (
+    ALL_CAUSES_COLUMNS,
     DELAY_COLUMNS,
     PROJECT_ROOT as VALIDATION_ROOT,
     RANKING_COLUMNS,
@@ -25,6 +26,7 @@ from scripts.validation_common import (
     metric_rows,
     read_csv_dir,
     resolve_project_path,
+    validate_all_causes,
     validate_delay,
     validate_ranking,
 )
@@ -53,21 +55,27 @@ def main() -> int:
 
     sql_delay = read_csv_dir(sql_root / "delay_by_airport_month" / "full")
     mapreduce_delay = read_csv_dir(mapreduce_root / "delay_by_airport_month" / "full")
+    sql_all_causes = read_csv_dir(sql_root / "delay_by_airport_month_all_causes" / "full")
+    mapreduce_all_causes = read_csv_dir(mapreduce_root / "delay_by_airport_month_all_causes" / "full")
     sql_ranking = read_csv_dir(sql_root / "airline_airport_ranking" / "full")
     mapreduce_ranking = read_csv_dir(mapreduce_root / "airline_airport_ranking" / "full")
 
     assert_output_row_count(mapreduce_delay, mapreduce_metric_rows, "delay_by_airport_month", "MapReduce")
+    assert_output_row_count(mapreduce_all_causes, mapreduce_metric_rows, "delay_by_airport_month_all_causes", "MapReduce")
     assert_output_row_count(mapreduce_ranking, mapreduce_metric_rows, "airline_airport_ranking", "MapReduce")
     assert_output_row_count(sql_delay, sql_metric_rows, "delay_by_airport_month", "Spark SQL")
+    assert_output_row_count(sql_all_causes, sql_metric_rows, "delay_by_airport_month_all_causes", "Spark SQL")
     assert_output_row_count(sql_ranking, sql_metric_rows, "airline_airport_ranking", "Spark SQL")
 
     assert_first_10(mapreduce_root, "delay_by_airport_month", DELAY_COLUMNS, "mapreduce")
+    assert_first_10(mapreduce_root, "delay_by_airport_month_all_causes", ALL_CAUSES_COLUMNS, "mapreduce")
     assert_first_10(mapreduce_root, "airline_airport_ranking", RANKING_COLUMNS, "mapreduce")
     validate_delay(sql_delay, mapreduce_delay, technology="mapreduce", candidate_label="MapReduce")
+    validate_all_causes(sql_all_causes, mapreduce_all_causes, technology="mapreduce", candidate_label="MapReduce")
     validate_ranking(sql_ranking, mapreduce_ranking, technology="mapreduce", candidate_label="MapReduce")
 
     print("MapReduce output validation passed")
-    print(f"delay rows: {len(mapreduce_delay)}; ranking rows: {len(mapreduce_ranking)}")
+    print(f"delay rows: {len(mapreduce_delay)}; all-cause rows: {len(mapreduce_all_causes)}; ranking rows: {len(mapreduce_ranking)}")
     print(f"numeric tolerance: {TOLERANCE}")
     return 0
 

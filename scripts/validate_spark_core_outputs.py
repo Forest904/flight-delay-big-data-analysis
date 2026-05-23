@@ -12,16 +12,19 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.validation_common import (
+    ALL_CAUSES_COLUMNS,
     PROJECT_ROOT as VALIDATION_ROOT,
     TOLERANCE,
     assert_metrics_success,
     assert_canonical_input_path,
+    assert_first_10,
     assert_same_input_path,
     assert_output_row_count,
     load_yaml,
     metric_rows,
     read_csv_dir,
     resolve_project_path,
+    validate_all_causes,
     validate_delay,
     validate_ranking,
 )
@@ -50,19 +53,25 @@ def main() -> int:
 
     sql_delay = read_csv_dir(sql_root / "delay_by_airport_month" / "full")
     core_delay = read_csv_dir(core_root / "delay_by_airport_month" / "full")
+    sql_all_causes = read_csv_dir(sql_root / "delay_by_airport_month_all_causes" / "full")
+    core_all_causes = read_csv_dir(core_root / "delay_by_airport_month_all_causes" / "full")
     sql_ranking = read_csv_dir(sql_root / "airline_airport_ranking" / "full")
     core_ranking = read_csv_dir(core_root / "airline_airport_ranking" / "full")
 
     assert_output_row_count(core_delay, core_metric_rows, "delay_by_airport_month", "Spark Core")
+    assert_output_row_count(core_all_causes, core_metric_rows, "delay_by_airport_month_all_causes", "Spark Core")
     assert_output_row_count(core_ranking, core_metric_rows, "airline_airport_ranking", "Spark Core")
     assert_output_row_count(sql_delay, sql_metric_rows, "delay_by_airport_month", "Spark SQL")
+    assert_output_row_count(sql_all_causes, sql_metric_rows, "delay_by_airport_month_all_causes", "Spark SQL")
     assert_output_row_count(sql_ranking, sql_metric_rows, "airline_airport_ranking", "Spark SQL")
 
+    assert_first_10(core_root, "delay_by_airport_month_all_causes", ALL_CAUSES_COLUMNS, "spark_core")
     validate_delay(sql_delay, core_delay, technology="core", candidate_label="Spark Core")
+    validate_all_causes(sql_all_causes, core_all_causes, technology="core", candidate_label="Spark Core")
     validate_ranking(sql_ranking, core_ranking, technology="core", candidate_label="Spark Core")
 
     print("Spark Core output validation passed")
-    print(f"delay rows: {len(core_delay)}; ranking rows: {len(core_ranking)}")
+    print(f"delay rows: {len(core_delay)}; all-cause rows: {len(core_all_causes)}; ranking rows: {len(core_ranking)}")
     print(f"numeric tolerance: {TOLERANCE}")
     return 0
 

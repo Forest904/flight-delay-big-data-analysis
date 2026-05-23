@@ -12,6 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.validation_common import (
+    ALL_CAUSES_COLUMNS,
     DELAY_COLUMNS,
     PROJECT_ROOT as VALIDATION_ROOT,
     RANKING_COLUMNS,
@@ -25,6 +26,7 @@ from scripts.validation_common import (
     metric_rows,
     read_csv_dir,
     resolve_project_path,
+    validate_all_causes,
     validate_delay,
     validate_ranking,
 )
@@ -53,21 +55,27 @@ def main() -> int:
 
     sql_delay = read_csv_dir(sql_root / "delay_by_airport_month" / "full")
     hive_delay = read_csv_dir(hive_root / "delay_by_airport_month" / "full")
+    sql_all_causes = read_csv_dir(sql_root / "delay_by_airport_month_all_causes" / "full")
+    hive_all_causes = read_csv_dir(hive_root / "delay_by_airport_month_all_causes" / "full")
     sql_ranking = read_csv_dir(sql_root / "airline_airport_ranking" / "full")
     hive_ranking = read_csv_dir(hive_root / "airline_airport_ranking" / "full")
 
     assert_output_row_count(hive_delay, hive_metric_rows, "delay_by_airport_month", "Hive")
+    assert_output_row_count(hive_all_causes, hive_metric_rows, "delay_by_airport_month_all_causes", "Hive")
     assert_output_row_count(hive_ranking, hive_metric_rows, "airline_airport_ranking", "Hive")
     assert_output_row_count(sql_delay, sql_metric_rows, "delay_by_airport_month", "Spark SQL")
+    assert_output_row_count(sql_all_causes, sql_metric_rows, "delay_by_airport_month_all_causes", "Spark SQL")
     assert_output_row_count(sql_ranking, sql_metric_rows, "airline_airport_ranking", "Spark SQL")
 
     assert_first_10(hive_root, "delay_by_airport_month", DELAY_COLUMNS, "hive")
+    assert_first_10(hive_root, "delay_by_airport_month_all_causes", ALL_CAUSES_COLUMNS, "hive")
     assert_first_10(hive_root, "airline_airport_ranking", RANKING_COLUMNS, "hive")
     validate_delay(sql_delay, hive_delay, technology="hive", candidate_label="Hive")
+    validate_all_causes(sql_all_causes, hive_all_causes, technology="hive", candidate_label="Hive")
     validate_ranking(sql_ranking, hive_ranking, technology="hive", candidate_label="Hive")
 
     print("Hive output validation passed")
-    print(f"delay rows: {len(hive_delay)}; ranking rows: {len(hive_ranking)}")
+    print(f"delay rows: {len(hive_delay)}; all-cause rows: {len(hive_all_causes)}; ranking rows: {len(hive_ranking)}")
     print(f"numeric tolerance: {TOLERANCE}")
     return 0
 
