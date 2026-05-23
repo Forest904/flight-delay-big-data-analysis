@@ -62,15 +62,17 @@ available; the report uses the completed EMR runs recorded under
 
 # Assignment Coverage
 
-| Final-report requirement | Where it is answered |
-| --- | --- |
-| Data preparation operations | Dataset And Preparation |
-| Implementation choices and pseudocode | Analyses And Implementations |
-| First 10 result rows | Evidence Appendix |
-| Execution-time tables and charts | Benchmark Evidence and AWS EMR Cluster Experiment |
-| Local, Docker standalone simulation, and AWS EMR settings | Docker Standalone Simulation, Environment And Runtime Configuration, and AWS EMR Cluster Experiment |
-| Critical discussion | Critical Discussion |
-| GitHub repository link | Executive Summary |
+This report covers the required elements as follows:
+
+- Data preparation: Dataset And Preparation.
+- Implementation choices and pseudocode: Analyses And Implementations.
+- First 10 result rows: Evidence Appendix.
+- Execution-time tables and charts: Benchmark Evidence and AWS EMR Cluster
+  Experiment.
+- Execution settings: Docker Standalone Simulation, Environment And Runtime
+  Configuration, and AWS EMR Cluster Experiment.
+- Critical discussion: Critical Discussion.
+- GitHub repository link: Executive Summary.
 
 ## Requirement-To-Output Mapping
 
@@ -78,7 +80,7 @@ The two selected analyses use stable output schemas so every assignment
 requirement can be traced to concrete columns in the generated CSV files and
 first-10 report samples.
 
-| Assignment Analysis 3.2 requirement | Output column(s) |
+| Analysis 3.2 requirement | Output column(s) |
 | --- | --- |
 | Departure airport | `origin_airport` |
 | Month | `month` |
@@ -86,9 +88,10 @@ first-10 report samples.
 | Number of flights | `flight_count` |
 | Average departure delay | `avg_departure_delay` |
 | Average arrival delay | `avg_arrival_delay` |
-| Three most frequent delay or cancellation causes | `top_1_cause`, `top_1_count`, `top_2_cause`, `top_2_count`, `top_3_cause`, `top_3_count` |
+| Top cause labels | `top_1_cause`, `top_2_cause`, `top_3_cause` |
+| Top cause counts | `top_1_count`, `top_2_count`, `top_3_count` |
 
-| Assignment Analysis 3.3 requirement | Output column(s) |
+| Analysis 3.3 requirement | Output column(s) |
 | --- | --- |
 | Departure airport | `origin_airport` |
 | Airline | `airline` |
@@ -96,14 +99,18 @@ first-10 report samples.
 | Average departure delay | `avg_departure_delay` |
 | Average arrival delay | `avg_arrival_delay` |
 | Cancellation rate | `cancellation_rate` |
-| Airport average departure delay | `airport_avg_departure_delay` |
-| Difference from airport average | `difference_from_airport_avg_departure_delay` |
+| Airport average delay | `airport_avg_departure_delay` |
+| Difference from airport average | see note below |
 | Airline rank at airport | `rank_at_airport` |
 
 The `airline` output field is the normalized `airline_code`. The raw dataset
 does not provide a stable airline-name field, so code-based airline identity is
 used consistently across Spark SQL, Spark Core, Hive, and the MapReduce
 stretch.
+
+The full CSV column for the difference from the airport average is
+`difference_from_airport_avg_departure_delay`; the shortened table label above
+keeps the PDF readable without changing the generated output schema.
 
 # Dataset And Preparation
 
@@ -461,13 +468,20 @@ are part of the managed execution path.
 The opt-in MapReduce stretch benchmark is reported separately from the required
 default benchmark matrix:
 
-| Environment | Inputs | Technologies | Jobs | Status |
-| --- | --- | --- | --- | --- |
-| Local | `100k`, `500k`, `1m`, `3m`, `full`, `14m`, `28m` | Spark SQL, Spark Core, Hive | both jobs | 42/42 successful, 3 repetitions each |
-| Docker standalone simulation | `100k`, `500k`, `1m`, `3m`, `full`, `14m`, `28m` | Spark SQL, Spark Core, Hive | both jobs | 42/42 successful, 3 repetitions each |
-| AWS EMR baseline cluster | `100k`, `500k`, `1m`, `3m`, `full`, `14m` | Spark SQL, Spark Core | both jobs | 24/24 successful; `500k`, `3m`, and `14m` strengthened to 2 repetitions |
-| AWS EMR larger cluster | `1m`, `full`, `14m`, `28m` | Spark SQL, Spark Core | both jobs | 16/16 successful; `28m` is single-run smoke/stress evidence |
-| Local stretch | `100k`, `500k`, `1m`, `3m`, `full` | Hadoop Streaming MapReduce | both jobs | 10/10 successful, 3 repetitions each |
+- Local required technologies: `100k`, `500k`, `1m`, `3m`, `full`, `14m`,
+  and `28m`; Spark SQL, Spark Core, and Hive; both jobs; 42/42 successful with
+  three repetitions each.
+- Docker standalone simulation: `100k`, `500k`, `1m`, `3m`, `full`, `14m`,
+  and `28m`; Spark SQL, Spark Core, and Hive; both jobs; 42/42 successful with
+  three repetitions each.
+- AWS EMR baseline cluster: `100k`, `500k`, `1m`, `3m`, `full`, and `14m`;
+  Spark SQL and Spark Core; both jobs; 24/24 successful. The `500k`, `3m`, and
+  `14m` cells were strengthened to two repetitions.
+- AWS EMR larger cluster: `1m`, `full`, `14m`, and `28m`; Spark SQL and Spark
+  Core; both jobs; 16/16 successful. The `28m` cells are single-run
+  smoke/stress evidence.
+- Local MapReduce stretch: `100k`, `500k`, `1m`, `3m`, and `full`; Hadoop
+  Streaming MapReduce; both jobs; 10/10 successful with three repetitions each.
 
 The local required-technology run IDs are `20260522T133525179005Z`,
 `20260522T142052973274Z`, and `20260522T144129099690Z`. Docker standalone
@@ -485,19 +499,22 @@ Hive cluster evidence. The full status matrix is stored in
 `report/tables/benchmark_status.md`; cells that were not run remain explicit
 `N/A` or `not_run` entries rather than inferred values.
 
-The table below is a compact excerpt from `report/tables/benchmark_summary.md`.
-The full generated table contains the same statistics for every successful
-environment/input/job/technology group.
+The full generated table in `report/tables/benchmark_summary.md` contains the
+same statistics for every successful environment/input/job/technology group.
+Compact examples from that table are:
 
-| Evidence row | runs | median s | mean s | min s | max s | stddev s | note |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| Local `28m` delay, Spark SQL | 3 | 11.924 | 11.896 | 11.790 | 11.973 | 0.095 | Replicated stress input |
-| Local `28m` delay, Spark Core | 3 | 1.333 | 1.403 | 1.252 | 1.625 | 0.196 | Replicated stress input |
-| Local `28m` delay, Hive | 3 | 101.265 | 101.785 | 100.484 | 103.605 | 1.624 | Replicated stress input |
-| Docker `28m` delay, Spark SQL | 3 | 14.397 | 14.731 | 14.270 | 15.525 | 0.689 | Docker standalone simulation |
-| AWS EMR baseline `14m` delay, Spark SQL | 2 | 17.020 | 17.020 | 16.676 | 17.363 | 0.486 | P2 weak-cell rerun |
-| AWS EMR larger `28m` delay, Spark SQL | 1 | 19.184 | 19.184 | 19.184 | 19.184 | N/A | Smoke/stress evidence |
-| AWS EMR `100k` delay, Spark SQL | 1 | 15.832 | 15.832 | 15.832 | 15.832 | N/A | Smoke evidence |
+- Local `28m` delay, Spark SQL: 3 runs; median 11.924 s; min 11.790 s; max
+  11.973 s.
+- Local `28m` delay, Spark Core: 3 runs; median 1.333 s; min 1.252 s; max
+  1.625 s.
+- Local `28m` delay, Hive: 3 runs; median 101.265 s; min 100.484 s; max
+  103.605 s.
+- Docker `28m` delay, Spark SQL: 3 runs; median 14.397 s; min 14.270 s; max
+  15.525 s.
+- AWS EMR baseline `14m` delay, Spark SQL: 2 runs; median 17.020 s; min
+  16.676 s; max 17.363 s.
+- AWS EMR larger `28m` delay, Spark SQL: 1 smoke/stress run; 19.184 s.
+- AWS EMR `100k` delay, Spark SQL: 1 smoke run; 15.832 s.
 
 ## Benchmark Pivot
 
@@ -538,7 +555,10 @@ Execution-time charts are generated separately for local execution, Docker
 standalone simulation, AWS EMR baseline, and AWS EMR larger-cluster runs. Charts
 plot median duration and include min/max variability indicators when repeated
 successful measurements are available. Line plots are used only when at least
-three input sizes are available for a job and environment.
+three input sizes are available for a job and environment. To keep the PDF
+readable, chart tick labels use compact input labels; the record counts are
+`100k` = 100,000, `500k` = 500,000, `1m` = 1,000,000, `3m` = 3,000,000,
+`full` = 7,079,081, `14m` = 14,000,000, and `28m` = 28,000,000.
 
 ![Local execution time for Assignment Analysis 3.2](figures/execution_time_local_delay_by_airport_month.png)
 
@@ -566,29 +586,32 @@ release notes list Spark `3.5.6-amzn-2` for release `emr-7.13.0`:
 <https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-spark.html> and
 <https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-7130-release.html>.
 
-| Field | Baseline EMR run | Larger EMR run |
-| --- | --- | --- |
-| Run ID | `m4-emr-final-2` | `m5-emr-3core-1m-full` |
-| Cluster ID | `j-VS6OEAAXUMGP` | `j-LTX1FIHYB4X9` |
-| Region | `us-east-1` | `us-east-1` |
-| EMR release | `emr-7.13.0` | `emr-7.13.0` |
-| Spark version | `3.5.6-amzn-2` | `3.5.6-amzn-2` |
-| Execution mode | Spark steps on YARN | Spark steps on YARN |
-| Instance type | `m5.xlarge` | `m5.xlarge` |
-| Node counts | 1 primary + 2 core, 3 total | 1 primary + 3 core, 4 total |
-| Inputs | `100k`, `500k`, `1m`, `3m`, `full`, `14m` | `1m`, `full` |
-| Technologies | Spark SQL, Spark Core | Spark SQL, Spark Core |
-| Cluster lifetime | `2026-05-21T22:51:56Z` to `2026-05-21T23:40:53Z` | `2026-05-22T00:46:03Z` to `2026-05-22T01:12:14Z` |
-| Cost evidence | Approximately `0.5530 USD`, estimated from run timestamps and config | `0.3944 USD` in `aws_cost_log` |
+The baseline EMR profile used `m5.xlarge` nodes with one primary and two core
+nodes. Its main run was `m4-emr-final-2` on cluster `j-VS6OEAAXUMGP`; the
+supplemental baseline runs were `m4-emr-p2-weak-cells` and
+`m4-hardened-smoke-3`. This profile covered `100k`, `500k`, `1m`, `3m`,
+`full`, and `14m` inputs for Spark SQL and Spark Core.
+
+The larger EMR profile used the same EMR release and instance type with one
+primary and three core nodes. Its main run was `m5-emr-3core-1m-full` on
+cluster `j-LTX1FIHYB4X9`; the supplemental larger runs were `m5-emr-p2-14m`
+and `m5-emr-p2-28m-smoke`. This profile covered `1m`, `full`, `14m`, and
+`28m` inputs for Spark SQL and Spark Core.
+
+The larger `14m` and `28m` inputs were run as separate P2 larger-profile
+clusters, not inside the canonical `m5-emr-3core-1m-full` cluster. They share
+the same node profile and Spark/YARN path, so the report groups them as larger
+EMR evidence while preserving separate run IDs and costs. The main larger run
+cost `0.3944 USD`; the larger `14m` run cost `0.3911 USD`; and the larger
+`28m` smoke run cost `0.2182 USD`, as recorded in `aws_cost_log`.
 
 The S3 layout is deliberately simple and reproducible:
 
-| Prefix | Purpose |
-| --- | --- |
-| `s3://fd-bda-380623119505-us-east-1/flight-delay/data/` | Prepared and generated Parquet inputs |
-| `s3://fd-bda-380623119505-us-east-1/flight-delay/code/` | Source bundles and per-run runtime configs |
-| `s3://fd-bda-380623119505-us-east-1/flight-delay/results/` | Runtime metrics, benchmark outputs, and fetched result evidence |
-| `s3://fd-bda-380623119505-us-east-1/flight-delay/logs/` | EMR and Spark step logs |
+- `.../flight-delay/data/`: prepared and generated Parquet inputs.
+- `.../flight-delay/code/`: source bundles and per-run runtime configs.
+- `.../flight-delay/results/`: runtime metrics, benchmark outputs, and fetched
+  result evidence.
+- `.../flight-delay/logs/`: EMR and Spark step logs.
 
 The report-ready AWS evidence is generated into small audit artifacts instead
 of relying on console screenshots. `report/tables/aws_run_manifest.md` records
@@ -741,8 +764,9 @@ sample files.
   default `make run-all-local` and `make benchmark-local` paths.
 - The Docker Spark setup is a Docker standalone simulation on one physical
   machine, not a true distributed cluster.
-- The Docker benchmark matrix stops at `1m`; Docker `full` comparison cells are
-  marked `N/A` rather than inferred.
+- The Docker benchmark matrix includes `full`, `14m`, and `28m`, but it still
+  runs on one physical host with shared Docker Desktop CPU, memory, and disk
+  limits.
 - Hive is containerized locally and is not running on a Hadoop/YARN service.
 - Docker worker-count variation is not included because the reliable Docker
   Compose topology has two named Spark workers.
@@ -754,11 +778,13 @@ sample files.
   cluster warmup, autoscaling, or production scheduling behavior.
 - S3 I/O is part of the EMR path. EMR timings therefore include object-store
   listing/read/write effects that local and Docker bind-mounted runs avoid.
-- The Learner Lab budget was small, so the larger-cluster experiment was
-  limited to `1m` and `full` inputs instead of repeating the entire AWS matrix.
-- The largest AWS inputs have limited repetitions: `14m`, `3m`, and `500k` were
-  run once in the baseline EMR matrix, while `1m` and `full` were repeated three
-  times for the baseline and larger profiles.
+- The Learner Lab budget was small, so the larger-cluster experiment has full
+  repeated evidence for `1m` and `full`, a three-repetition larger `14m` run,
+  and a single-run larger `28m` smoke/stress run rather than a complete sweep
+  of every baseline cell.
+- The largest AWS inputs still have limited repetitions: baseline `500k`,
+  `3m`, and `14m` have two repetitions, larger `14m` has three repetitions,
+  and larger `28m` has one smoke/stress repetition.
 - Windows Spark runs require care around Java, Hadoop `winutils.exe`, and
   native file handling; the project includes compatibility helpers and Docker
   paths where needed.

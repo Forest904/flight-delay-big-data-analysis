@@ -80,6 +80,8 @@ EXPECTED_INPUTS_BY_ENVIRONMENT = {
     "aws-emr-larger": (
         ("1m", 1_000_000),
         ("full", 7_079_081),
+        ("14m", 14_000_000),
+        ("28m", 28_000_000),
     ),
 }
 EXPECTED_TECHNOLOGIES_BY_ENVIRONMENT = {
@@ -698,7 +700,7 @@ def write_table_pair(tables_dir: Path, stem: str, records: list[dict[str, object
 
 
 def input_tick_label(label: object, records: object) -> str:
-    return f"{label}\n({formatted_number(records, digits=0)} rows)"
+    return str(label)
 
 
 def execution_time_chart_kind(input_count: int) -> str:
@@ -725,7 +727,7 @@ def generate_execution_time_charts(rows: list[dict[str, object]], figures_dir: P
         x_lookup = {item["input_label"]: index for index, item in enumerate(input_order)}
         chart_kind = execution_time_chart_kind(len(input_order))
 
-        plt.figure(figsize=(7.0, 4.2), dpi=140)
+        plt.figure(figsize=(8.5, 4.4), dpi=140)
         technology_labels = [
             label
             for label in TECHNOLOGY_LABELS.values()
@@ -781,6 +783,7 @@ def generate_execution_time_charts(rows: list[dict[str, object]], figures_dir: P
         plt.grid(axis="y", alpha=0.25)
         plt.legend(title="Technology")
         plt.tight_layout()
+        plt.subplots_adjust(bottom=0.16)
 
         safe_environment = str(environment).replace(" ", "_")
         safe_job_name = str(job_name).replace(" ", "_")

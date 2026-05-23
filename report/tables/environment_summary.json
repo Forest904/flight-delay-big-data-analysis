@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-05-23T10:38:35.185433+00:00",
+  "generated_at_utc": "2026-05-23T14:21:25.177658+00:00",
   "records": [
     {
       "category": "campaign",
       "item": "summary_generated_at_utc",
       "source": "script timestamp",
-      "value": "2026-05-23T10:38:32.014643+00:00"
+      "value": "2026-05-23T14:21:11.080027+00:00"
     },
     {
       "category": "host",
@@ -59,7 +59,7 @@
       "category": "host",
       "item": "project_drive_free_bytes",
       "source": "psutil.disk_usage",
-      "value": "538098012160"
+      "value": "540177465344"
     },
     {
       "category": "host",
@@ -101,7 +101,7 @@
       "category": "runtime",
       "item": "docker_desktop_limits",
       "source": "docker info",
-      "value": "CPUs=16; MemBytes=16391536640; Server=29.4.3; OS=Docker Desktop"
+      "value": "unavailable (CPUs=0; MemBytes=0; Server=; OS=)"
     },
     {
       "category": "runtime",

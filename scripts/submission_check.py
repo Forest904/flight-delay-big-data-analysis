@@ -16,8 +16,8 @@ FIGURES_DIR = PROJECT_ROOT / "report" / "figures"
 
 JOBS = ("delay_by_airport_month", "airline_airport_ranking")
 CORE_TECHNOLOGIES = ("Spark SQL", "Spark Core", "Hive")
-LOCAL_INPUTS = ("100k", "500k", "1m", "3m", "full")
-DOCKER_INPUTS = ("100k", "500k", "1m")
+LOCAL_INPUTS = ("100k", "500k", "1m", "3m", "full", "14m", "28m")
+DOCKER_INPUTS = ("100k", "500k", "1m", "3m", "full", "14m", "28m")
 NOTE_COLUMNS = ("environment", "input_label", "job_name", "technology", "run_id", "classification", "note")
 NOTE_CLASSIFICATIONS = {"smoke", "budget_limited", "resource_limited"}
 

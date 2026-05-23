@@ -196,6 +196,8 @@ def test_default_chart_discovery_includes_aws_emr_results_dir():
     assert generate_charts.EXPECTED_INPUTS_BY_ENVIRONMENT["aws-emr-larger"] == (
         ("1m", 1_000_000),
         ("full", 7_079_081),
+        ("14m", 14_000_000),
+        ("28m", 28_000_000),
     )
     assert generate_charts.EXPECTED_INPUTS_BY_ENVIRONMENT["docker-simulation"] == (
         ("100k", 100_000),
@@ -206,6 +208,11 @@ def test_default_chart_discovery_includes_aws_emr_results_dir():
         ("14m", 14_000_000),
         ("28m", 28_000_000),
     )
+
+
+def test_input_tick_label_is_compact_for_pdf_readability():
+    assert generate_charts.input_tick_label("100k", 100_000) == "100k"
+    assert "rows" not in generate_charts.input_tick_label("full", 7_079_081)
 
 
 def test_benchmark_pivot_contains_available_technology_duration_columns():
