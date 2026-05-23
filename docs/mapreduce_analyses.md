@@ -79,11 +79,12 @@ The output schemas and job names match Spark SQL, Spark Core, and Hive:
 
 ## Implementation Notes
 
-The delay mapper skips rows with null `departure_delay`, derives the same delay
-range and per-flight cause label as Spark SQL, and emits grouped values keyed by
-`origin_airport`, `month`, and `delay_range`. The reducer aggregates counts and
-averages, then sorts cause counts by count descending and cause label ascending
-to emit the top-three cause schema.
+The delay mapper assigns known `departure_delay` values to the same numeric
+delay ranges as Spark SQL. Cancelled rows with null `departure_delay` are emitted
+under the supplementary `cancelled_no_departure_delay` bucket with cancellation
+cause labels; other null departure-delay rows are skipped. The reducer
+aggregates counts and averages, then sorts cause counts by count descending and
+cause label ascending to emit the top-three cause schema.
 
 The ranking mapper emits one record per flight keyed by `origin_airport`. The
 reducer aggregates airline-level and airport-level departure statistics, applies

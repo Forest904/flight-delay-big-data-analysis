@@ -78,6 +78,14 @@ RANKING_OUTPUT_COLUMNS = [
     "rank_at_airport",
 ]
 
+CANCELLED_NO_DEPARTURE_DELAY_RANGE = "cancelled_no_departure_delay"
+DELAY_RANGE_SORT_ORDER = {
+    CANCELLED_NO_DEPARTURE_DELAY_RANGE: 0,
+    "low": 1,
+    "medium": 2,
+    "high": 3,
+}
+
 DELAY_SCHEMA = StructType(
     [
         StructField("origin_airport", StringType(), False),
@@ -271,10 +279,19 @@ def derived_cause(row: Any) -> str:
     return cause
 
 
-def delay_accumulator(departure_delay: float, arrival_delay: float | None) -> tuple[int, float, int, float, int]:
+def cancellation_cause(row: Any) -> str:
+    cancellation_code = row["cancellation_code"]
+    if cancellation_code is None:
+        return "cancellation:unknown"
+    return f"cancellation:{cancellation_code}"
+
+
+def delay_accumulator(departure_delay: float | None, arrival_delay: float | None) -> tuple[int, float, int, float, int]:
+    departure_sum = 0.0 if departure_delay is None else departure_delay
+    departure_count = 0 if departure_delay is None else 1
     arrival_sum = 0.0 if arrival_delay is None else arrival_delay
     arrival_count = 0 if arrival_delay is None else 1
-    return (1, departure_delay, 1, arrival_sum, arrival_count)
+    return (1, departure_sum, departure_count, arrival_sum, arrival_count)
 
 
 def add_delay_accumulators(
@@ -290,10 +307,13 @@ def add_delay_accumulators(
     )
 
 
-def ranged_delay_record(row: Any) -> tuple[tuple[str, int, str], tuple[float, float | None, str]] | None:
+def ranged_delay_record(row: Any) -> tuple[tuple[str, int, str], tuple[float | None, float | None, str]] | None:
     departure_delay = to_float(row["departure_delay"])
     if departure_delay is None:
-        return None
+        if row["cancelled"] != 1:
+            return None
+        key = (row["origin_airport"], int(row["month"]), CANCELLED_NO_DEPARTURE_DELAY_RANGE)
+        return key, (None, to_float(row["arrival_delay"]), cancellation_cause(row))
 
     key = (row["origin_airport"], int(row["month"]), delay_range(departure_delay))
     value = (departure_delay, to_float(row["arrival_delay"]), derived_cause(row))
@@ -330,8 +350,8 @@ def delay_output_sort_key(
         str | None,
         int,
     ],
-) -> tuple[str, int, str]:
-    return row[0], row[1], row[2]
+) -> tuple[str, int, int, str]:
+    return row[0], row[1], DELAY_RANGE_SORT_ORDER.get(row[2], 99), row[2]
 
 
 def delay_report_df(spark: SparkSession, flights: DataFrame) -> DataFrame:

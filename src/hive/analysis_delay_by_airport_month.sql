@@ -1,4 +1,4 @@
-WITH ranged AS (
+WITH known_departure_delay AS (
   SELECT
     origin_airport,
     month,
@@ -36,6 +36,22 @@ WITH ranged AS (
     END AS derived_cause
   FROM flight_delay.flights_2024_clean
   WHERE departure_delay IS NOT NULL
+),
+cancelled_no_departure_delay AS (
+  SELECT
+    origin_airport,
+    month,
+    departure_delay,
+    arrival_delay,
+    'cancelled_no_departure_delay' AS delay_range,
+    concat('cancellation:', coalesce(cancellation_code, 'unknown')) AS derived_cause
+  FROM flight_delay.flights_2024_clean
+  WHERE cancelled = 1 AND departure_delay IS NULL
+),
+ranged AS (
+  SELECT * FROM known_departure_delay
+  UNION ALL
+  SELECT * FROM cancelled_no_departure_delay
 ),
 grouped AS (
   SELECT
@@ -104,4 +120,14 @@ LEFT JOIN top_causes
   ON grouped.origin_airport = top_causes.origin_airport
   AND grouped.month = top_causes.month
   AND grouped.delay_range = top_causes.delay_range
-ORDER BY grouped.origin_airport, grouped.month, grouped.delay_range;
+ORDER BY
+  grouped.origin_airport,
+  grouped.month,
+  CASE grouped.delay_range
+    WHEN 'cancelled_no_departure_delay' THEN 0
+    WHEN 'low' THEN 1
+    WHEN 'medium' THEN 2
+    WHEN 'high' THEN 3
+    ELSE 4
+  END,
+  grouped.delay_range;

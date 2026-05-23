@@ -79,8 +79,11 @@ reference exactly.
 
 ## RDD Aggregation Strategy
 
-The delay report filters out rows with null `departure_delay`, derives the same
-delay range and cause labels as Spark SQL, then aggregates with `reduceByKey`.
+The delay report assigns known `departure_delay` values to the same numeric
+delay ranges as Spark SQL. Cancelled rows with null `departure_delay` are kept
+in the supplementary `cancelled_no_departure_delay` bucket, while other null
+departure-delay rows are excluded. It then derives cause labels and aggregates
+with `reduceByKey`.
 One keyed RDD computes flight counts and averages by `(origin_airport, month,
 delay_range)`. A second keyed RDD counts causes by `(origin_airport, month,
 delay_range, cause)`, sorts the reduced cause counts by count descending and

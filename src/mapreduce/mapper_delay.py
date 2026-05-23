@@ -12,23 +12,20 @@ if str(PROJECT_ROOT) not in sys.path:
 
 try:
     from src.mapreduce.mapreduce_logic import (
-        delay_range,
-        derived_cause,
+        delay_key_value,
         emit_pair,
         iter_flight_records,
     )
 except ModuleNotFoundError:  # pragma: no cover - Hadoop Streaming localized file fallback
-    from mapreduce_logic import delay_range, derived_cause, emit_pair, iter_flight_records
+    from mapreduce_logic import delay_key_value, emit_pair, iter_flight_records
 
 
 def main() -> int:
     for record in iter_flight_records(sys.stdin):
-        if record.departure_delay is None:
+        pair = delay_key_value(record)
+        if pair is None:
             continue
-        emit_pair(
-            [record.origin_airport, record.month, delay_range(record.departure_delay)],
-            [record.departure_delay, record.arrival_delay, derived_cause(record)],
-        )
+        emit_pair(*pair)
     return 0
 
 

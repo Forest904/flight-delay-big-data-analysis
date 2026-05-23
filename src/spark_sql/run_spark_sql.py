@@ -170,7 +170,7 @@ def build_spark(local_config: dict[str, Any]) -> SparkSession:
 def delay_report_query(spark: SparkSession) -> DataFrame:
     return spark.sql(
         """
-        WITH ranged AS (
+        WITH known_departure_delay AS (
             SELECT
                 origin_airport,
                 month,
@@ -210,6 +210,22 @@ def delay_report_query(spark: SparkSession) -> DataFrame:
                 END AS derived_cause
             FROM flights
             WHERE departure_delay IS NOT NULL
+        ),
+        cancelled_no_departure_delay AS (
+            SELECT
+                origin_airport,
+                month,
+                departure_delay,
+                arrival_delay,
+                'cancelled_no_departure_delay' AS delay_range,
+                concat('cancellation:', coalesce(cancellation_code, 'unknown')) AS derived_cause
+            FROM flights
+            WHERE cancelled = 1 AND departure_delay IS NULL
+        ),
+        ranged AS (
+            SELECT * FROM known_departure_delay
+            UNION ALL
+            SELECT * FROM cancelled_no_departure_delay
         ),
         grouped AS (
             SELECT
@@ -278,7 +294,17 @@ def delay_report_query(spark: SparkSession) -> DataFrame:
             ON grouped.origin_airport = top_causes.origin_airport
             AND grouped.month = top_causes.month
             AND grouped.delay_range = top_causes.delay_range
-        ORDER BY grouped.origin_airport, grouped.month, grouped.delay_range
+        ORDER BY
+            grouped.origin_airport,
+            grouped.month,
+            CASE grouped.delay_range
+                WHEN 'cancelled_no_departure_delay' THEN 0
+                WHEN 'low' THEN 1
+                WHEN 'medium' THEN 2
+                WHEN 'high' THEN 3
+                ELSE 4
+            END,
+            grouped.delay_range
         """
     ).select(*DELAY_OUTPUT_COLUMNS)
 

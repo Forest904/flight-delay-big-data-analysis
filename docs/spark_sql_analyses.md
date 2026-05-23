@@ -48,7 +48,7 @@ Stable output schema:
 |---|---|---|
 | origin_airport | string | Departure airport code. |
 | month | int | Month number from the prepared dataset. |
-| delay_range | string | One of `low`, `medium`, or `high`. |
+| delay_range | string | One of `low`, `medium`, `high`, or `cancelled_no_departure_delay`. |
 | flight_count | long | Count of flights in the airport-month-range group. |
 | avg_departure_delay | double | Average departure delay; Spark SQL ignores nulls. |
 | avg_arrival_delay | double | Average arrival delay; Spark SQL ignores nulls. |
@@ -67,13 +67,17 @@ medium: 15 <= departure_delay <= 60
 high: departure_delay > 60
 ```
 
-Rows with null `departure_delay` are excluded from this report so the grouping
-uses only the three required delay ranges. Negative delays are preserved and fall
-into the `low` bucket.
+Rows with known `departure_delay` use only the three numeric assignment ranges.
+Cancelled rows with null `departure_delay` are reported separately in the
+supplementary `cancelled_no_departure_delay` bucket. Other rows with null
+`departure_delay` are excluded. Negative delays are preserved and fall into the
+`low` bucket.
 
 The cause field is derived per flight:
 
 - Cancelled flights with a cancellation code use `cancellation:<code>`.
+- Cancelled flights in the null-departure bucket without a code use
+  `cancellation:unknown`.
 - Otherwise, the largest positive delay-cause column is mapped to
   `delay:carrier`, `delay:weather`, `delay:nas`, `delay:security`, or
   `delay:late_aircraft`.

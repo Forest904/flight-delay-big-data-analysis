@@ -223,13 +223,13 @@ The delay ranges are:
 - `medium`: `15 <= departure_delay <= 60`
 - `high`: `departure_delay > 60`
 
-Rows with null departure delay are excluded from this job because they cannot
-be assigned to one of the required ranges. In the raw audit above, that means
-92,970 cancelled rows are outside Assignment Analysis 3.2. Their cancellation
-codes therefore cannot contribute to the delay-range top-cause counts. The
-cause counts in this analysis should be read as causes among flights with a
-known departure delay, not as complete cancellation-cause totals for the raw
-dataset. For each remaining group, the output reports flight count, average
+Rows with known departure delay are assigned only to these three numeric ranges.
+Cancelled rows with null departure delay cannot be placed in a numeric delay
+range, so the analysis reports them separately with
+`delay_range = cancelled_no_departure_delay`. In the raw audit above, that
+accounts for the 92,970 cancelled rows whose departure delay is null but whose
+cancellation code is available. Other rows with null departure delay remain
+outside this analysis. For each group, the output reports flight count, average
 departure delay, average arrival delay, and the three most frequent delay or
 cancellation causes.
 
@@ -242,15 +242,18 @@ The stable output schema includes:
 | Top causes | `top_1_cause`, `top_1_count`, `top_2_cause`, `top_2_count`, `top_3_cause`, `top_3_count` |
 
 Cause labels are derived from cancellation codes or the largest positive
-delay-cause field. Cause ties are deterministic: cause count descending, then
-cause label ascending. Groups with fewer than three available causes use an
-empty cause value and count `0`.
+delay-cause field. In the `cancelled_no_departure_delay` bucket, cancellation
+codes are reported as `cancellation:<code>`, with `cancellation:unknown` as a
+fallback if a cancelled row has no code. Cause ties are deterministic: cause
+count descending, then cause label ascending. Groups with fewer than three
+available causes use an empty cause value and count `0`.
 
 Textual pseudocode:
 
 ```text
-filter rows where departure_delay is not null
-derive delay_range from departure_delay
+keep rows with known departure_delay or cancelled rows with null departure_delay
+derive numeric delay_range from known departure_delay
+derive cancelled_no_departure_delay for cancelled rows without departure_delay
 derive cause from cancellation code or largest positive delay-cause field
 group by origin_airport, month, delay_range
 compute flight count and average delays

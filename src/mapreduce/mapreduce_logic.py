@@ -57,6 +57,14 @@ RANKING_OUTPUT_COLUMNS = [
     "rank_at_airport",
 ]
 
+CANCELLED_NO_DEPARTURE_DELAY_RANGE = "cancelled_no_departure_delay"
+DELAY_RANGE_SORT_ORDER = {
+    CANCELLED_NO_DEPARTURE_DELAY_RANGE: 0,
+    "low": 1,
+    "medium": 2,
+    "high": 3,
+}
+
 
 @dataclass(frozen=True)
 class FlightRecord:
@@ -243,13 +251,34 @@ def derived_cause(record: FlightRecord) -> str:
     return cause
 
 
+def cancellation_cause(record: FlightRecord) -> str:
+    if record.cancellation_code is None:
+        return "cancellation:unknown"
+    return f"cancellation:{record.cancellation_code}"
+
+
+def delay_key_value(record: FlightRecord) -> tuple[list[Any], list[Any]] | None:
+    if record.departure_delay is None:
+        if record.cancelled != 1:
+            return None
+        return (
+            [record.origin_airport, record.month, CANCELLED_NO_DEPARTURE_DELAY_RANGE],
+            [None, record.arrival_delay, cancellation_cause(record)],
+        )
+    return (
+        [record.origin_airport, record.month, delay_range(record.departure_delay)],
+        [record.departure_delay, record.arrival_delay, derived_cause(record)],
+    )
+
+
 def add_delay_value(accumulator: DelayAccumulator, value: list[Any]) -> None:
-    departure_delay = float(value[0])
+    departure_delay = parse_float(str(value[0])) if value[0] is not None else None
     arrival_delay = parse_float(str(value[1])) if value[1] is not None else None
     cause = str(value[2])
     accumulator.flight_count += 1
-    accumulator.departure_sum += departure_delay
-    accumulator.departure_count += 1
+    if departure_delay is not None:
+        accumulator.departure_sum += departure_delay
+        accumulator.departure_count += 1
     if arrival_delay is not None:
         accumulator.arrival_sum += arrival_delay
         accumulator.arrival_count += 1
@@ -374,8 +403,8 @@ def ranking_rows_from_group(origin_airport: str, values: list[Any]) -> list[list
     return ranked_rows
 
 
-def delay_output_sort_key(row: list[Any]) -> tuple[str, int, str]:
-    return str(row[0]), int(row[1]), str(row[2])
+def delay_output_sort_key(row: list[Any]) -> tuple[str, int, int, str]:
+    return str(row[0]), int(row[1]), DELAY_RANGE_SORT_ORDER.get(str(row[2]), 99), str(row[2])
 
 
 def ranking_output_sort_key(row: list[Any]) -> tuple[str, int, tuple[int, float], str]:

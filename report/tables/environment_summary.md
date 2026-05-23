@@ -1,6 +1,6 @@
 | category | item | value | source |
 | --- | --- | --- | --- |
-| campaign | summary_generated_at_utc | 2026-05-23T14:21:11.080027+00:00 | script timestamp |
+| campaign | summary_generated_at_utc | 2026-05-23T21:43:12.678713+00:00 | script timestamp |
 | host | os | Windows-11-10.0.26200-SP0 | platform.platform |
 | host | python_executable | C:\Users\lucap\Documents\VSC Repository\flight-delay-big-data-analysis\.venv\Scripts\python.exe | sys.executable |
 | host | python_version | 3.12.2 | platform.python_version |
@@ -9,14 +9,14 @@
 | host | logical_cores | 16 | psutil |
 | host | ram_bytes | 33598853120 | psutil |
 | host | project_drive_total_bytes | 957397069824 | psutil.disk_usage |
-| host | project_drive_free_bytes | 540177465344 | psutil.disk_usage |
+| host | project_drive_free_bytes | 540715290624 | psutil.disk_usage |
 | host | windows_cpu_model | AMD Ryzen AI 7 350 w/ Radeon 860M | Win32_Processor |
 | host | windows_os_detail | Microsoft Windows 11 Home 10.0.26200 build 26200 64-bit | Win32_OperatingSystem |
 | host | disk_type | WD PC SN5000S SDEPMSJ-1T00-1101; media=SSD; bus=NVMe; size=1024209543168 | Get-PhysicalDisk |
 | runtime | java_version | openjdk version "17.0.19" 2026-04-21 | java -version |
 | runtime | docker_version | Docker version 29.4.3, build 055a478 | docker --version |
 | runtime | docker_compose_version | Docker Compose version v5.1.3 | docker compose version |
-| runtime | docker_desktop_limits | unavailable (CPUs=0; MemBytes=0; Server=; OS=) | docker info |
+| runtime | docker_desktop_limits | CPUs=16; MemBytes=16391536640; Server=29.4.3; OS=Docker Desktop | docker info |
 | runtime | hive_base_image | apache/hive:4.0.1 | Dockerfile.hive |
 | runtime | mapreduce_base_image | apache/hive:4.0.1 | Dockerfile.mapreduce |
 | runtime | pyspark_version | 4.1.1 | Python import |

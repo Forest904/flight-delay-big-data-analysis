@@ -74,6 +74,11 @@ Runtime metrics capture generation timestamp, input path, Hive table metadata,
 top-level status, per-job duration, output rows, output paths, and failure
 details when a stage fails.
 
+The delay query follows the Spark SQL cancellation policy: known departure
+delays use the `low`, `medium`, and `high` numeric ranges, while cancelled rows
+with null `departure_delay` are reported in the supplementary
+`cancelled_no_departure_delay` bucket with cancellation-code cause labels.
+
 Internally, Hive writes query results through temporary text tables located under
 `outputs/hive/.tmp_exports/` with a control-character delimiter. The Python
 runner converts those part files into the stable CSV output layout above.

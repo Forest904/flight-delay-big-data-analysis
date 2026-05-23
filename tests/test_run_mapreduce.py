@@ -15,6 +15,8 @@ import pyarrow.parquet as pq
 from src.mapreduce import run_mapreduce
 from src.mapreduce.mapreduce_logic import (
     CANONICAL_COLUMNS,
+    CANCELLED_NO_DEPARTURE_DELAY_RANGE,
+    delay_key_value,
     delay_range,
     delay_row_from_group,
     derived_cause,
@@ -66,6 +68,25 @@ def test_delay_range_and_derived_cause_match_reference_rules():
     assert derived_cause(unknown) == "unknown"
 
 
+def test_delay_key_value_includes_cancelled_null_departure_bucket():
+    cancelled = record_from_row(canonical_row(departure_delay="", arrival_delay="", cancelled="1", cancellation_code="B"))
+    pair = delay_key_value(cancelled)
+
+    assert pair == (
+        ["ABE", 1, CANCELLED_NO_DEPARTURE_DELAY_RANGE],
+        [None, None, "cancellation:B"],
+    )
+
+    missing_code = record_from_row(canonical_row(departure_delay="", arrival_delay="", cancelled="1", cancellation_code=""))
+    assert delay_key_value(missing_code) == (
+        ["ABE", 1, CANCELLED_NO_DEPARTURE_DELAY_RANGE],
+        [None, None, "cancellation:unknown"],
+    )
+
+    non_cancelled_null = record_from_row(canonical_row(departure_delay="", arrival_delay="", cancelled="0"))
+    assert delay_key_value(non_cancelled_null) is None
+
+
 def test_top_three_causes_use_count_descending_and_label_ascending():
     causes = Counter({"delay:weather": 2, "delay:carrier": 2, "unknown": 1})
 
@@ -93,6 +114,32 @@ def test_delay_reducer_row_excludes_null_departure_upstream_and_pads_causes():
         "delay:carrier",
         2,
         "delay:nas",
+        1,
+        None,
+        0,
+    ]
+
+
+def test_delay_reducer_row_allows_cancelled_bucket_null_departure_average():
+    row = delay_row_from_group(
+        ["ABE", 1, CANCELLED_NO_DEPARTURE_DELAY_RANGE],
+        [
+            [None, None, "cancellation:B"],
+            [None, None, "cancellation:A"],
+            [None, None, "cancellation:A"],
+        ],
+    )
+
+    assert row == [
+        "ABE",
+        1,
+        CANCELLED_NO_DEPARTURE_DELAY_RANGE,
+        3,
+        None,
+        None,
+        "cancellation:A",
+        2,
+        "cancellation:B",
         1,
         None,
         0,

@@ -19,7 +19,12 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.common.prepared_data import read_prepared_parquet
 from src.preparation.prepare_spark import ensure_java_17
-from scripts.validation_common import assert_canonical_input_path
+from scripts.validation_common import (
+    ALLOWED_DELAY_RANGES,
+    CANCELLED_NO_DEPARTURE_DELAY_RANGE,
+    assert_cancellation_bucket_semantics,
+    assert_canonical_input_path,
+)
 
 
 LOCAL_CONFIG = PROJECT_ROOT / "config" / "local.yaml"
@@ -131,8 +136,9 @@ def main() -> int:
         raise AssertionError("Ranking output row count does not match runtime metrics")
 
     delay_ranges = set(delay["delay_range"].unique())
-    if not delay_ranges <= {"low", "medium", "high"}:
+    if not delay_ranges <= ALLOWED_DELAY_RANGES:
         raise AssertionError(f"Unexpected delay ranges: {sorted(delay_ranges)}")
+    assert_cancellation_bucket_semantics(delay, "delay_by_airport_month")
     for column in ("top_1_count", "top_2_count", "top_3_count"):
         if not (pd.to_numeric(delay[column], errors="coerce") >= 0).all():
             raise AssertionError(f"{column} must be non-negative")
@@ -166,18 +172,38 @@ def main() -> int:
     try:
         flights = read_prepared_parquet(spark, prepared_file)
         non_null_departure_rows = flights.where(F.col("departure_delay").isNotNull()).count()
+        cancelled_null_departure_rows = flights.where(
+            (F.col("cancelled") == 1) & F.col("departure_delay").isNull()
+        ).count()
         total_prepared_rows = flights.count()
     finally:
         spark.stop()
 
-    if int(delay["flight_count"].sum()) != non_null_departure_rows:
-        raise AssertionError("Delay grouped flight counts do not match non-null departure-delay rows")
+    expected_delay_rows = non_null_departure_rows + cancelled_null_departure_rows
+    if int(delay["flight_count"].sum()) != expected_delay_rows:
+        raise AssertionError(
+            "Delay grouped flight counts do not match non-null departure-delay rows plus "
+            "cancelled null-departure rows"
+        )
+    cancellation_bucket_count = int(
+        pd.to_numeric(
+            delay.loc[delay["delay_range"] == CANCELLED_NO_DEPARTURE_DELAY_RANGE, "flight_count"],
+            errors="coerce",
+        ).sum()
+    )
+    if cancellation_bucket_count != cancelled_null_departure_rows:
+        raise AssertionError("Cancellation bucket flight count does not match cancelled null-departure rows")
     if int(ranking["flight_count"].sum()) != total_prepared_rows:
         raise AssertionError("Ranking grouped flight counts do not match all prepared rows")
 
     print("Spark SQL output validation passed")
     print(f"delay rows: {len(delay)}; ranking rows: {len(ranking)}")
-    print(f"delay grouped flights: {int(delay['flight_count'].sum())}; non-null departure rows: {non_null_departure_rows}")
+    print(
+        "delay grouped flights: "
+        f"{int(delay['flight_count'].sum())}; "
+        f"non-null departure rows: {non_null_departure_rows}; "
+        f"cancelled null-departure rows: {cancelled_null_departure_rows}"
+    )
     print(f"ranking grouped flights: {int(ranking['flight_count'].sum())}; prepared rows: {total_prepared_rows}")
     return 0
 

@@ -42,6 +42,8 @@ RANKING_COLUMNS = [
 
 DELAY_KEYS = ["origin_airport", "month", "delay_range"]
 RANKING_KEYS = ["origin_airport", "airline"]
+CANCELLED_NO_DEPARTURE_DELAY_RANGE = "cancelled_no_departure_delay"
+ALLOWED_DELAY_RANGES = {"low", "medium", "high", CANCELLED_NO_DEPARTURE_DELAY_RANGE}
 
 DELAY_NUMERIC_COLUMNS = [
     "flight_count",
@@ -222,6 +224,10 @@ def assert_string_columns_equal(
 def validate_delay(sql: pd.DataFrame, candidate: pd.DataFrame, *, technology: str, candidate_label: str) -> None:
     assert_columns(sql, DELAY_COLUMNS, "spark_sql delay_by_airport_month")
     assert_columns(candidate, DELAY_COLUMNS, f"{technology} delay_by_airport_month")
+    assert_delay_range_domain(sql, "spark_sql delay_by_airport_month")
+    assert_delay_range_domain(candidate, f"{technology} delay_by_airport_month")
+    assert_cancellation_bucket_semantics(sql, "spark_sql delay_by_airport_month")
+    assert_cancellation_bucket_semantics(candidate, f"{technology} delay_by_airport_month")
     assert_equal_row_count(sql, candidate, "delay_by_airport_month", candidate_label)
     assert_unique_keys(sql, DELAY_KEYS, "spark_sql delay_by_airport_month")
     assert_unique_keys(candidate, DELAY_KEYS, f"{technology} delay_by_airport_month")
@@ -230,6 +236,30 @@ def validate_delay(sql: pd.DataFrame, candidate: pd.DataFrame, *, technology: st
     merged = sql.merge(candidate, on=DELAY_KEYS, suffixes=("_sql", f"_{technology}"), how="inner")
     assert_numeric_close(merged, DELAY_NUMERIC_COLUMNS, "delay_by_airport_month", technology)
     assert_string_columns_equal(merged, DELAY_CAUSE_COLUMNS, "sql", technology, "delay_by_airport_month")
+
+
+def assert_delay_range_domain(delay: pd.DataFrame, label: str) -> None:
+    delay_ranges = set(delay["delay_range"].unique())
+    if not delay_ranges <= ALLOWED_DELAY_RANGES:
+        raise AssertionError(f"{label} has unexpected delay ranges: {sorted(delay_ranges)}")
+
+
+def assert_cancellation_bucket_semantics(delay: pd.DataFrame, label: str) -> None:
+    bucket = delay[delay["delay_range"] == CANCELLED_NO_DEPARTURE_DELAY_RANGE]
+    if bucket.empty:
+        raise AssertionError(f"{label} is missing {CANCELLED_NO_DEPARTURE_DELAY_RANGE}")
+    if not bucket["avg_departure_delay"].isna().all():
+        raise AssertionError(f"{label} cancellation bucket must have null avg_departure_delay")
+    for cause_column, count_column in (
+        ("top_1_cause", "top_1_count"),
+        ("top_2_cause", "top_2_count"),
+        ("top_3_cause", "top_3_count"),
+    ):
+        positive_count = pd.to_numeric(bucket[count_column], errors="coerce") > 0
+        bad = positive_count & ~bucket[cause_column].fillna("").str.startswith("cancellation:")
+        if bad.any():
+            sample = bucket.loc[bad].head(3)
+            raise AssertionError(f"{label} cancellation bucket has non-cancellation cause labels: {sample}")
 
 
 def assert_ranking_order(ranking: pd.DataFrame, label: str) -> None:
