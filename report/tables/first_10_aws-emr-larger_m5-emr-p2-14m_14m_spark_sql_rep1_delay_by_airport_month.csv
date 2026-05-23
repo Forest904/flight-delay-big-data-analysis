@@ -1,0 +1,11 @@
+origin_airport,month,delay_range,flight_count,avg_departure_delay,avg_arrival_delay,top_1_cause,top_1_count,top_2_cause,top_2_count,top_3_cause,top_3_count
+ABE,1,high,58,239.39655172413796,232.24137931034485,delay:late_aircraft,27,delay:carrier,23,delay:nas,4
+ABE,1,low,548,-5.5,-14.630514705882351,unknown,507,delay:nas,39,delay:carrier,2
+ABE,1,medium,62,34.32258064516129,32.5,delay:late_aircraft,24,delay:carrier,16,unknown,14
+ABE,2,high,28,227.92857142857144,217.92857142857144,delay:carrier,12,delay:late_aircraft,12,delay:nas,2
+ABE,2,low,587,-6.727427597955707,-19.625641025641027,unknown,563,delay:nas,20,delay:carrier,2
+ABE,2,medium,39,29.871794871794872,10.72972972972973,unknown,23,delay:carrier,10,delay:late_aircraft,6
+ABE,3,high,46,173.43478260869566,163.3913043478261,delay:carrier,18,delay:late_aircraft,16,delay:nas,12
+ABE,3,low,669,-6.179372197309417,-18.369207772795217,unknown,655,delay:nas,14,,0
+ABE,3,medium,55,30.21818181818182,19.63636363636364,unknown,26,delay:late_aircraft,14,delay:nas,8
+ABE,4,high,55,248.12727272727275,240.47272727272727,delay:carrier,29,delay:late_aircraft,14,delay:nas,8

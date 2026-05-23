@@ -3,7 +3,7 @@ input_label,records,job_name,technology,local_median_duration_seconds,docker_sim
 1m,1000000,delay_by_airport_month,Spark Core,1.195326,3.672848,1.923128,1.67876,1.145564583382973,20260522T133525179005Z,20260522T161751426398Z,m4-emr-final-2,m5-emr-3core-1m-full,
 1m,1000000,airline_airport_ranking,Spark SQL,2.500201,5.868738,4.051517,4.087248,0.9912579319874888,20260522T133525179005Z,20260522T161751426398Z,m4-emr-final-2,m5-emr-3core-1m-full,
 1m,1000000,airline_airport_ranking,Spark Core,0.795687,3.043644,1.243081,1.018218,1.2208397415877543,20260522T133525179005Z,20260522T161751426398Z,m4-emr-final-2,m5-emr-3core-1m-full,
-full,7079081,delay_by_airport_month,Spark SQL,12.997052,N/A,15.505447,16.309206,0.9507174659514388,20260522T133525179005Z,N/A,m4-emr-final-2,m5-emr-3core-1m-full,Docker standalone simulation full input was not run.
-full,7079081,delay_by_airport_month,Spark Core,1.221141,N/A,1.91819,1.649712,1.162742345330579,20260522T133525179005Z,N/A,m4-emr-final-2,m5-emr-3core-1m-full,Docker standalone simulation full input was not run.
-full,7079081,airline_airport_ranking,Spark SQL,3.39957,N/A,4.301809,4.475255,0.9612433257993122,20260522T133525179005Z,N/A,m4-emr-final-2,m5-emr-3core-1m-full,Docker standalone simulation full input was not run.
-full,7079081,airline_airport_ranking,Spark Core,0.785086,N/A,1.106489,0.918515,1.204649896844363,20260522T133525179005Z,N/A,m4-emr-final-2,m5-emr-3core-1m-full,Docker standalone simulation full input was not run.
+full,7079081,delay_by_airport_month,Spark SQL,12.997052,12.502685,15.505447,16.309206,0.9507174659514388,20260522T133525179005Z,20260523T002948918166Z,m4-emr-final-2,m5-emr-3core-1m-full,
+full,7079081,delay_by_airport_month,Spark Core,1.221141,2.773847,1.91819,1.649712,1.162742345330579,20260522T133525179005Z,20260523T002948918166Z,m4-emr-final-2,m5-emr-3core-1m-full,
+full,7079081,airline_airport_ranking,Spark SQL,3.39957,6.443688,4.301809,4.475255,0.9612433257993122,20260522T133525179005Z,20260523T002948918166Z,m4-emr-final-2,m5-emr-3core-1m-full,
+full,7079081,airline_airport_ranking,Spark Core,0.785086,2.339931,1.106489,0.918515,1.204649896844363,20260522T133525179005Z,20260523T002948918166Z,m4-emr-final-2,m5-emr-3core-1m-full,

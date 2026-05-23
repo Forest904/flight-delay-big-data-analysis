@@ -147,3 +147,9 @@ def test_secret_scan_allows_placeholders_and_flags_realistic_values(tmp_path):
     assert submission_check.scan_text_for_secrets(placeholder) == []
     findings = submission_check.scan_text_for_secrets(secret)
     assert len(findings) == 3
+
+
+def test_secret_scan_skips_deleted_tracked_paths(tmp_path):
+    missing = tmp_path / "deleted-roadmap.md"
+
+    assert submission_check.scan_text_for_secrets(missing) == []

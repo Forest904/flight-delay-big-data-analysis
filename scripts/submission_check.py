@@ -262,6 +262,8 @@ def audit_tracked_artifacts(files: list[str]) -> list[str]:
 def scan_text_for_secrets(path: Path) -> list[str]:
     if path.suffix.lower() in BINARY_SUFFIXES:
         return []
+    if not path.exists():
+        return []
     try:
         text = path.read_text(encoding="utf-8")
     except UnicodeDecodeError:

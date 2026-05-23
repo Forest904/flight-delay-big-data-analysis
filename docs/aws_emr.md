@@ -51,6 +51,16 @@ make benchmark-aws-emr AWS_DRY_RUN=1 AWS_SMOKE_ONLY=1 AWS_RUN_ID=m4-hardened-smo
 make aws-cleanup AWS_DRY_RUN=1
 ```
 
+Sprint P2 stretch configs must also be dry-run checked before any cluster is
+created:
+
+```powershell
+make aws-upload AWS_DRY_RUN=1 AWS_CONFIG=config/aws_emr_p2_weak_cells.yaml AWS_RUN_ID=m4-emr-p2-weak-cells
+make benchmark-aws-emr AWS_DRY_RUN=1 AWS_CONFIG=config/aws_emr_p2_weak_cells.yaml AWS_RUN_ID=m4-emr-p2-weak-cells
+make benchmark-aws-emr AWS_DRY_RUN=1 AWS_CONFIG=config/aws_emr_m5_larger_p2_14m.yaml AWS_RUN_ID=m5-emr-p2-14m
+make benchmark-aws-emr AWS_DRY_RUN=1 AWS_CONFIG=config/aws_emr_m5_larger_p2_28m.yaml AWS_RUN_ID=m5-emr-p2-28m-smoke
+```
+
 ## Upload, Run, Fetch, Cleanup
 
 Upload prepared/generated Parquet inputs, source bundle, and runtime config:
@@ -85,12 +95,44 @@ make aws-fetch-results AWS_CONFIG=config/aws_emr_m5_larger.yaml AWS_RUN_ID=m5-em
 make aws-cleanup AWS_CONFIG=config/aws_emr_m5_larger.yaml
 ```
 
+For Sprint P2 stretch reruns, keep the existing baseline configs intact and use
+the narrow rerun configs:
+
+```powershell
+make aws-check AWS_CHECK_FLAGS="--config config/aws_emr_p2_weak_cells.yaml"
+make benchmark-aws-emr AWS_CONFIG=config/aws_emr_p2_weak_cells.yaml AWS_RUN_ID=m4-emr-p2-weak-cells
+make aws-fetch-results AWS_CONFIG=config/aws_emr_p2_weak_cells.yaml AWS_RUN_ID=m4-emr-p2-weak-cells
+make aws-cleanup AWS_CONFIG=config/aws_emr_p2_weak_cells.yaml
+
+make aws-check AWS_CHECK_FLAGS="--config config/aws_emr_m5_larger_p2_14m.yaml"
+make benchmark-aws-emr AWS_CONFIG=config/aws_emr_m5_larger_p2_14m.yaml AWS_RUN_ID=m5-emr-p2-14m
+make aws-fetch-results AWS_CONFIG=config/aws_emr_m5_larger_p2_14m.yaml AWS_RUN_ID=m5-emr-p2-14m
+make aws-cleanup AWS_CONFIG=config/aws_emr_m5_larger_p2_14m.yaml
+
+make aws-check AWS_CHECK_FLAGS="--config config/aws_emr_m5_larger_p2_28m.yaml"
+make benchmark-aws-emr AWS_CONFIG=config/aws_emr_m5_larger_p2_28m.yaml AWS_RUN_ID=m5-emr-p2-28m-smoke
+make aws-fetch-results AWS_CONFIG=config/aws_emr_m5_larger_p2_28m.yaml AWS_RUN_ID=m5-emr-p2-28m-smoke
+make aws-cleanup AWS_CONFIG=config/aws_emr_m5_larger_p2_28m.yaml
+```
+
+The `28m` profile is smoke/stress evidence and should run only after the weak
+baseline cells and larger `14m` profile complete cleanly.
+
+Sprint P2 completed:
+
+- `m4-emr-p2-weak-cells`: baseline profile rerun of `500k`, `3m`, and `14m`
+  with Spark SQL/Core, two repetitions per technology/input cell.
+- `m5-emr-p2-14m`: larger profile `14m` run with Spark SQL/Core, three
+  repetitions per technology/input cell.
+- `m5-emr-p2-28m-smoke`: larger profile `28m` single-repetition stress smoke
+  run with Spark SQL/Core.
+
 ## Evidence Policy
 
 - EMR Spark SQL/Core evidence can strengthen the report, especially for managed
   execution discussion.
-- EMR Hive is stretch scope only unless a real Hive lane is completed and
-  validated.
+- EMR Hive is excluded from the Sprint P2 implementation. Hive evidence remains
+  local and Docker-based, and the report must not claim Hive cluster evidence.
 - Single-run AWS benchmark cells must be marked `budget_limited` or `smoke` in
   `report/tables/benchmark_notes.csv`.
 - Always terminate clusters after runs. Do not leave long-running clusters in

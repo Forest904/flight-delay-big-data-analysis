@@ -63,6 +63,18 @@ def test_selected_benchmark_inputs_skip_optional_by_default(tmp_path):
                 "validation_status": "success",
             },
             {
+                "label": "500k",
+                "actual_records": 500000,
+                "path": "data/generated/flights_500k.parquet",
+                "validation_status": "success",
+            },
+            {
+                "label": "1m",
+                "actual_records": 1000000,
+                "path": "data/generated/flights_1m.parquet",
+                "validation_status": "success",
+            },
+            {
                 "label": "14m",
                 "actual_records": 14000000,
                 "path": "data/generated/flights_14m.parquet",
@@ -126,6 +138,18 @@ def test_selected_benchmark_inputs_include_optional_when_requested(tmp_path):
                 "label": "100k",
                 "actual_records": 100000,
                 "path": "data/generated/flights_100k.parquet",
+                "validation_status": "success",
+            },
+            {
+                "label": "500k",
+                "actual_records": 500000,
+                "path": "data/generated/flights_500k.parquet",
+                "validation_status": "success",
+            },
+            {
+                "label": "1m",
+                "actual_records": 1000000,
+                "path": "data/generated/flights_1m.parquet",
                 "validation_status": "success",
             },
             {
@@ -568,7 +592,55 @@ def test_docker_simulation_config_lists_required_docker_simulation_inputs():
     config = yaml.safe_load(Path("config/docker_simulation.yaml").read_text(encoding="utf-8"))
 
     assert config["environment"] == "docker-simulation"
-    assert [entry["label"] for entry in config["benchmark"]["input_sizes"]] == ["100k", "500k", "1m"]
+    required = [entry["label"] for entry in config["benchmark"]["input_sizes"] if not entry.get("optional")]
+    optional = [entry["label"] for entry in config["benchmark"]["input_sizes"] if entry.get("optional")]
+    assert required == ["100k", "500k", "1m"]
+    assert optional == ["3m", "full", "14m", "28m"]
+
+
+def test_docker_simulation_large_inputs_are_requestable_without_default_matrix(tmp_path):
+    import yaml
+
+    config = yaml.safe_load(Path("config/docker_simulation.yaml").read_text(encoding="utf-8"))
+    manifest = {
+        "datasets": [
+            {
+                "label": "100k",
+                "actual_records": 100000,
+                "path": "data/generated/flights_100k.parquet",
+                "validation_status": "success",
+            },
+            {
+                "label": "500k",
+                "actual_records": 500000,
+                "path": "data/generated/flights_500k.parquet",
+                "validation_status": "success",
+            },
+            {
+                "label": "1m",
+                "actual_records": 1000000,
+                "path": "data/generated/flights_1m.parquet",
+                "validation_status": "success",
+            },
+            {
+                "label": "14m",
+                "actual_records": 14000000,
+                "path": "data/generated/flights_14m.parquet",
+                "validation_status": "success",
+            },
+        ]
+    }
+
+    default_inputs = run_benchmarks.selected_benchmark_inputs(config, manifest, project_root=tmp_path)
+    requested_inputs = run_benchmarks.selected_benchmark_inputs(
+        config,
+        manifest,
+        labels=["14m"],
+        project_root=tmp_path,
+    )
+
+    assert [item.label for item in default_inputs] == ["100k", "500k", "1m"]
+    assert [item.label for item in requested_inputs] == ["14m"]
 
 
 def test_makefile_uses_docker_simulation_default_matrix():

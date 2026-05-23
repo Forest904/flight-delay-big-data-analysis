@@ -197,6 +197,15 @@ def test_default_chart_discovery_includes_aws_emr_results_dir():
         ("1m", 1_000_000),
         ("full", 7_079_081),
     )
+    assert generate_charts.EXPECTED_INPUTS_BY_ENVIRONMENT["docker-simulation"] == (
+        ("100k", 100_000),
+        ("500k", 500_000),
+        ("1m", 1_000_000),
+        ("3m", 3_000_000),
+        ("full", 7_079_081),
+        ("14m", 14_000_000),
+        ("28m", 28_000_000),
+    )
 
 
 def test_benchmark_pivot_contains_available_technology_duration_columns():
@@ -543,6 +552,7 @@ def test_benchmark_status_records_include_success_failure_and_not_run():
     assert by_key[("local", "full", "delay_by_airport_month", "Hive")]["status"] == "failed"
     assert "exceeded practical limit" in by_key[("local", "full", "delay_by_airport_month", "Hive")]["reason"]
     assert by_key[("docker-simulation", "500k", "airline_airport_ranking", "Spark SQL")]["status"] == "not_run"
+    assert by_key[("docker-simulation", "28m", "delay_by_airport_month", "Hive")]["status"] == "not_run"
 
 
 def test_first_10_csv_inputs_are_written_as_report_tables(tmp_path):

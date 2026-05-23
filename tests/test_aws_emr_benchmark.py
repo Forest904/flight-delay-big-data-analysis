@@ -227,6 +227,54 @@ def test_m5_larger_config_expands_to_twelve_benchmark_steps(monkeypatch):
     assert sum(1 for step in steps if step.input_label == "full") == 6
 
 
+def test_p2_weak_cell_config_expands_to_twelve_benchmark_steps(monkeypatch):
+    monkeypatch.delenv("AWS_EMR_14M_REPETITIONS", raising=False)
+    monkeypatch.setenv("AWS_FLIGHT_DELAY_BUCKET", "flight-delay-test")
+    config = aws_emr_benchmark.load_yaml(Path("config/aws_emr_p2_weak_cells.yaml"))
+    context = aws_emr_benchmark.context_from_config(config)
+    manifest = {
+        "datasets": [
+            {"label": "500k", "actual_records": 500000, "validation_status": "success"},
+            {"label": "3m", "actual_records": 3000000, "validation_status": "success"},
+            {"label": "14m", "actual_records": 14000000, "validation_status": "success"},
+        ]
+    }
+
+    steps = aws_emr_benchmark.expand_benchmark_steps(context, "m4-emr-p2-weak-cells", manifest)
+
+    assert len(steps) == 12
+    assert {step.input_label for step in steps} == {"500k", "3m", "14m"}
+    assert all(step.technology in {"spark_sql", "spark_core"} for step in steps)
+    assert sum(1 for step in steps if step.input_label == "14m") == 4
+
+
+def test_p2_larger_14m_config_expands_to_six_benchmark_steps(monkeypatch):
+    monkeypatch.delenv("AWS_EMR_14M_REPETITIONS", raising=False)
+    monkeypatch.setenv("AWS_FLIGHT_DELAY_BUCKET", "flight-delay-test")
+    config = aws_emr_benchmark.load_yaml(Path("config/aws_emr_m5_larger_p2_14m.yaml"))
+    context = aws_emr_benchmark.context_from_config(config)
+    manifest = {"datasets": [{"label": "14m", "actual_records": 14000000, "validation_status": "success"}]}
+
+    steps = aws_emr_benchmark.expand_benchmark_steps(context, "m5-emr-p2-14m", manifest)
+
+    assert len(steps) == 6
+    assert {step.input_label for step in steps} == {"14m"}
+    assert {step.repetition for step in steps} == {1, 2, 3}
+
+
+def test_p2_larger_28m_config_expands_to_two_smoke_steps(monkeypatch):
+    monkeypatch.setenv("AWS_FLIGHT_DELAY_BUCKET", "flight-delay-test")
+    config = aws_emr_benchmark.load_yaml(Path("config/aws_emr_m5_larger_p2_28m.yaml"))
+    context = aws_emr_benchmark.context_from_config(config)
+    manifest = {"datasets": [{"label": "28m", "actual_records": 28000000, "validation_status": "success"}]}
+
+    steps = aws_emr_benchmark.expand_benchmark_steps(context, "m5-emr-p2-28m-smoke", manifest)
+
+    assert len(steps) == 2
+    assert {step.input_label for step in steps} == {"28m"}
+    assert {step.technology for step in steps} == {"spark_sql", "spark_core"}
+
+
 def test_s3_input_prefix_validation_requires_parquet_objects(monkeypatch):
     class FakePaginator:
         def paginate(self, **_kwargs):

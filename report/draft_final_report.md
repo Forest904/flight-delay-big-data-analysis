@@ -390,6 +390,9 @@ Hive is included in the Docker benchmark CSV so the report contains rows for
 all three required technologies, but Hive remains a single-node containerized
 Hive setup. Therefore the report uses the phrase "Docker standalone simulation"
 and avoids presenting these runs as managed-service performance.
+The `3m`, `full`, `14m`, and `28m` Docker inputs were configured as Sprint P2
+stretch targets and completed successfully for Spark SQL, Spark Core, and Hive
+with three repetitions per technology/input cell.
 
 The documented topology is stored in `docs/docker_simulation.md`. The command
 used to run the simulation evidence is:
@@ -461,20 +464,24 @@ default benchmark matrix:
 | Environment | Inputs | Technologies | Jobs | Status |
 | --- | --- | --- | --- | --- |
 | Local | `100k`, `500k`, `1m`, `3m`, `full`, `14m`, `28m` | Spark SQL, Spark Core, Hive | both jobs | 42/42 successful, 3 repetitions each |
-| Docker standalone simulation | `100k`, `500k`, `1m` | Spark SQL, Spark Core, Hive | both jobs | 18/18 successful |
-| AWS EMR baseline cluster | `100k`, `500k`, `1m`, `3m`, `full`, `14m` | Spark SQL, Spark Core | both jobs | 24/24 successful |
-| AWS EMR larger cluster | `1m`, `full` | Spark SQL, Spark Core | both jobs | 8/8 successful |
+| Docker standalone simulation | `100k`, `500k`, `1m`, `3m`, `full`, `14m`, `28m` | Spark SQL, Spark Core, Hive | both jobs | 42/42 successful, 3 repetitions each |
+| AWS EMR baseline cluster | `100k`, `500k`, `1m`, `3m`, `full`, `14m` | Spark SQL, Spark Core | both jobs | 24/24 successful; `500k`, `3m`, and `14m` strengthened to 2 repetitions |
+| AWS EMR larger cluster | `1m`, `full`, `14m`, `28m` | Spark SQL, Spark Core | both jobs | 16/16 successful; `28m` is single-run smoke/stress evidence |
 | Local stretch | `100k`, `500k`, `1m`, `3m`, `full` | Hadoop Streaming MapReduce | both jobs | 10/10 successful, 3 repetitions each |
 
 The local required-technology run IDs are `20260522T133525179005Z`,
-`20260522T142052973274Z`, and `20260522T144129099690Z`. The Docker standalone
-simulation run ID is `20260522T161751426398Z`. The MapReduce stretch benchmark
-run ID is `20260522T182250129354Z`. The canonical AWS EMR baseline run ID is
-`m4-emr-final-2`, the AWS 100k hardened path is marked as smoke evidence under
-`m4-hardened-smoke-3`, and the limited larger-cluster comparison run ID is
-`m5-emr-3core-1m-full`. AWS uses three repetitions for `1m` and `full`, one
-budget-limited run for `500k`, `3m`, and `14m`, and a separate smoke record for
-the `100k` audit path. The full status matrix is stored in
+`20260522T142052973274Z`, and `20260522T144129099690Z`. Docker standalone
+simulation uses the original `100k`/`500k`/`1m` run
+`20260522T161751426398Z` plus Sprint P2 large-input runs from
+`20260523T002216937593Z` through `20260523T010842627918Z`. The MapReduce
+stretch benchmark run ID is `20260522T182250129354Z`. AWS EMR uses
+`m4-emr-final-2` and `m4-hardened-smoke-3` for the earlier baseline/smoke
+evidence, then `m4-emr-p2-weak-cells`, `m5-emr-p2-14m`, and
+`m5-emr-p2-28m-smoke` for Sprint P2. AWS `500k`, `3m`, and `14m` baseline
+cells now have two repetitions, larger-profile `14m` has three repetitions,
+and larger-profile `28m` is retained as single-run smoke/stress evidence.
+EMR Hive was explicitly excluded from Sprint P2, so this report does not claim
+Hive cluster evidence. The full status matrix is stored in
 `report/tables/benchmark_status.md`; cells that were not run remain explicit
 `N/A` or `not_run` entries rather than inferred values.
 
@@ -487,8 +494,9 @@ environment/input/job/technology group.
 | Local `28m` delay, Spark SQL | 3 | 11.924 | 11.896 | 11.790 | 11.973 | 0.095 | Replicated stress input |
 | Local `28m` delay, Spark Core | 3 | 1.333 | 1.403 | 1.252 | 1.625 | 0.196 | Replicated stress input |
 | Local `28m` delay, Hive | 3 | 101.265 | 101.785 | 100.484 | 103.605 | 1.624 | Replicated stress input |
-| Docker `1m` delay, Spark SQL | 3 | 14.541 | 14.559 | 14.242 | 14.895 | 0.327 | Docker standalone simulation |
-| AWS EMR `14m` delay, Spark SQL | 1 | 18.147 | 18.147 | 18.147 | 18.147 | N/A | Budget-limited single run |
+| Docker `28m` delay, Spark SQL | 3 | 14.397 | 14.731 | 14.270 | 15.525 | 0.689 | Docker standalone simulation |
+| AWS EMR baseline `14m` delay, Spark SQL | 2 | 17.020 | 17.020 | 16.676 | 17.363 | 0.486 | P2 weak-cell rerun |
+| AWS EMR larger `28m` delay, Spark SQL | 1 | 19.184 | 19.184 | 19.184 | 19.184 | N/A | Smoke/stress evidence |
 | AWS EMR `100k` delay, Spark SQL | 1 | 15.832 | 15.832 | 15.832 | 15.832 | N/A | Smoke evidence |
 
 ## Benchmark Pivot
@@ -604,16 +612,16 @@ experiment was an unconstrained production benchmark.
 
 ## Cluster Size Variation
 
-The cluster-size comparison uses `m4-emr-final-2` as the baseline point and
-`m5-emr-3core-1m-full` as the larger-cluster point. The larger run used one
-primary node and three core nodes, the same `m5.xlarge` instance type, the same
-EMR release, and the same Spark/YARN execution path. It completed on cluster
-`j-LTX1FIHYB4X9` from `2026-05-22T00:46:03Z` to `2026-05-22T01:12:14Z`, with
-an estimated cost of `0.3944 USD`. The larger-profile matrix was intentionally
-limited to `1m` and `full` so the evidence stayed within AWS Academy Learner
-Lab budget limits. Docker standalone simulation is shown only where matching
-data exists; the Docker benchmark matrix stops at `1m`, so Docker `full` cells
-are marked `N/A` instead of being overclaimed.
+The cluster-size comparison uses `m4-emr-final-2` plus
+`m4-emr-p2-weak-cells` as the baseline-profile evidence and
+`m5-emr-3core-1m-full`, `m5-emr-p2-14m`, and `m5-emr-p2-28m-smoke` as the
+larger-profile evidence. The larger runs used one primary node and three core
+nodes, the same `m5.xlarge` instance type, the same EMR release, and the same
+Spark/YARN execution path. The P2 larger `14m` run completed on cluster
+`j-UTYJJLQJEQUZ` with an estimated cost of `0.3911 USD`; the P2 larger `28m`
+smoke run completed on cluster `j-1XB692RVA04ZI` with an estimated cost of
+`0.2182 USD`. Docker standalone simulation is now shown for every configured
+input size, including `full`, `14m`, and `28m`.
 
 The generated cluster-size comparison table is stored in
 `report/tables/cluster_size_comparison.md`. Compared with the baseline EMR

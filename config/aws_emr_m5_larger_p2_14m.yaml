@@ -1,0 +1,91 @@
+environment: aws-emr-larger
+
+paths:
+  raw_dir: data/raw
+  raw_file: data/raw/flight_data_2024.csv
+  prepared_dir: data/prepared
+  prepared_file: data/prepared/flights_2024_clean.parquet
+  generated_dir: data/generated
+  outputs_dir: outputs
+  results_dir: experiments/results/aws-emr-larger
+
+spark:
+  master: yarn
+  app_name: flight-delay-big-data-analysis-aws-emr-larger-p2-14m
+  shuffle_partitions: 24
+
+benchmark:
+  canonical_run_id: m5-emr-3core-1m-full
+  execution_setting: "Amazon EMR cluster: 1 primary + 3 core nodes; Spark on YARN; P2 14m rerun"
+  technologies:
+    - spark_sql
+    - spark_core
+  input_sizes:
+    - label: 14m
+      records: 14000000
+      local_path: data/generated/flights_14m.parquet
+      s3_path: flight-delay/data/generated/flights_14m.parquet/
+      repetitions: 3
+      max_repetitions: 3
+      optional: true
+
+aws:
+  region: us-east-1
+  learner_lab: true
+  dependencies:
+    - PyYAML==6.0.3
+    - pandas==2.3.3
+    - pyarrow==21.0.0
+    - boto3==1.42.97
+  timeouts:
+    cluster_startup_seconds: 900
+    step_seconds: 1800
+    total_run_seconds: 7200
+  budget:
+    expected_allowance_usd: 50
+    minimum_remaining_usd: 45
+    remaining_budget_env: AWS_LEARNER_LAB_BUDGET_REMAINING_USD
+    estimated_hourly_usd_per_node: 0.226
+
+s3:
+  bucket_env: AWS_FLIGHT_DELAY_BUCKET
+  prefix: flight-delay
+  layout:
+    data: flight-delay/data/
+    code: flight-delay/code/
+    results: flight-delay/results/
+    logs: flight-delay/logs/
+
+emr:
+  release_label: emr-7.13.0
+  release_label_fallback: emr-7.13.0
+  applications:
+    - Spark
+  instance_type_fallback_order:
+    - m5.xlarge
+    - m5.large
+  cluster_profile:
+    primary_nodes: 1
+    core_nodes: 3
+    instance_type: m5.xlarge
+    terminate_after_benchmark: true
+    idle_timeout_seconds: 600
+    log_destination: s3
+  iam_role_candidates:
+    service_role:
+      - EMR_DefaultRole
+      - LabRole
+    ec2_instance_profile:
+      - EMR_EC2_DefaultRole
+      - LabInstanceProfile
+
+checks:
+  required_services:
+    - sts
+    - s3
+    - emr
+    - ec2
+    - iam
+  logging:
+    require_s3_logs: true
+    cloudwatch_optional: true

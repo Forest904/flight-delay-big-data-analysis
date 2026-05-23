@@ -52,7 +52,6 @@ make clean
 | Scope | Document |
 |---|---|
 | As-built goals and acceptance contract | [flight_delay_big_data_prd.md](flight_delay_big_data_prd.md) |
-| Recovery priorities and benchmark/report roadmap | [ROADMAP.md](ROADMAP.md) |
 | Environment setup and canonical run order | [docs/reproducibility.md](docs/reproducibility.md) |
 | Benchmark matrix, repetitions, and evidence policy | [docs/benchmarking.md](docs/benchmarking.md) |
 | Final gate, validation, and hygiene checks | [docs/submission_gate.md](docs/submission_gate.md) |

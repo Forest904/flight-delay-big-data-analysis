@@ -4,26 +4,26 @@
 | aws-emr | 100k | 100000 | airline_airport_ranking | Spark SQL | 3.984 | 25100.912 |
 | aws-emr | 100k | 100000 | delay_by_airport_month | Spark Core | 1.864 | 53638.86 |
 | aws-emr | 100k | 100000 | delay_by_airport_month | Spark SQL | 15.832 | 6316.443 |
-| aws-emr | 500k | 500000 | airline_airport_ranking | Spark Core | 1.205 | 414935.349 |
-| aws-emr | 500k | 500000 | airline_airport_ranking | Spark SQL | 4.179 | 119655.297 |
-| aws-emr | 500k | 500000 | delay_by_airport_month | Spark Core | 1.706 | 293052.831 |
-| aws-emr | 500k | 500000 | delay_by_airport_month | Spark SQL | 13.879 | 36024.755 |
+| aws-emr | 500k | 500000 | airline_airport_ranking | Spark Core | 1.187 | 421281.809 |
+| aws-emr | 500k | 500000 | airline_airport_ranking | Spark SQL | 3.898 | 128265.314 |
+| aws-emr | 500k | 500000 | delay_by_airport_month | Spark Core | 1.93 | 259062.324 |
+| aws-emr | 500k | 500000 | delay_by_airport_month | Spark SQL | 14.054 | 35577.267 |
 | aws-emr | 1m | 1000000 | airline_airport_ranking | Spark Core | 1.243 | 804452.807 |
 | aws-emr | 1m | 1000000 | airline_airport_ranking | Spark SQL | 4.052 | 246821.129 |
 | aws-emr | 1m | 1000000 | delay_by_airport_month | Spark Core | 1.923 | 519986.189 |
 | aws-emr | 1m | 1000000 | delay_by_airport_month | Spark SQL | 15.126 | 66112.52 |
-| aws-emr | 3m | 3000000 | airline_airport_ranking | Spark Core | 1.249 | 2402619.817 |
-| aws-emr | 3m | 3000000 | airline_airport_ranking | Spark SQL | 4.457 | 673139.275 |
-| aws-emr | 3m | 3000000 | delay_by_airport_month | Spark Core | 2.02 | 1485130.135 |
-| aws-emr | 3m | 3000000 | delay_by_airport_month | Spark SQL | 14.582 | 205728.186 |
+| aws-emr | 3m | 3000000 | airline_airport_ranking | Spark Core | 1.437 | 2088391.883 |
+| aws-emr | 3m | 3000000 | airline_airport_ranking | Spark SQL | 4.08 | 735280.692 |
+| aws-emr | 3m | 3000000 | delay_by_airport_month | Spark Core | 2.473 | 1213287.929 |
+| aws-emr | 3m | 3000000 | delay_by_airport_month | Spark SQL | 14.704 | 204025.304 |
 | aws-emr | full | 7079081 | airline_airport_ranking | Spark Core | 1.106 | 6397787.054 |
 | aws-emr | full | 7079081 | airline_airport_ranking | Spark SQL | 4.302 | 1645605.605 |
 | aws-emr | full | 7079081 | delay_by_airport_month | Spark Core | 1.918 | 3690500.42 |
 | aws-emr | full | 7079081 | delay_by_airport_month | Spark SQL | 15.505 | 456554.461 |
-| aws-emr | 14m | 14000000 | airline_airport_ranking | Spark Core | 1.235 | 11336197.613 |
-| aws-emr | 14m | 14000000 | airline_airport_ranking | Spark SQL | 6.056 | 2311734.413 |
-| aws-emr | 14m | 14000000 | delay_by_airport_month | Spark Core | 2.061 | 6792321.378 |
-| aws-emr | 14m | 14000000 | delay_by_airport_month | Spark SQL | 18.147 | 771475.466 |
+| aws-emr | 14m | 14000000 | airline_airport_ranking | Spark Core | 1.25 | 11196063.464 |
+| aws-emr | 14m | 14000000 | airline_airport_ranking | Spark SQL | 5.359 | 2612341.41 |
+| aws-emr | 14m | 14000000 | delay_by_airport_month | Spark Core | 2.265 | 6179711.302 |
+| aws-emr | 14m | 14000000 | delay_by_airport_month | Spark SQL | 17.02 | 822581 |
 | aws-emr-larger | 1m | 1000000 | airline_airport_ranking | Spark Core | 1.018 | 982107.957 |
 | aws-emr-larger | 1m | 1000000 | airline_airport_ranking | Spark SQL | 4.087 | 244663.402 |
 | aws-emr-larger | 1m | 1000000 | delay_by_airport_month | Spark Core | 1.679 | 595677.762 |
@@ -32,6 +32,14 @@
 | aws-emr-larger | full | 7079081 | airline_airport_ranking | Spark SQL | 4.475 | 1581827.404 |
 | aws-emr-larger | full | 7079081 | delay_by_airport_month | Spark Core | 1.65 | 4291101.113 |
 | aws-emr-larger | full | 7079081 | delay_by_airport_month | Spark SQL | 16.309 | 434054.3 |
+| aws-emr-larger | 14m | 14000000 | airline_airport_ranking | Spark Core | 0.995 | 14069164.01 |
+| aws-emr-larger | 14m | 14000000 | airline_airport_ranking | Spark SQL | 4.98 | 2811228.045 |
+| aws-emr-larger | 14m | 14000000 | delay_by_airport_month | Spark Core | 1.742 | 8038299.05 |
+| aws-emr-larger | 14m | 14000000 | delay_by_airport_month | Spark SQL | 18.056 | 775367.419 |
+| aws-emr-larger | 28m | 28000000 | airline_airport_ranking | Spark Core | 1.037 | 26993311.443 |
+| aws-emr-larger | 28m | 28000000 | airline_airport_ranking | Spark SQL | 6.343 | 4414473.672 |
+| aws-emr-larger | 28m | 28000000 | delay_by_airport_month | Spark Core | 2.321 | 12063713.642 |
+| aws-emr-larger | 28m | 28000000 | delay_by_airport_month | Spark SQL | 19.184 | 1459544.679 |
 | docker-simulation | 100k | 100000 | airline_airport_ranking | Hive | 18.288 | 5467.964 |
 | docker-simulation | 100k | 100000 | airline_airport_ranking | Spark Core | 6.214 | 16093.865 |
 | docker-simulation | 100k | 100000 | airline_airport_ranking | Spark SQL | 12.685 | 7883.209 |
@@ -50,6 +58,30 @@
 | docker-simulation | 1m | 1000000 | delay_by_airport_month | Hive | 16.797 | 59535.05 |
 | docker-simulation | 1m | 1000000 | delay_by_airport_month | Spark Core | 3.673 | 272268.278 |
 | docker-simulation | 1m | 1000000 | delay_by_airport_month | Spark SQL | 14.541 | 68772.012 |
+| docker-simulation | 3m | 3000000 | airline_airport_ranking | Hive | 8.83 | 339768.55 |
+| docker-simulation | 3m | 3000000 | airline_airport_ranking | Spark Core | 2.292 | 1308686.406 |
+| docker-simulation | 3m | 3000000 | airline_airport_ranking | Spark SQL | 5.813 | 516064.752 |
+| docker-simulation | 3m | 3000000 | delay_by_airport_month | Hive | 13.976 | 214647.979 |
+| docker-simulation | 3m | 3000000 | delay_by_airport_month | Spark Core | 2.589 | 1158677.84 |
+| docker-simulation | 3m | 3000000 | delay_by_airport_month | Spark SQL | 11.369 | 263870.786 |
+| docker-simulation | full | 7079081 | airline_airport_ranking | Hive | 13.464 | 525786.881 |
+| docker-simulation | full | 7079081 | airline_airport_ranking | Spark Core | 2.34 | 3025337.499 |
+| docker-simulation | full | 7079081 | airline_airport_ranking | Spark SQL | 6.444 | 1098607.04 |
+| docker-simulation | full | 7079081 | delay_by_airport_month | Hive | 19.24 | 367936.138 |
+| docker-simulation | full | 7079081 | delay_by_airport_month | Spark Core | 2.774 | 2552080.558 |
+| docker-simulation | full | 7079081 | delay_by_airport_month | Spark SQL | 12.503 | 566204.859 |
+| docker-simulation | 14m | 14000000 | airline_airport_ranking | Hive | 15.326 | 913484.175 |
+| docker-simulation | 14m | 14000000 | airline_airport_ranking | Spark Core | 2.4 | 5832222.781 |
+| docker-simulation | 14m | 14000000 | airline_airport_ranking | Spark SQL | 5.995 | 2335206.169 |
+| docker-simulation | 14m | 14000000 | delay_by_airport_month | Hive | 23.822 | 587681.885 |
+| docker-simulation | 14m | 14000000 | delay_by_airport_month | Spark Core | 2.826 | 4954563.117 |
+| docker-simulation | 14m | 14000000 | delay_by_airport_month | Spark SQL | 13.316 | 1051379.331 |
+| docker-simulation | 28m | 28000000 | airline_airport_ranking | Hive | 22.965 | 1219247.158 |
+| docker-simulation | 28m | 28000000 | airline_airport_ranking | Spark Core | 2.266 | 12357715.253 |
+| docker-simulation | 28m | 28000000 | airline_airport_ranking | Spark SQL | 7.379 | 3794785.585 |
+| docker-simulation | 28m | 28000000 | delay_by_airport_month | Hive | 35.275 | 793764.414 |
+| docker-simulation | 28m | 28000000 | delay_by_airport_month | Spark Core | 2.76 | 10144493.822 |
+| docker-simulation | 28m | 28000000 | delay_by_airport_month | Spark SQL | 14.397 | 1944822.469 |
 | local | 100k | 100000 | airline_airport_ranking | Hive | 14.322 | 6982.271 |
 | local | 100k | 100000 | airline_airport_ranking | MapReduce | 6.708 | 14907.026 |
 | local | 100k | 100000 | airline_airport_ranking | Spark Core | 0.74 | 135131.483 |
