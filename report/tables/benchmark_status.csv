@@ -23,72 +23,138 @@ aws-emr,14m,14000000,,airline_airport_ranking,Spark Core,success,1.253015,1738,,
 aws-emr,14m,14000000,,airline_airport_ranking,Spark SQL,success,5.203272,1738,,m4-emr-p2-weak-cells,2026-05-22T19:58:01.737116+00:00,benchmark_m4-emr-p2-weak-cells.csv
 aws-emr,14m,14000000,,delay_by_airport_month,Spark Core,success,2.12323,11902,,m4-emr-p2-weak-cells,2026-05-22T19:58:01.737116+00:00,benchmark_m4-emr-p2-weak-cells.csv
 aws-emr,14m,14000000,,delay_by_airport_month,Spark SQL,success,17.206701,11902,,m4-emr-p2-weak-cells,2026-05-22T19:58:01.737116+00:00,benchmark_m4-emr-p2-weak-cells.csv
-aws-emr-larger,1m,1000000,,airline_airport_ranking,Spark Core,success,1.037951,1723,,m5-emr-3core-1m-full,2026-05-22T00:46:03.790422+00:00,benchmark_m5-emr-3core-1m-full.csv
-aws-emr-larger,1m,1000000,,airline_airport_ranking,Spark SQL,success,3.368381,1723,,m5-emr-3core-1m-full,2026-05-22T00:46:03.790422+00:00,benchmark_m5-emr-3core-1m-full.csv
-aws-emr-larger,1m,1000000,,delay_by_airport_month,Spark Core,success,2.08048,10206,,m5-emr-3core-1m-full,2026-05-22T00:46:03.790422+00:00,benchmark_m5-emr-3core-1m-full.csv
-aws-emr-larger,1m,1000000,,delay_by_airport_month,Spark SQL,success,14.374481,10206,,m5-emr-3core-1m-full,2026-05-22T00:46:03.790422+00:00,benchmark_m5-emr-3core-1m-full.csv
-aws-emr-larger,full,7079081,,airline_airport_ranking,Spark Core,success,0.911306,1738,,m5-emr-3core-1m-full,2026-05-22T00:46:03.790422+00:00,benchmark_m5-emr-3core-1m-full.csv
-aws-emr-larger,full,7079081,,airline_airport_ranking,Spark SQL,success,4.475255,1738,,m5-emr-3core-1m-full,2026-05-22T00:46:03.790422+00:00,benchmark_m5-emr-3core-1m-full.csv
-aws-emr-larger,full,7079081,,delay_by_airport_month,Spark Core,success,1.617607,11902,,m5-emr-3core-1m-full,2026-05-22T00:46:03.790422+00:00,benchmark_m5-emr-3core-1m-full.csv
-aws-emr-larger,full,7079081,,delay_by_airport_month,Spark SQL,success,16.309206,11902,,m5-emr-3core-1m-full,2026-05-22T00:46:03.790422+00:00,benchmark_m5-emr-3core-1m-full.csv
-aws-emr-larger,14m,14000000,,airline_airport_ranking,Spark Core,success,0.953544,1738,,m5-emr-p2-14m,2026-05-22T20:35:33.699560+00:00,benchmark_m5-emr-p2-14m.csv
-aws-emr-larger,14m,14000000,,airline_airport_ranking,Spark SQL,success,4.889553,1738,,m5-emr-p2-14m,2026-05-22T20:35:33.699560+00:00,benchmark_m5-emr-p2-14m.csv
-aws-emr-larger,14m,14000000,,delay_by_airport_month,Spark Core,success,1.741634,11902,,m5-emr-p2-14m,2026-05-22T20:35:33.699560+00:00,benchmark_m5-emr-p2-14m.csv
-aws-emr-larger,14m,14000000,,delay_by_airport_month,Spark SQL,success,16.484021,11902,,m5-emr-p2-14m,2026-05-22T20:35:33.699560+00:00,benchmark_m5-emr-p2-14m.csv
-aws-emr-larger,28m,28000000,,airline_airport_ranking,Spark Core,success,1.037294,1738,,m5-emr-p2-28m-smoke,2026-05-23T00:06:39.794890+00:00,benchmark_m5-emr-p2-28m-smoke.csv
-aws-emr-larger,28m,28000000,,airline_airport_ranking,Spark SQL,success,6.342772,1738,,m5-emr-p2-28m-smoke,2026-05-23T00:06:39.794890+00:00,benchmark_m5-emr-p2-28m-smoke.csv
-aws-emr-larger,28m,28000000,,delay_by_airport_month,Spark Core,success,2.32101,11902,,m5-emr-p2-28m-smoke,2026-05-23T00:06:39.794890+00:00,benchmark_m5-emr-p2-28m-smoke.csv
-aws-emr-larger,28m,28000000,,delay_by_airport_month,Spark SQL,success,19.184065,11902,,m5-emr-p2-28m-smoke,2026-05-23T00:06:39.794890+00:00,benchmark_m5-emr-p2-28m-smoke.csv
-docker-simulation,100k,100000,,airline_airport_ranking,Hive,success,17.959624,1641,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,100k,100000,,airline_airport_ranking,Spark Core,success,6.213548,1641,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,100k,100000,,airline_airport_ranking,Spark SQL,success,12.685189,1641,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,100k,100000,,delay_by_airport_month,Hive,success,27.848052,6367,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,100k,100000,,delay_by_airport_month,Spark Core,success,7.085845,6367,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,100k,100000,,delay_by_airport_month,Spark SQL,success,26.054633,6367,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,500k,500000,,airline_airport_ranking,Hive,success,10.344782,1707,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,500k,500000,,airline_airport_ranking,Spark Core,success,6.414528,1707,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,500k,500000,,airline_airport_ranking,Spark SQL,success,12.53712,1707,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,500k,500000,,delay_by_airport_month,Hive,success,25.90275,9265,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,500k,500000,,delay_by_airport_month,Spark Core,success,8.201698,9265,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,500k,500000,,delay_by_airport_month,Spark SQL,success,25.677885,9265,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,1m,1000000,,airline_airport_ranking,Hive,success,11.300811,1723,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,1m,1000000,deterministic_subset,airline_airport_ranking,Spark Core,success,2.010782,1723,,20260523T232929496789Z,2026-05-23T23:29:29.496789+00:00,benchmark_20260523T232929496789Z.csv
-docker-simulation,1m,1000000,deterministic_subset,airline_airport_ranking,Spark SQL,success,1.113307,1723,,20260523T232929496789Z,2026-05-23T23:29:29.496789+00:00,benchmark_20260523T232929496789Z.csv
-docker-simulation,1m,1000000,,delay_by_airport_month,Hive,success,18.24548,10206,,20260522T161751426398Z,2026-05-22T16:17:51.426398+00:00,benchmark_20260522T161751426398Z.csv
-docker-simulation,1m,1000000,deterministic_subset,delay_by_airport_month,Spark Core,success,2.674352,11861,,20260523T232929496789Z,2026-05-23T23:29:29.496789+00:00,benchmark_20260523T232929496789Z.csv
-docker-simulation,1m,1000000,deterministic_subset,delay_by_airport_month,Spark SQL,success,6.434885,11861,,20260523T232929496789Z,2026-05-23T23:29:29.496789+00:00,benchmark_20260523T232929496789Z.csv
-docker-simulation,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,2.028541,27416,,20260523T232929496789Z,2026-05-23T23:29:29.496789+00:00,benchmark_20260523T232929496789Z.csv
-docker-simulation,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,3.459751,27416,,20260523T232929496789Z,2026-05-23T23:29:29.496789+00:00,benchmark_20260523T232929496789Z.csv
+aws-emr-larger,100k,100000,deterministic_subset,airline_airport_ranking,Spark Core,success,0.875297,1641,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,100k,100000,deterministic_subset,airline_airport_ranking,Spark SQL,success,2.407847,1641,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,100k,100000,deterministic_subset,delay_by_airport_month,Spark Core,success,2.280954,6882,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,100k,100000,deterministic_subset,delay_by_airport_month,Spark SQL,success,10.837344,6882,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,100k,100000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,1.01456,10370,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,100k,100000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,4.630739,10370,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,500k,500000,deterministic_subset,airline_airport_ranking,Spark Core,success,0.852097,1707,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,500k,500000,deterministic_subset,airline_airport_ranking,Spark SQL,success,1.79684,1707,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,500k,500000,deterministic_subset,delay_by_airport_month,Spark Core,success,2.182511,10536,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,500k,500000,deterministic_subset,delay_by_airport_month,Spark SQL,success,12.303012,10536,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,500k,500000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,1.214318,21371,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,500k,500000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,5.602186,21371,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,1m,1000000,deterministic_subset,airline_airport_ranking,Spark Core,success,1.173252,1723,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,1m,1000000,deterministic_subset,airline_airport_ranking,Spark SQL,success,2.262195,1723,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,1m,1000000,deterministic_subset,delay_by_airport_month,Spark Core,success,1.778298,11861,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,1m,1000000,deterministic_subset,delay_by_airport_month,Spark SQL,success,11.730155,11861,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,1.144206,27416,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,6.466375,27416,,aws-3x-small,2026-05-25T10:28:56.787877+00:00,benchmark_aws-3x-small.csv
+aws-emr-larger,3m,3000000,deterministic_subset,airline_airport_ranking,Spark Core,success,0.822703,1735,,aws-3x-mid,2026-05-25T11:04:59.790810+00:00,benchmark_aws-3x-mid.csv
+aws-emr-larger,3m,3000000,deterministic_subset,airline_airport_ranking,Spark SQL,success,2.422008,1735,,aws-3x-mid,2026-05-25T11:04:59.790810+00:00,benchmark_aws-3x-mid.csv
+aws-emr-larger,3m,3000000,deterministic_subset,delay_by_airport_month,Spark Core,success,2.012316,13813,,aws-3x-mid,2026-05-25T11:04:59.790810+00:00,benchmark_aws-3x-mid.csv
+aws-emr-larger,3m,3000000,deterministic_subset,delay_by_airport_month,Spark SQL,success,12.577642,13813,,aws-3x-mid,2026-05-25T11:04:59.790810+00:00,benchmark_aws-3x-mid.csv
+aws-emr-larger,3m,3000000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,1.34742,38211,,aws-3x-mid,2026-05-25T11:04:59.790810+00:00,benchmark_aws-3x-mid.csv
+aws-emr-larger,3m,3000000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,6.148132,38211,,aws-3x-mid,2026-05-25T11:04:59.790810+00:00,benchmark_aws-3x-mid.csv
+aws-emr-larger,full,7079081,original_prepared,airline_airport_ranking,Spark Core,success,0.85103,1738,,aws-3x-mid,2026-05-25T11:04:59.790810+00:00,benchmark_aws-3x-mid.csv
+aws-emr-larger,full,7079081,original_prepared,airline_airport_ranking,Spark SQL,success,2.507246,1738,,aws-3x-mid,2026-05-25T11:04:59.790810+00:00,benchmark_aws-3x-mid.csv
+aws-emr-larger,full,7079081,original_prepared,delay_by_airport_month,Spark Core,success,2.098496,14804,,aws-3x-mid,2026-05-25T11:04:59.790810+00:00,benchmark_aws-3x-mid.csv
+aws-emr-larger,full,7079081,original_prepared,delay_by_airport_month,Spark SQL,success,13.174938,14804,,aws-3x-mid,2026-05-25T11:04:59.790810+00:00,benchmark_aws-3x-mid.csv
+aws-emr-larger,full,7079081,original_prepared,delay_by_airport_month_all_causes,Spark Core,success,1.373426,46745,,aws-3x-mid,2026-05-25T11:04:59.790810+00:00,benchmark_aws-3x-mid.csv
+aws-emr-larger,full,7079081,original_prepared,delay_by_airport_month_all_causes,Spark SQL,success,9.018823,46745,,aws-3x-mid,2026-05-25T11:04:59.790810+00:00,benchmark_aws-3x-mid.csv
+aws-emr-larger,14m,14000000,row_volume_replication,airline_airport_ranking,Spark Core,success,1.033637,1738,,aws-3x-14m,2026-05-25T11:40:14.833880+00:00,benchmark_aws-3x-14m.csv
+aws-emr-larger,14m,14000000,row_volume_replication,airline_airport_ranking,Spark SQL,success,4.200261,1738,,aws-3x-14m,2026-05-25T11:40:14.833880+00:00,benchmark_aws-3x-14m.csv
+aws-emr-larger,14m,14000000,row_volume_replication,delay_by_airport_month,Spark Core,success,1.931235,14804,,aws-3x-14m,2026-05-25T11:40:14.833880+00:00,benchmark_aws-3x-14m.csv
+aws-emr-larger,14m,14000000,row_volume_replication,delay_by_airport_month,Spark SQL,success,18.576842,14804,,aws-3x-14m,2026-05-25T11:40:14.833880+00:00,benchmark_aws-3x-14m.csv
+aws-emr-larger,14m,14000000,row_volume_replication,delay_by_airport_month_all_causes,Spark Core,success,1.621089,46745,,aws-3x-14m,2026-05-25T11:40:14.833880+00:00,benchmark_aws-3x-14m.csv
+aws-emr-larger,14m,14000000,row_volume_replication,delay_by_airport_month_all_causes,Spark SQL,success,12.647647,46745,,aws-3x-14m,2026-05-25T11:40:14.833880+00:00,benchmark_aws-3x-14m.csv
+aws-emr-larger,28m,28000000,row_volume_replication,airline_airport_ranking,Spark Core,success,0.792307,1738,,aws-3x-28m,2026-05-25T12:21:18.953930+00:00,benchmark_aws-3x-28m.csv
+aws-emr-larger,28m,28000000,row_volume_replication,airline_airport_ranking,Spark SQL,success,4.646326,1738,,aws-3x-28m,2026-05-25T12:21:18.953930+00:00,benchmark_aws-3x-28m.csv
+aws-emr-larger,28m,28000000,row_volume_replication,delay_by_airport_month,Spark Core,success,2.012461,14804,,aws-3x-28m,2026-05-25T12:21:18.953930+00:00,benchmark_aws-3x-28m.csv
+aws-emr-larger,28m,28000000,row_volume_replication,delay_by_airport_month,Spark SQL,success,23.135594,14804,,aws-3x-28m,2026-05-25T12:21:18.953930+00:00,benchmark_aws-3x-28m.csv
+aws-emr-larger,28m,28000000,row_volume_replication,delay_by_airport_month_all_causes,Spark Core,success,1.267924,46745,,aws-3x-28m,2026-05-25T12:21:18.953930+00:00,benchmark_aws-3x-28m.csv
+aws-emr-larger,28m,28000000,row_volume_replication,delay_by_airport_month_all_causes,Spark SQL,success,17.595672,46745,,aws-3x-28m,2026-05-25T12:21:18.953930+00:00,benchmark_aws-3x-28m.csv
+docker-simulation,100k,100000,deterministic_subset,airline_airport_ranking,Hive,success,9.074,1641,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,100k,100000,deterministic_subset,airline_airport_ranking,MapReduce,success,6.650205,1641,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,100k,100000,deterministic_subset,airline_airport_ranking,Spark Core,success,1.999347,1641,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,100k,100000,deterministic_subset,airline_airport_ranking,Spark SQL,success,1.112551,1641,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,100k,100000,deterministic_subset,delay_by_airport_month,Hive,success,12.994698,6882,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,100k,100000,deterministic_subset,delay_by_airport_month,MapReduce,success,7.699054,6882,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,100k,100000,deterministic_subset,delay_by_airport_month,Spark Core,success,2.686059,6882,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,100k,100000,deterministic_subset,delay_by_airport_month,Spark SQL,success,6.51476,6882,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,100k,100000,deterministic_subset,delay_by_airport_month_all_causes,Hive,success,7.277979,10370,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,100k,100000,deterministic_subset,delay_by_airport_month_all_causes,MapReduce,success,4.696181,10370,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,100k,100000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,1.585286,10370,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,100k,100000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,3.000902,10370,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,500k,500000,deterministic_subset,airline_airport_ranking,Hive,success,9.015724,1707,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,500k,500000,deterministic_subset,airline_airport_ranking,MapReduce,success,20.634244,1707,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,500k,500000,deterministic_subset,airline_airport_ranking,Spark Core,success,2.07867,1707,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,500k,500000,deterministic_subset,airline_airport_ranking,Spark SQL,success,1.067205,1707,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,500k,500000,deterministic_subset,delay_by_airport_month,Hive,success,14.036619,10536,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,500k,500000,deterministic_subset,delay_by_airport_month,MapReduce,success,21.448455,10536,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,500k,500000,deterministic_subset,delay_by_airport_month,Spark Core,success,2.581477,10536,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,500k,500000,deterministic_subset,delay_by_airport_month,Spark SQL,success,5.739603,10536,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,500k,500000,deterministic_subset,delay_by_airport_month_all_causes,Hive,success,7.340485,21371,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,500k,500000,deterministic_subset,delay_by_airport_month_all_causes,MapReduce,success,10.615336,21371,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,500k,500000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,1.731593,21371,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,500k,500000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,3.568085,21371,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,1m,1000000,deterministic_subset,airline_airport_ranking,Hive,success,9.079175,1723,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,1m,1000000,deterministic_subset,airline_airport_ranking,MapReduce,success,39.000764,1723,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,1m,1000000,deterministic_subset,airline_airport_ranking,Spark Core,success,2.016841,1723,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,1m,1000000,deterministic_subset,airline_airport_ranking,Spark SQL,success,1.28626,1723,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,1m,1000000,deterministic_subset,delay_by_airport_month,Hive,success,15.106143,11861,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,1m,1000000,deterministic_subset,delay_by_airport_month,MapReduce,success,41.47153,11861,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,1m,1000000,deterministic_subset,delay_by_airport_month,Spark Core,success,2.663375,11861,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,1m,1000000,deterministic_subset,delay_by_airport_month,Spark SQL,success,6.28902,11861,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,Hive,success,8.288204,27416,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,MapReduce,success,18.528213,27416,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,2.021809,27416,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,3.28845,27416,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
 docker-simulation,1m_hc8,1000000,high_cardinality_stress,airline_airport_ranking,Spark Core,success,2.276821,13269,,20260523T232929496789Z,2026-05-23T23:29:29.496789+00:00,benchmark_20260523T232929496789Z.csv
 docker-simulation,1m_hc8,1000000,high_cardinality_stress,airline_airport_ranking,Spark SQL,success,1.399013,13269,,20260523T232929496789Z,2026-05-23T23:29:29.496789+00:00,benchmark_20260523T232929496789Z.csv
 docker-simulation,1m_hc8,1000000,high_cardinality_stress,delay_by_airport_month,Spark Core,success,3.536699,59196,,20260523T232929496789Z,2026-05-23T23:29:29.496789+00:00,benchmark_20260523T232929496789Z.csv
 docker-simulation,1m_hc8,1000000,high_cardinality_stress,delay_by_airport_month,Spark SQL,success,7.540993,59196,,20260523T232929496789Z,2026-05-23T23:29:29.496789+00:00,benchmark_20260523T232929496789Z.csv
 docker-simulation,1m_hc8,1000000,high_cardinality_stress,delay_by_airport_month_all_causes,Spark Core,success,2.36856,92253,,20260523T232929496789Z,2026-05-23T23:29:29.496789+00:00,benchmark_20260523T232929496789Z.csv
 docker-simulation,1m_hc8,1000000,high_cardinality_stress,delay_by_airport_month_all_causes,Spark SQL,success,3.796827,92253,,20260523T232929496789Z,2026-05-23T23:29:29.496789+00:00,benchmark_20260523T232929496789Z.csv
-docker-simulation,3m,3000000,,airline_airport_ranking,Hive,success,8.82954,1735,,20260523T002216937593Z,2026-05-23T00:22:16.937593+00:00,benchmark_20260523T002216937593Z.csv
-docker-simulation,3m,3000000,,airline_airport_ranking,Spark Core,success,2.510022,1735,,20260523T002216937593Z,2026-05-23T00:22:16.937593+00:00,benchmark_20260523T002216937593Z.csv
-docker-simulation,3m,3000000,,airline_airport_ranking,Spark SQL,success,5.813224,1735,,20260523T002216937593Z,2026-05-23T00:22:16.937593+00:00,benchmark_20260523T002216937593Z.csv
-docker-simulation,3m,3000000,,delay_by_airport_month,Hive,success,13.618601,11417,,20260523T002216937593Z,2026-05-23T00:22:16.937593+00:00,benchmark_20260523T002216937593Z.csv
-docker-simulation,3m,3000000,,delay_by_airport_month,Spark Core,success,2.549302,11417,,20260523T002216937593Z,2026-05-23T00:22:16.937593+00:00,benchmark_20260523T002216937593Z.csv
-docker-simulation,3m,3000000,,delay_by_airport_month,Spark SQL,success,12.165484,11417,,20260523T002216937593Z,2026-05-23T00:22:16.937593+00:00,benchmark_20260523T002216937593Z.csv
-docker-simulation,full,7079081,,airline_airport_ranking,Hive,success,13.428806,1738,,20260523T002948918166Z,2026-05-23T00:29:48.918166+00:00,benchmark_20260523T002948918166Z.csv
-docker-simulation,full,7079081,,airline_airport_ranking,Spark Core,success,2.339931,1738,,20260523T002948918166Z,2026-05-23T00:29:48.918166+00:00,benchmark_20260523T002948918166Z.csv
-docker-simulation,full,7079081,,airline_airport_ranking,Spark SQL,success,6.538453,1738,,20260523T002948918166Z,2026-05-23T00:29:48.918166+00:00,benchmark_20260523T002948918166Z.csv
-docker-simulation,full,7079081,,delay_by_airport_month,Hive,success,19.121218,11902,,20260523T002948918166Z,2026-05-23T00:29:48.918166+00:00,benchmark_20260523T002948918166Z.csv
-docker-simulation,full,7079081,,delay_by_airport_month,Spark Core,success,2.769498,11902,,20260523T002948918166Z,2026-05-23T00:29:48.918166+00:00,benchmark_20260523T002948918166Z.csv
-docker-simulation,full,7079081,,delay_by_airport_month,Spark SQL,success,12.966112,11902,,20260523T002948918166Z,2026-05-23T00:29:48.918166+00:00,benchmark_20260523T002948918166Z.csv
-docker-simulation,14m,14000000,,airline_airport_ranking,Hive,success,15.325936,1738,,20260523T004842214881Z,2026-05-23T00:48:42.214881+00:00,benchmark_20260523T004842214881Z.csv
-docker-simulation,14m,14000000,,airline_airport_ranking,Spark Core,success,2.400457,1738,,20260523T003851694527Z,2026-05-23T00:38:51.694527+00:00,benchmark_20260523T003851694527Z.csv
-docker-simulation,14m,14000000,,airline_airport_ranking,Spark SQL,success,5.995188,1738,,20260523T003851694527Z,2026-05-23T00:38:51.694527+00:00,benchmark_20260523T003851694527Z.csv
-docker-simulation,14m,14000000,,delay_by_airport_month,Hive,success,23.749941,11902,,20260523T004842214881Z,2026-05-23T00:48:42.214881+00:00,benchmark_20260523T004842214881Z.csv
-docker-simulation,14m,14000000,,delay_by_airport_month,Spark Core,success,2.784723,11902,,20260523T003851694527Z,2026-05-23T00:38:51.694527+00:00,benchmark_20260523T003851694527Z.csv
-docker-simulation,14m,14000000,,delay_by_airport_month,Spark SQL,success,13.315841,11902,,20260523T003851694527Z,2026-05-23T00:38:51.694527+00:00,benchmark_20260523T003851694527Z.csv
-docker-simulation,28m,28000000,,airline_airport_ranking,Hive,success,22.760309,1738,,20260523T010842627918Z,2026-05-23T01:08:42.627918+00:00,benchmark_20260523T010842627918Z.csv
-docker-simulation,28m,28000000,,airline_airport_ranking,Spark Core,success,2.187782,1738,,20260523T005223008588Z,2026-05-23T00:52:23.008588+00:00,benchmark_20260523T005223008588Z.csv
-docker-simulation,28m,28000000,,airline_airport_ranking,Spark SQL,success,7.378546,1738,,20260523T005223008588Z,2026-05-23T00:52:23.008588+00:00,benchmark_20260523T005223008588Z.csv
-docker-simulation,28m,28000000,,delay_by_airport_month,Hive,success,35.183802,11902,,20260523T010842627918Z,2026-05-23T01:08:42.627918+00:00,benchmark_20260523T010842627918Z.csv
-docker-simulation,28m,28000000,,delay_by_airport_month,Spark Core,success,2.731809,11902,,20260523T005223008588Z,2026-05-23T00:52:23.008588+00:00,benchmark_20260523T005223008588Z.csv
-docker-simulation,28m,28000000,,delay_by_airport_month,Spark SQL,success,15.192445,11902,,20260523T005223008588Z,2026-05-23T00:52:23.008588+00:00,benchmark_20260523T005223008588Z.csv
+docker-simulation,3m,3000000,deterministic_subset,airline_airport_ranking,Hive,success,9.060835,1735,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,3m,3000000,deterministic_subset,airline_airport_ranking,MapReduce,success,110.290797,1735,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,3m,3000000,deterministic_subset,airline_airport_ranking,Spark Core,success,2.109586,1735,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,3m,3000000,deterministic_subset,airline_airport_ranking,Spark SQL,success,1.308594,1735,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,3m,3000000,deterministic_subset,delay_by_airport_month,Hive,success,22.311456,13813,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,3m,3000000,deterministic_subset,delay_by_airport_month,MapReduce,success,117.145354,13813,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,3m,3000000,deterministic_subset,delay_by_airport_month,Spark Core,success,2.724516,13813,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,3m,3000000,deterministic_subset,delay_by_airport_month,Spark SQL,success,7.263636,13813,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,3m,3000000,deterministic_subset,delay_by_airport_month_all_causes,Hive,success,12.337903,38211,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,3m,3000000,deterministic_subset,delay_by_airport_month_all_causes,MapReduce,success,48.924459,38211,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,3m,3000000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,1.689279,38211,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,3m,3000000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,3.69733,38211,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,full,7079081,original_prepared,airline_airport_ranking,Hive,success,13.146808,1738,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,full,7079081,original_prepared,airline_airport_ranking,MapReduce,success,248.682014,1738,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,full,7079081,original_prepared,airline_airport_ranking,Spark Core,success,2.079348,1738,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,full,7079081,original_prepared,airline_airport_ranking,Spark SQL,success,1.897226,1738,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,full,7079081,original_prepared,delay_by_airport_month,Hive,success,38.690142,14804,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,full,7079081,original_prepared,delay_by_airport_month,MapReduce,success,274.82839,14804,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,full,7079081,original_prepared,delay_by_airport_month,Spark Core,success,2.877121,14804,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,full,7079081,original_prepared,delay_by_airport_month,Spark SQL,success,8.577453,14804,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,full,7079081,original_prepared,delay_by_airport_month_all_causes,Hive,success,21.571419,46745,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,full,7079081,original_prepared,delay_by_airport_month_all_causes,MapReduce,success,107.832129,46745,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,full,7079081,original_prepared,delay_by_airport_month_all_causes,Spark Core,success,1.528265,46745,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,full,7079081,original_prepared,delay_by_airport_month_all_causes,Spark SQL,success,6.346275,46745,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,14m,14000000,row_volume_replication,airline_airport_ranking,Hive,success,14.754289,1738,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,14m,14000000,row_volume_replication,airline_airport_ranking,MapReduce,success,426.620464,1738,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,14m,14000000,row_volume_replication,airline_airport_ranking,Spark Core,success,2.188318,1738,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,14m,14000000,row_volume_replication,airline_airport_ranking,Spark SQL,success,1.944876,1738,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,14m,14000000,row_volume_replication,delay_by_airport_month,Hive,success,56.008644,14804,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,14m,14000000,row_volume_replication,delay_by_airport_month,MapReduce,success,488.847175,14804,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,14m,14000000,row_volume_replication,delay_by_airport_month,Spark Core,success,2.412201,14804,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,14m,14000000,row_volume_replication,delay_by_airport_month,Spark SQL,success,10.15418,14804,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,14m,14000000,row_volume_replication,delay_by_airport_month_all_causes,Hive,success,29.916393,46745,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,14m,14000000,row_volume_replication,delay_by_airport_month_all_causes,MapReduce,success,216.5279,46745,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,14m,14000000,row_volume_replication,delay_by_airport_month_all_causes,Spark Core,success,1.39077,46745,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,14m,14000000,row_volume_replication,delay_by_airport_month_all_causes,Spark SQL,success,6.957489,46745,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,28m,28000000,row_volume_replication,airline_airport_ranking,Hive,success,23.05297,1738,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,28m,28000000,row_volume_replication,airline_airport_ranking,MapReduce,success,984.568705,1738,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,28m,28000000,row_volume_replication,airline_airport_ranking,Spark Core,success,2.141805,1738,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,28m,28000000,row_volume_replication,airline_airport_ranking,Spark SQL,success,3.159168,1738,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,28m,28000000,row_volume_replication,delay_by_airport_month,Hive,success,97.849562,14804,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,28m,28000000,row_volume_replication,delay_by_airport_month,MapReduce,success,1049.233707,14804,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,28m,28000000,row_volume_replication,delay_by_airport_month,Spark Core,success,2.811033,14804,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,28m,28000000,row_volume_replication,delay_by_airport_month,Spark SQL,success,13.039246,14804,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,28m,28000000,row_volume_replication,delay_by_airport_month_all_causes,Hive,success,53.489103,46745,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,28m,28000000,row_volume_replication,delay_by_airport_month_all_causes,MapReduce,success,412.948826,46745,,20260524T184208059067Z,2026-05-24T18:42:08.059067+00:00,benchmark_20260524T184208059067Z.csv
+docker-simulation,28m,28000000,row_volume_replication,delay_by_airport_month_all_causes,Spark Core,success,1.515416,46745,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
+docker-simulation,28m,28000000,row_volume_replication,delay_by_airport_month_all_causes,Spark SQL,success,11.821568,46745,,20260524T161313685088Z,2026-05-24T16:13:13.685088+00:00,benchmark_20260524T161313685088Z.csv
 docker-simulation-spark-sql-baseline-m4,1m,1000000,,airline_airport_ranking,Spark SQL,success,3.493789,1723,,20260523T222744444536Z,2026-05-23T22:27:44.444536+00:00,benchmark_20260523T222744444536Z.csv
 docker-simulation-spark-sql-baseline-m4,1m,1000000,,delay_by_airport_month,Spark SQL,success,9.586714,11861,,20260523T222744444536Z,2026-05-23T22:27:44.444536+00:00,benchmark_20260523T222744444536Z.csv
 docker-simulation-spark-sql-baseline-m4,1m,1000000,,delay_by_airport_month_all_causes,Spark SQL,success,5.432835,27416,,20260523T222744444536Z,2026-05-23T22:27:44.444536+00:00,benchmark_20260523T222744444536Z.csv
@@ -107,66 +173,96 @@ docker-simulation-spark-sql-optimized-m4,full,7079081,,delay_by_airport_month_al
 docker-simulation-spark-sql-optimized-m4,14m,14000000,,airline_airport_ranking,Spark SQL,success,1.981981,1738,,20260523T224239080920Z,2026-05-23T22:42:39.080920+00:00,benchmark_20260523T224239080920Z.csv
 docker-simulation-spark-sql-optimized-m4,14m,14000000,,delay_by_airport_month,Spark SQL,success,9.468684,14804,,20260523T224239080920Z,2026-05-23T22:42:39.080920+00:00,benchmark_20260523T224239080920Z.csv
 docker-simulation-spark-sql-optimized-m4,14m,14000000,,delay_by_airport_month_all_causes,Spark SQL,success,6.899514,46745,,20260523T224239080920Z,2026-05-23T22:42:39.080920+00:00,benchmark_20260523T224239080920Z.csv
-local,100k,100000,,airline_airport_ranking,Hive,success,13.910368,1641,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,100k,100000,,airline_airport_ranking,MapReduce,success,6.708246,1641,,20260522T182250129354Z,2026-05-22T18:22:50.129354+00:00,benchmark_20260522T182250129354Z.csv
-local,100k,100000,,airline_airport_ranking,Spark Core,success,0.960478,1641,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,100k,100000,,airline_airport_ranking,Spark SQL,success,1.74436,1641,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,100k,100000,,delay_by_airport_month,Hive,success,19.594788,6367,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,100k,100000,,delay_by_airport_month,MapReduce,success,7.64389,6367,,20260522T182250129354Z,2026-05-22T18:22:50.129354+00:00,benchmark_20260522T182250129354Z.csv
-local,100k,100000,,delay_by_airport_month,Spark Core,success,1.35415,6367,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,100k,100000,,delay_by_airport_month,Spark SQL,success,7.927306,6367,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,500k,500000,,airline_airport_ranking,Hive,success,15.56281,1707,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,500k,500000,,airline_airport_ranking,MapReduce,success,20.327809,1707,,20260522T182250129354Z,2026-05-22T18:22:50.129354+00:00,benchmark_20260522T182250129354Z.csv
-local,500k,500000,,airline_airport_ranking,Spark Core,success,0.689851,1707,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,500k,500000,,airline_airport_ranking,Spark SQL,success,1.852542,1707,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,500k,500000,,delay_by_airport_month,Hive,success,21.961934,9265,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,500k,500000,,delay_by_airport_month,MapReduce,success,23.256457,9265,,20260522T182250129354Z,2026-05-22T18:22:50.129354+00:00,benchmark_20260522T182250129354Z.csv
-local,500k,500000,,delay_by_airport_month,Spark Core,success,1.12204,9265,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,500k,500000,,delay_by_airport_month,Spark SQL,success,8.674959,9265,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,1m,1000000,,airline_airport_ranking,Hive,success,15.983799,1723,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,1m,1000000,,airline_airport_ranking,MapReduce,success,37.886627,1723,,20260522T182250129354Z,2026-05-22T18:22:50.129354+00:00,benchmark_20260522T182250129354Z.csv
-local,1m,1000000,deterministic_subset,airline_airport_ranking,Spark Core,success,0.504085,1723,,20260523T232403721782Z,2026-05-23T23:24:03.721782+00:00,benchmark_20260523T232403721782Z.csv
-local,1m,1000000,deterministic_subset,airline_airport_ranking,Spark SQL,success,0.914358,1723,,20260523T232403721782Z,2026-05-23T23:24:03.721782+00:00,benchmark_20260523T232403721782Z.csv
-local,1m,1000000,,delay_by_airport_month,Hive,success,22.411059,10206,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,1m,1000000,,delay_by_airport_month,MapReduce,success,38.838454,10206,,20260522T182250129354Z,2026-05-22T18:22:50.129354+00:00,benchmark_20260522T182250129354Z.csv
-local,1m,1000000,deterministic_subset,delay_by_airport_month,Spark Core,success,0.81117,11861,,20260523T232403721782Z,2026-05-23T23:24:03.721782+00:00,benchmark_20260523T232403721782Z.csv
-local,1m,1000000,deterministic_subset,delay_by_airport_month,Spark SQL,success,4.360503,11861,,20260523T232403721782Z,2026-05-23T23:24:03.721782+00:00,benchmark_20260523T232403721782Z.csv
-local,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,0.504729,27416,,20260523T232403721782Z,2026-05-23T23:24:03.721782+00:00,benchmark_20260523T232403721782Z.csv
-local,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,2.090399,27416,,20260523T232403721782Z,2026-05-23T23:24:03.721782+00:00,benchmark_20260523T232403721782Z.csv
+local,100k,100000,deterministic_subset,airline_airport_ranking,Hive,success,9.521758,1641,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,100k,100000,deterministic_subset,airline_airport_ranking,MapReduce,success,6.527285,1641,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,100k,100000,deterministic_subset,airline_airport_ranking,Spark Core,success,0.611545,1641,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,100k,100000,deterministic_subset,airline_airport_ranking,Spark SQL,success,0.857826,1641,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,100k,100000,deterministic_subset,delay_by_airport_month,Hive,success,12.769226,6882,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,100k,100000,deterministic_subset,delay_by_airport_month,MapReduce,success,7.455035,6882,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,100k,100000,deterministic_subset,delay_by_airport_month,Spark Core,success,0.983064,6882,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,100k,100000,deterministic_subset,delay_by_airport_month,Spark SQL,success,5.203271,6882,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,100k,100000,deterministic_subset,delay_by_airport_month_all_causes,Hive,success,7.423233,10370,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,100k,100000,deterministic_subset,delay_by_airport_month_all_causes,MapReduce,success,4.62098,10370,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,100k,100000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,0.514518,10370,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,100k,100000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,1.660837,10370,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,500k,500000,deterministic_subset,airline_airport_ranking,Hive,success,8.905047,1707,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,500k,500000,deterministic_subset,airline_airport_ranking,MapReduce,success,20.686811,1707,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,500k,500000,deterministic_subset,airline_airport_ranking,Spark Core,success,0.627912,1707,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,500k,500000,deterministic_subset,airline_airport_ranking,Spark SQL,success,1.103837,1707,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,500k,500000,deterministic_subset,delay_by_airport_month,Hive,success,13.828563,10536,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,500k,500000,deterministic_subset,delay_by_airport_month,MapReduce,success,22.607201,10536,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,500k,500000,deterministic_subset,delay_by_airport_month,Spark Core,success,0.984102,10536,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,500k,500000,deterministic_subset,delay_by_airport_month,Spark SQL,success,6.393455,10536,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,500k,500000,deterministic_subset,delay_by_airport_month_all_causes,Hive,success,8.347037,21371,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,500k,500000,deterministic_subset,delay_by_airport_month_all_causes,MapReduce,success,11.24664,21371,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,500k,500000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,0.55759,21371,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,500k,500000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,2.033224,21371,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,1m,1000000,deterministic_subset,airline_airport_ranking,Hive,success,8.825159,1723,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,1m,1000000,deterministic_subset,airline_airport_ranking,MapReduce,success,38.436646,1723,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,1m,1000000,deterministic_subset,airline_airport_ranking,Spark Core,success,0.611891,1723,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,1m,1000000,deterministic_subset,airline_airport_ranking,Spark SQL,success,1.059439,1723,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,1m,1000000,deterministic_subset,delay_by_airport_month,Hive,success,16.273088,11861,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,1m,1000000,deterministic_subset,delay_by_airport_month,MapReduce,success,42.256578,11861,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,1m,1000000,deterministic_subset,delay_by_airport_month,Spark Core,success,1.002453,11861,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,1m,1000000,deterministic_subset,delay_by_airport_month,Spark SQL,success,5.998484,11861,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,Hive,success,9.069178,27416,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,MapReduce,success,18.870057,27416,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,0.594109,27416,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,1m,1000000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,2.711124,27416,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
 local,1m_hc8,1000000,high_cardinality_stress,airline_airport_ranking,Spark Core,success,0.639535,13269,,20260523T232403721782Z,2026-05-23T23:24:03.721782+00:00,benchmark_20260523T232403721782Z.csv
 local,1m_hc8,1000000,high_cardinality_stress,airline_airport_ranking,Spark SQL,success,1.176026,13269,,20260523T232403721782Z,2026-05-23T23:24:03.721782+00:00,benchmark_20260523T232403721782Z.csv
 local,1m_hc8,1000000,high_cardinality_stress,delay_by_airport_month,Spark Core,success,1.293825,59196,,20260523T232403721782Z,2026-05-23T23:24:03.721782+00:00,benchmark_20260523T232403721782Z.csv
 local,1m_hc8,1000000,high_cardinality_stress,delay_by_airport_month,Spark SQL,success,6.157771,59196,,20260523T232403721782Z,2026-05-23T23:24:03.721782+00:00,benchmark_20260523T232403721782Z.csv
 local,1m_hc8,1000000,high_cardinality_stress,delay_by_airport_month_all_causes,Spark Core,success,0.81776,92253,,20260523T232403721782Z,2026-05-23T23:24:03.721782+00:00,benchmark_20260523T232403721782Z.csv
 local,1m_hc8,1000000,high_cardinality_stress,delay_by_airport_month_all_causes,Spark SQL,success,2.547695,92253,,20260523T232403721782Z,2026-05-23T23:24:03.721782+00:00,benchmark_20260523T232403721782Z.csv
-local,3m,3000000,,airline_airport_ranking,Hive,success,15.004577,1735,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,3m,3000000,,airline_airport_ranking,MapReduce,success,105.490861,1735,,20260522T182250129354Z,2026-05-22T18:22:50.129354+00:00,benchmark_20260522T182250129354Z.csv
-local,3m,3000000,,airline_airport_ranking,Spark Core,success,0.729875,1735,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,3m,3000000,,airline_airport_ranking,Spark SQL,success,2.849642,1735,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,3m,3000000,,delay_by_airport_month,Hive,success,25.068832,11417,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,3m,3000000,,delay_by_airport_month,MapReduce,success,116.109869,11417,,20260522T182250129354Z,2026-05-22T18:22:50.129354+00:00,benchmark_20260522T182250129354Z.csv
-local,3m,3000000,,delay_by_airport_month,Spark Core,success,1.191845,11417,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,3m,3000000,,delay_by_airport_month,Spark SQL,success,13.057866,11417,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,full,7079081,,airline_airport_ranking,Hive,success,26.632626,1738,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,full,7079081,,airline_airport_ranking,MapReduce,success,253.987902,1738,,20260522T182250129354Z,2026-05-22T18:22:50.129354+00:00,benchmark_20260522T182250129354Z.csv
-local,full,7079081,,airline_airport_ranking,Spark Core,success,0.789088,1738,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,full,7079081,,airline_airport_ranking,Spark SQL,success,3.39957,1738,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,full,7079081,,delay_by_airport_month,Hive,success,32.788066,11902,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,full,7079081,,delay_by_airport_month,MapReduce,success,265.23782,11902,,20260522T182250129354Z,2026-05-22T18:22:50.129354+00:00,benchmark_20260522T182250129354Z.csv
-local,full,7079081,,delay_by_airport_month,Spark Core,success,1.228729,11902,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,full,7079081,,delay_by_airport_month,Spark SQL,success,12.997052,11902,,20260522T133525179005Z,2026-05-22T13:35:25.179005+00:00,benchmark_20260522T133525179005Z.csv
-local,14m,14000000,,airline_airport_ranking,Hive,success,25.701671,1738,,20260522T142052973274Z,2026-05-22T14:20:52.973274+00:00,benchmark_20260522T142052973274Z.csv
-local,14m,14000000,,airline_airport_ranking,Spark Core,success,0.831216,1738,,20260522T142052973274Z,2026-05-22T14:20:52.973274+00:00,benchmark_20260522T142052973274Z.csv
-local,14m,14000000,,airline_airport_ranking,Spark SQL,success,3.317852,1738,,20260522T142052973274Z,2026-05-22T14:20:52.973274+00:00,benchmark_20260522T142052973274Z.csv
-local,14m,14000000,,delay_by_airport_month,Hive,success,41.111622,11902,,20260522T142052973274Z,2026-05-22T14:20:52.973274+00:00,benchmark_20260522T142052973274Z.csv
-local,14m,14000000,,delay_by_airport_month,Spark Core,success,1.184803,11902,,20260522T142052973274Z,2026-05-22T14:20:52.973274+00:00,benchmark_20260522T142052973274Z.csv
-local,14m,14000000,,delay_by_airport_month,Spark SQL,success,11.867535,11902,,20260522T142052973274Z,2026-05-22T14:20:52.973274+00:00,benchmark_20260522T142052973274Z.csv
-local,28m,28000000,,airline_airport_ranking,Hive,success,67.656302,1738,,20260522T144129099690Z,2026-05-22T14:41:29.099690+00:00,benchmark_20260522T144129099690Z.csv
-local,28m,28000000,,airline_airport_ranking,Spark Core,success,1.140267,1738,,20260522T144129099690Z,2026-05-22T14:41:29.099690+00:00,benchmark_20260522T144129099690Z.csv
-local,28m,28000000,,airline_airport_ranking,Spark SQL,success,3.372759,1738,,20260522T144129099690Z,2026-05-22T14:41:29.099690+00:00,benchmark_20260522T144129099690Z.csv
-local,28m,28000000,,delay_by_airport_month,Hive,success,100.484196,11902,,20260522T144129099690Z,2026-05-22T14:41:29.099690+00:00,benchmark_20260522T144129099690Z.csv
-local,28m,28000000,,delay_by_airport_month,Spark Core,success,1.624947,11902,,20260522T144129099690Z,2026-05-22T14:41:29.099690+00:00,benchmark_20260522T144129099690Z.csv
-local,28m,28000000,,delay_by_airport_month,Spark SQL,success,11.923533,11902,,20260522T144129099690Z,2026-05-22T14:41:29.099690+00:00,benchmark_20260522T144129099690Z.csv
+local,3m,3000000,deterministic_subset,airline_airport_ranking,Hive,success,8.873463,1735,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,3m,3000000,deterministic_subset,airline_airport_ranking,MapReduce,success,106.485596,1735,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,3m,3000000,deterministic_subset,airline_airport_ranking,Spark Core,success,0.59581,1735,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,3m,3000000,deterministic_subset,airline_airport_ranking,Spark SQL,success,1.489981,1735,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,3m,3000000,deterministic_subset,delay_by_airport_month,Hive,success,21.2181,13813,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,3m,3000000,deterministic_subset,delay_by_airport_month,MapReduce,success,116.882725,13813,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,3m,3000000,deterministic_subset,delay_by_airport_month,Spark Core,success,1.081849,13813,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,3m,3000000,deterministic_subset,delay_by_airport_month,Spark SQL,success,7.261517,13813,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,3m,3000000,deterministic_subset,delay_by_airport_month_all_causes,Hive,success,11.934986,38211,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,3m,3000000,deterministic_subset,delay_by_airport_month_all_causes,MapReduce,success,48.338575,38211,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,3m,3000000,deterministic_subset,delay_by_airport_month_all_causes,Spark Core,success,0.647494,38211,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,3m,3000000,deterministic_subset,delay_by_airport_month_all_causes,Spark SQL,success,2.974806,38211,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,full,7079081,original_prepared,airline_airport_ranking,Hive,success,12.076404,1738,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,full,7079081,original_prepared,airline_airport_ranking,MapReduce,success,258.739366,1738,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,full,7079081,original_prepared,airline_airport_ranking,Spark Core,success,0.615077,1738,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,full,7079081,original_prepared,airline_airport_ranking,Spark SQL,success,1.955089,1738,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,full,7079081,original_prepared,delay_by_airport_month,Hive,success,35.253749,14804,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,full,7079081,original_prepared,delay_by_airport_month,MapReduce,success,274.881882,14804,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,full,7079081,original_prepared,delay_by_airport_month,Spark Core,success,1.037563,14804,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,full,7079081,original_prepared,delay_by_airport_month,Spark SQL,success,8.989049,14804,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,full,7079081,original_prepared,delay_by_airport_month_all_causes,Hive,success,19.506734,46745,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,full,7079081,original_prepared,delay_by_airport_month_all_causes,MapReduce,success,113.608179,46745,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,full,7079081,original_prepared,delay_by_airport_month_all_causes,Spark Core,success,0.692172,46745,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,full,7079081,original_prepared,delay_by_airport_month_all_causes,Spark SQL,success,5.81198,46745,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,14m,14000000,row_volume_replication,airline_airport_ranking,Hive,success,13.941162,1738,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,14m,14000000,row_volume_replication,airline_airport_ranking,MapReduce,success,492.444868,1738,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,14m,14000000,row_volume_replication,airline_airport_ranking,Spark Core,success,0.590543,1738,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,14m,14000000,row_volume_replication,airline_airport_ranking,Spark SQL,success,1.91152,1738,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,14m,14000000,row_volume_replication,delay_by_airport_month,Hive,success,54.532884,14804,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,14m,14000000,row_volume_replication,delay_by_airport_month,MapReduce,success,527.125965,14804,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,14m,14000000,row_volume_replication,delay_by_airport_month,Spark Core,success,1.07308,14804,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,14m,14000000,row_volume_replication,delay_by_airport_month,Spark SQL,success,15.023263,14804,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,14m,14000000,row_volume_replication,delay_by_airport_month_all_causes,Hive,success,30.753164,46745,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,14m,14000000,row_volume_replication,delay_by_airport_month_all_causes,MapReduce,success,209.756309,46745,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,14m,14000000,row_volume_replication,delay_by_airport_month_all_causes,Spark Core,success,0.684704,46745,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,14m,14000000,row_volume_replication,delay_by_airport_month_all_causes,Spark SQL,success,5.08418,46745,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,28m,28000000,row_volume_replication,airline_airport_ranking,Hive,success,23.50614,1738,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,28m,28000000,row_volume_replication,airline_airport_ranking,MapReduce,success,982.517119,1738,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,28m,28000000,row_volume_replication,airline_airport_ranking,Spark Core,success,0.638913,1738,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,28m,28000000,row_volume_replication,airline_airport_ranking,Spark SQL,success,2.018968,1738,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,28m,28000000,row_volume_replication,delay_by_airport_month,Hive,success,99.110872,14804,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,28m,28000000,row_volume_replication,delay_by_airport_month,MapReduce,success,1067.580163,14804,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,28m,28000000,row_volume_replication,delay_by_airport_month,Spark Core,success,1.055563,14804,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,28m,28000000,row_volume_replication,delay_by_airport_month,Spark SQL,success,9.619835,14804,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,28m,28000000,row_volume_replication,delay_by_airport_month_all_causes,Hive,success,53.591416,46745,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,28m,28000000,row_volume_replication,delay_by_airport_month_all_causes,MapReduce,success,414.845911,46745,,20260525T011749182941Z,2026-05-25T01:17:49.182941+00:00,benchmark_20260525T011749182941Z.csv
+local,28m,28000000,row_volume_replication,delay_by_airport_month_all_causes,Spark Core,success,0.659035,46745,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
+local,28m,28000000,row_volume_replication,delay_by_airport_month_all_causes,Spark SQL,success,6.800749,46745,,20260524T095743481484Z,2026-05-24T09:57:43.481484+00:00,benchmark_20260524T095743481484Z.csv
 local-spark-sql-baseline-m4,1m,1000000,,airline_airport_ranking,Spark SQL,success,1.126573,1723,,20260523T222417711003Z,2026-05-23T22:24:17.711003+00:00,benchmark_20260523T222417711003Z.csv
 local-spark-sql-baseline-m4,1m,1000000,,delay_by_airport_month,Spark SQL,success,5.748548,11861,,20260523T222417711003Z,2026-05-23T22:24:17.711003+00:00,benchmark_20260523T222417711003Z.csv
 local-spark-sql-baseline-m4,1m,1000000,,delay_by_airport_month_all_causes,Spark SQL,success,2.337022,27416,,20260523T222417711003Z,2026-05-23T22:24:17.711003+00:00,benchmark_20260523T222417711003Z.csv

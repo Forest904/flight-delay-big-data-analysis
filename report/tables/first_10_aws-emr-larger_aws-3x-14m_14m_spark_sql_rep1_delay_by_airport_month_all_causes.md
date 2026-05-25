@@ -1,0 +1,12 @@
+| origin_airport | month | delay_range | cause_rank | cause | cause_count |
+| --- | --- | --- | --- | --- | --- |
+| ABE | 1 | cancelled_no_departure_delay | 1 | cancellation:B | 44 |
+| ABE | 1 | low | 1 | delay:nas | 82 |
+| ABE | 1 | low | 2 | delay:carrier | 16 |
+| ABE | 1 | low | 3 | delay:late_aircraft | 4 |
+| ABE | 1 | low | 4 | delay:weather | 4 |
+| ABE | 1 | medium | 1 | delay:late_aircraft | 64 |
+| ABE | 1 | medium | 2 | delay:nas | 56 |
+| ABE | 1 | medium | 3 | delay:carrier | 52 |
+| ABE | 1 | medium | 4 | delay:weather | 12 |
+| ABE | 1 | medium | 5 | delay:security | 4 |

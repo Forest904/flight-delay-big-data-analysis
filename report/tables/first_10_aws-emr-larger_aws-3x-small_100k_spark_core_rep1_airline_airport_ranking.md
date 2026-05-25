@@ -1,0 +1,12 @@
+| origin_airport | airline | flight_count | avg_departure_delay | avg_arrival_delay | cancellation_rate | airport_avg_departure_delay | difference_from_airport_avg_departure_delay | rank_at_airport |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ABE | OO | 2 | -1.5 | -7.5 | 0 | 27.475 | -28.975 | 1 |
+| ABE | 9E | 19 | 0.474 | -10.684 | 0 | 27.475 | -27.001 | 2 |
+| ABE | G4 | 29 | 38.571 | 34.889 | 0.034 | 27.475 | 11.097 | 3 |
+| ABE | OH | 10 | 53.5 | 40.8 | 0 | 27.475 | 26.025 | 4 |
+| ABI | MQ | 22 | 13.955 | 14.045 | 0 | 13.955 | 0 | 1 |
+| ABQ | AS | 10 | -2.4 | -7.6 | 0 | 14.94 | -17.34 | 1 |
+| ABQ | DL | 26 | 1.12 | -3.72 | 0.038 | 14.94 | -13.82 | 2 |
+| ABQ | NK | 11 | 2.455 | -1.545 | 0 | 14.94 | -12.485 | 3 |
+| ABQ | OO | 42 | 2.81 | -2.81 | 0 | 14.94 | -12.13 | 4 |
+| ABQ | UA | 24 | 3.458 | -4.875 | 0 | 14.94 | -11.481 | 5 |

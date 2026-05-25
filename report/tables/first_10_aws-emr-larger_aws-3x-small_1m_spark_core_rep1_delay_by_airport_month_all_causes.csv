@@ -1,0 +1,11 @@
+origin_airport,month,delay_range,cause_rank,cause,cause_count
+ABE,1,cancelled_no_departure_delay,1,cancellation:B,3
+ABE,1,low,1,delay:nas,1
+ABE,1,medium,1,delay:carrier,3
+ABE,1,medium,2,delay:late_aircraft,3
+ABE,1,medium,3,delay:nas,1
+ABE,1,high,1,delay:late_aircraft,4
+ABE,1,high,2,delay:carrier,3
+ABE,1,high,3,delay:nas,3
+ABE,1,high,4,delay:weather,2
+ABE,2,low,1,delay:nas,1

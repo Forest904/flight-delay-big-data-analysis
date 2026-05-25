@@ -1,0 +1,11 @@
+origin_airport,month,delay_range,cause_rank,cause,cause_count
+ABE,1,medium,1,delay:carrier,1
+ABE,1,medium,2,delay:late_aircraft,1
+ABE,1,high,1,delay:carrier,1
+ABE,2,high,1,delay:carrier,1
+ABE,2,high,2,delay:late_aircraft,1
+ABE,2,high,3,delay:nas,1
+ABE,3,low,1,delay:nas,1
+ABE,3,high,1,delay:nas,1
+ABE,4,low,1,delay:carrier,1
+ABE,4,low,2,delay:nas,1
