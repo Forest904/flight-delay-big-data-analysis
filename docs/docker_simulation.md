@@ -57,24 +57,18 @@ Additional benchmark flags can be passed through `BENCHMARK_FLAGS`. For example:
 make benchmark-docker-simulation BENCHMARK_FLAGS="--technology spark_sql"
 ```
 
-The default simulation matrix is `100k`, `500k`, and `1m`. The larger `3m`,
-`full`, `14m`, and `28m` inputs are configured as optional Sprint P2 stretch
-targets, so they do not run unless requested. Use `BENCHMARK_FLAGS` to run a
-narrower configured and validated input:
+The final report uses a full-ladder Docker standalone simulation benchmark for
+`100k`, `500k`, `1m`, `3m`, `full`, `14m`, and `28m`. Use `BENCHMARK_FLAGS` to
+run a narrower configured and validated input:
 
 ```powershell
 make benchmark-docker-simulation BENCHMARK_FLAGS="--input-label 1m"
 ```
 
-Run the optional large inputs one at a time so resource failures are isolated:
+The final full-ladder command is:
 
 ```powershell
-make benchmark-docker-simulation BENCHMARK_FLAGS="--input-label 3m --repetitions 3"
-make benchmark-docker-simulation BENCHMARK_FLAGS="--input-label full --repetitions 3"
-make benchmark-docker-simulation BENCHMARK_FLAGS="--input-label 14m --technology spark_sql --technology spark_core --repetitions 3"
-make benchmark-docker-simulation BENCHMARK_FLAGS="--input-label 14m --technology hive --repetitions 3"
-make benchmark-docker-simulation BENCHMARK_FLAGS="--input-label 28m --technology spark_sql --technology spark_core --repetitions 3"
-make benchmark-docker-simulation BENCHMARK_FLAGS="--input-label 28m --technology hive --repetitions 3"
+make benchmark-docker-simulation BENCHMARK_FLAGS="--include-optional --input-label 100k --input-label 500k --input-label 1m --input-label 3m --input-label full --input-label 14m --input-label 28m --technology spark_sql --technology spark_core --technology hive --repetitions 5"
 ```
 
 If a large Docker cell is skipped or fails because of Docker Desktop memory,
@@ -82,9 +76,10 @@ disk, or time limits, leave it as `not_run` or failed evidence in
 `report/tables/benchmark_status.md` and add a `resource_limited` note in
 `report/tables/benchmark_notes.csv`.
 
-The Sprint P2 run on the recorded workstation completed `3m`, `full`, `14m`,
-and `28m` for Spark SQL, Spark Core, and Hive with three repetitions per
-technology/input cell.
+The recorded final campaign completed the full ladder for Spark SQL, Spark
+Core, and Hive with five repetitions per technology/input cell. MapReduce
+Docker-labeled stretch evidence was also completed through the MapReduce
+benchmark runner with five repetitions per input.
 
 ## Results
 

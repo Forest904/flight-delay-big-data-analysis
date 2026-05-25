@@ -36,22 +36,20 @@ The `1m_hc8` input keeps the source row count, schema, and numeric values from
 It is benchmark-only stress evidence and must not be interpreted as additional
 flight-behavior observations.
 
-## Required Evidence
+## Final Evidence Matrix
 
-Local baseline:
+The final report is based on the completed full-ladder campaign:
 
-- Technologies: Spark SQL, Spark Core, Hive.
-- Inputs: `100k`, `500k`, `1m`, `3m`, `full`.
-- Target repetitions: 3 for report-critical cells.
+- Local: Spark SQL, Spark Core, Hive, and MapReduce across `100k`, `500k`,
+  `1m`, `3m`, `full`, `14m`, and `28m`, with 5 repetitions.
+- Docker standalone simulation: Spark SQL, Spark Core, Hive, and MapReduce
+  across the same ladder, with 5 repetitions.
+- AWS EMR larger profile: Spark SQL and Spark Core across the same ladder, with
+  3 repetitions.
 
-Docker standalone simulation baseline:
-
-- Technologies: Spark SQL, Spark Core, Hive.
-- Inputs: `100k`, `500k`, `1m`.
-- Target repetitions: 3 for report-critical cells.
-
-MapReduce is stretch evidence. AWS EMR is managed Spark evidence when budget and
-credentials allow.
+Hive remains required-technology evidence through local and Docker runs. The
+current AWS EMR runner supports Spark steps only, so the report does not claim
+AWS Hive evidence.
 
 ## Commands
 
@@ -71,18 +69,21 @@ Run local benchmarks:
 
 ```powershell
 make benchmark-local
+make benchmark-local BENCHMARK_FLAGS="--include-optional --input-label 100k --input-label 500k --input-label 1m --input-label 3m --input-label full --input-label 14m --input-label 28m --technology spark_sql --technology spark_core --technology hive --repetitions 5"
 ```
 
 Run Docker standalone simulation:
 
 ```powershell
 make benchmark-docker-simulation
+make benchmark-docker-simulation BENCHMARK_FLAGS="--include-optional --input-label 100k --input-label 500k --input-label 1m --input-label 3m --input-label full --input-label 14m --input-label 28m --technology spark_sql --technology spark_core --technology hive --repetitions 5"
 ```
 
 Run the optional MapReduce stretch benchmark:
 
 ```powershell
 make benchmark-mapreduce-local BENCHMARK_FLAGS="--input-label 100k --input-label 500k --input-label 1m --input-label 3m --input-label full --repetitions 3"
+make benchmark-mapreduce-local BENCHMARK_FLAGS="--include-optional --input-label 100k --input-label 500k --input-label 1m --input-label 3m --input-label full --input-label 14m --input-label 28m --repetitions 5"
 ```
 
 Useful flags:
@@ -93,6 +94,22 @@ make benchmark-local BENCHMARK_FLAGS="--include-optional --input-label 14m --rep
 make benchmark-local BENCHMARK_FLAGS="--input-label 1m --input-label 1m_hc8 --technology spark_sql --technology spark_core --repetitions 3"
 make benchmark-docker-simulation BENCHMARK_FLAGS="--input-label 1m --input-label 1m_hc8 --technology spark_sql --technology spark_core --repetitions 3"
 ```
+
+Run the final AWS larger-profile campaign only after refreshing AWS Academy
+Learner Lab credentials:
+
+```powershell
+make aws-check AWS_CHECK_FLAGS="--config config/aws_emr_campaign_3x_small.yaml"
+make aws-upload AWS_CONFIG=config/aws_emr_campaign_3x_small.yaml AWS_RUN_ID=aws-3x-small
+make benchmark-aws-emr AWS_CONFIG=config/aws_emr_campaign_3x_small.yaml AWS_RUN_ID=aws-3x-small
+make aws-fetch-results AWS_CONFIG=config/aws_emr_campaign_3x_small.yaml AWS_RUN_ID=aws-3x-small
+make aws-cleanup AWS_CONFIG=config/aws_emr_campaign_3x_small.yaml
+```
+
+Repeat the same upload/run/fetch/cleanup sequence for
+`config/aws_emr_campaign_3x_mid.yaml` / `aws-3x-mid`,
+`config/aws_emr_campaign_3x_14m.yaml` / `aws-3x-14m`, and
+`config/aws_emr_campaign_3x_28m.yaml` / `aws-3x-28m`.
 
 ## Output Files
 

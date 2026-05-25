@@ -1,7 +1,7 @@
 # Flight Delay Big Data Analysis
 
 As-built big-data coursework project for the 2024 Flight Delay Dataset. The
-repository prepares the raw Kaggle CSV, runs two assignment analyses across
+repository prepares the raw Kaggle CSV, runs two analytical workflows across
 multiple big-data technologies, validates comparable outputs, and produces
 benchmark evidence for the final report.
 
@@ -9,10 +9,10 @@ Repository: <https://github.com/Forest904/flight-delay-big-data-analysis.git>
 
 ## Current Scope
 
-- Required technologies: Spark SQL, Spark Core, and Hive.
+- Core technologies: Spark SQL, Spark Core, and Hive.
 - Stretch technology: Docker-local Hadoop Streaming MapReduce.
-- Execution evidence: local runs, Docker standalone simulation, and AWS EMR
-  Spark evidence where budget allows.
+- Execution evidence: local runs, Docker standalone simulation, and completed
+  AWS EMR Spark evidence.
 - Canonical validation input: `data/prepared/flights_2024_clean.parquet`.
 - Final guardrail: `make submission-check`.
 
@@ -46,6 +46,22 @@ make benchmark-local
 make benchmark-docker-simulation
 make clean
 ```
+
+## Reproducibility
+
+Use the final gate as the canonical reproduction check:
+
+```powershell
+make charts
+make report
+make submission-check
+```
+
+`make submission-check` runs the automated tests, validates comparable outputs
+for Spark SQL, Spark Core, Hive, and MapReduce, rebuilds report artifacts, and
+checks repository hygiene. The full run order is documented in
+`docs/reproducibility.md`; AWS EMR reruns and credential cautions are documented
+in `docs/aws_emr.md`.
 
 ## Documentation Index
 

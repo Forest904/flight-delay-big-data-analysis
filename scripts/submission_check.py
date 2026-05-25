@@ -47,8 +47,14 @@ REQUIRED_TABLES = (
 REQUIRED_FIGURES = (
     "execution_time_local_delay_by_airport_month.png",
     "execution_time_local_airline_airport_ranking.png",
+    "execution_time_local_delay_by_airport_month_spark_hive.png",
+    "execution_time_local_airline_airport_ranking_spark_hive.png",
     "execution_time_docker-simulation_delay_by_airport_month.png",
     "execution_time_docker-simulation_airline_airport_ranking.png",
+    "execution_time_docker-simulation_delay_by_airport_month_spark_hive.png",
+    "execution_time_docker-simulation_airline_airport_ranking_spark_hive.png",
+    "execution_time_aws-emr-larger_delay_by_airport_month.png",
+    "execution_time_aws-emr-larger_airline_airport_ranking.png",
 )
 TECHNOLOGY_SLUGS = {
     "spark_sql": "spark_sql",

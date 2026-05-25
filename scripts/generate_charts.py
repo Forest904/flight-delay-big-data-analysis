@@ -996,7 +996,15 @@ def generate_execution_time_charts(rows: list[dict[str, object]], figures_dir: P
         return []
     figures: list[Path] = []
 
-    for (environment, job_name), group in frame.groupby(["environment", "job_name"], sort=True):
+    def plot_group(
+        *,
+        environment: object,
+        job_name: object,
+        group: pd.DataFrame,
+        technology_labels: list[str],
+        filename_suffix: str = "",
+        title_suffix: str = "",
+    ) -> Path:
         group = group.sort_values(["records", "input_label", "technology"])
         input_order = (
             group[["input_label", "records"]]
@@ -1009,11 +1017,6 @@ def generate_execution_time_charts(rows: list[dict[str, object]], figures_dir: P
         chart_kind = execution_time_chart_kind(len(input_order))
 
         plt.figure(figsize=(8.5, 4.4), dpi=140)
-        technology_labels = [
-            label
-            for label in TECHNOLOGY_LABELS.values()
-            if not group[group["technology"] == label].empty
-        ]
         bar_width = 0.8 / max(len(technology_labels), 1)
 
         for technology_index, technology_label in enumerate(technology_labels):
@@ -1054,7 +1057,10 @@ def generate_execution_time_charts(rows: list[dict[str, object]], figures_dir: P
                 )
 
         environment_label = ENVIRONMENT_LABELS.get(str(environment), str(environment))
-        plt.title(f"{JOB_LABELS.get(str(job_name), job_name)} - {environment_label}")
+        title = f"{JOB_LABELS.get(str(job_name), job_name)} - {environment_label}"
+        if title_suffix:
+            title = f"{title} {title_suffix}"
+        plt.title(title)
         plt.xlabel("Input size (record count)")
         plt.ylabel("Median execution time (seconds)")
         plt.xticks(
@@ -1068,10 +1074,48 @@ def generate_execution_time_charts(rows: list[dict[str, object]], figures_dir: P
 
         safe_environment = str(environment).replace(" ", "_")
         safe_job_name = str(job_name).replace(" ", "_")
-        figure_path = figures_dir / f"execution_time_{safe_environment}_{safe_job_name}.png"
+        figure_path = figures_dir / f"execution_time_{safe_environment}_{safe_job_name}{filename_suffix}.png"
         plt.savefig(figure_path, bbox_inches="tight")
         plt.close()
-        figures.append(figure_path)
+        return figure_path
+
+    for (environment, job_name), group in frame.groupby(["environment", "job_name"], sort=True):
+        technology_labels = [
+            label
+            for label in TECHNOLOGY_LABELS.values()
+            if not group[group["technology"] == label].empty
+        ]
+        figures.append(
+            plot_group(
+                environment=environment,
+                job_name=job_name,
+                group=group,
+                technology_labels=technology_labels,
+            )
+        )
+
+        mapreduce_points = group[group["technology"] == TECHNOLOGY_LABELS["mapreduce"]]
+        spark_hive_labels = [
+            TECHNOLOGY_LABELS[technology]
+            for technology in CORE_TECHNOLOGY_ORDER
+            if not group[group["technology"] == TECHNOLOGY_LABELS[technology]].empty
+        ]
+        report_comparison_job = str(job_name) in {
+            "delay_by_airport_month",
+            "airline_airport_ranking",
+        }
+        if report_comparison_job and len(mapreduce_points) >= 2 and spark_hive_labels:
+            spark_hive_group = group[group["technology"].isin(spark_hive_labels)]
+            figures.append(
+                plot_group(
+                    environment=environment,
+                    job_name=job_name,
+                    group=spark_hive_group,
+                    technology_labels=spark_hive_labels,
+                    filename_suffix="_spark_hive",
+                    title_suffix="(Spark/Hive detail)",
+                )
+            )
 
     return figures
 

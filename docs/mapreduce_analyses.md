@@ -108,11 +108,11 @@ benchmark metadata.
 
 ## Benchmarking
 
-Run the opt-in MapReduce stretch benchmark with three repetitions on the local
-input ladder:
+Run the opt-in MapReduce stretch benchmark with five repetitions on the final
+full input ladder:
 
 ```powershell
-make benchmark-mapreduce-local BENCHMARK_FLAGS="--input-label 100k --input-label 500k --input-label 1m --input-label 3m --input-label full --repetitions 3"
+make benchmark-mapreduce-local BENCHMARK_FLAGS="--include-optional --input-label 100k --input-label 500k --input-label 1m --input-label 3m --input-label full --input-label 14m --input-label 28m --repetitions 5"
 ```
 
 The default `make benchmark-local` matrix intentionally remains limited to
